@@ -220,10 +220,12 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting.
 
 ---
 
-### License ⚖️
+### License
 
-The LegalDown specification is released under
-[](LICENSE).
+The LegalDown specification document is released under
+Creative Commons Attribution 4.0 International (CC BY 4.0).
 
-Use it, implement it, build on it — only attribution is required. The goal is a genuinely open standard with the widest possible
-adoption.
+This license applies to the specification document itself.
+It does not govern software implementations of the specification.
+Parsers, renderers, editors, and other tools implementing LegalDown
+may be released under any license their authors choose.
