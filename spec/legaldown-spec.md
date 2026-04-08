@@ -117,41 +117,20 @@ tags:
 | Field | Status | Description |
 |---|---|---|
 | `title` | REQUIRED | Document title |
-| `document_type` | RECOMMENDED | Contract type identifier (see 3.3) |
 | `version` | OPTIONAL | Document version identifier |
-| `date` | RECOMMENDED | Document date (ISO 8601) |
 | `effective_date` | OPTIONAL | Contract effective date (ISO 8601) |
 | `parties` | RECOMMENDED | Array of party information |
-| `jurisdiction` | OPTIONAL | Governing jurisdiction |
 | `governing_law` | OPTIONAL | Applicable law |
 | `language` | RECOMMENDED | Primary language (ISO 639-1) |
 | `translations` | OPTIONAL | Map of translation files (see Section 13) |
 | `authoritative` | OPTIONAL | Authoritative language for disputes (ISO 639-1) |
 | `tags` | OPTIONAL | Classification tags array |
-| `template` | OPTIONAL | Template identifier used for validation |
-| `render` | OPTIONAL | Default rendering configuration |
 
-### 3.3 Standard Document Types
-
-Implementations SHOULD recognize the following standard document type identifiers:
-
-- `nda` — Non-Disclosure Agreement
-- `service_agreement` — Service Agreement / Statement of Work
-- `employment` — Employment Agreement
-- `partnership` — Partnership Agreement
-- `license` — License Agreement
-- `purchase` — Purchase Agreement / Sale of Goods
-- `lease` — Lease Agreement
-- `settlement` — Settlement Agreement
-- `amendment` — Amendment to existing agreement
-
-Implementations MAY define additional document types.
-
-### 3.4 Party References in Text
+### 3.3 Party References in Text
 
 Party `short_name` values from frontmatter MAY be used directly in document body text. Renderers SHOULD NOT automatically substitute or link these unless explicitly configured. The author is responsible for using party names consistently.
 
-### 3.5 Metadata Extensions
+### 3.4 Metadata Extensions
 
 Additional metadata fields in frontmatter are permitted. Implementations MUST ignore unknown metadata fields rather than failing. This allows forward compatibility and custom extensions.
 
@@ -276,11 +255,11 @@ Cross-references create links between sections within a document. Because sectio
 **Examples:**
 
 ```markdown
-As described in {{ref: definitions}}, terms have specific meanings.
+As described in Section {{ref: definitions}}, terms have specific meanings.
 
-Subject to {{ref: liability.limitations.cap}}, Provider shall indemnify Client.
+Subject to Clause {{ref: liability.limitations.cap}}, Provider shall indemnify Client.
 
-The payment schedule in {{ref: payment-terms.schedule}} applies from the Effective Date.
+The payment schedule in Article {{ref: payment-terms.schedule}} applies from the Effective Date.
 ```
 
 ### 6.3 Reference Rendering
@@ -289,7 +268,7 @@ Renderers MUST:
 
 1. Locate the target section by identifier
 2. Determine the rendered section number based on the active numbering scheme
-3. Replace the reference with appropriate text (e.g., "Section 3.2")
+3. Replace the reference with appropriate numbering (e.g., "3.2")
 4. Create a hyperlink to the target section in formats that support hyperlinking (HTML, PDF, DOCX)
 5. If the target identifier does not exist, insert `[BROKEN REF: identifier]` in output and emit a validation error
 
@@ -298,13 +277,12 @@ Renderers MUST:
 Implementations MAY support format variants controlling how references render:
 
 ```markdown
-{{ref: payment-terms}}                          → "Section 5"
-{{ref: payment-terms, format=number-only}}      → "5"
-{{ref: payment-terms, format=with-title}}       → "Section 5 (Payment Terms)"
-{{ref: payment-terms, format=title-only}}       → "Payment Terms"
+Section {{ref: payment-terms}}                          → "Section 5"
+Section {{ref: payment-terms, format=with-title}}       → "Section 5 (Payment Terms)"
+in {{ref: payment-terms, format=title-only}}            → "in Payment Terms"
 ```
 
-Default rendering (without format specifier) MUST include the section label and number (e.g., "Section 5").
+Default rendering (without format specifier) MUST include the section number (e.g., "5").
 
 ---
 
@@ -331,7 +309,7 @@ information, and any other information designated as confidential.
 ### Services {#def-services}
 
 {{def: services}}
-**"Services"** means the software development services described in
+**"Services"** means the software development services described in Section
 {{ref: scope-of-work}}.
 ```
 
@@ -389,7 +367,6 @@ All standard CommonMark inline formatting is supported:
 - `**bold**` or `__bold__` — Bold text (used for defined terms)
 - `*italic*` or `_italic_` — Italic text (used for emphasis)
 - `` `code` `` — Monospace/code (used for technical specifications)
-- `~~strikethrough~~` — Strikethrough (renderer support RECOMMENDED)
 
 ### 8.2 Lists
 
@@ -506,7 +483,6 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{def: id}}` | REQUIRED | Declare a definition |
 | `{{term: id}}` | REQUIRED | Reference a defined term |
 | `{{include: path}}` | OPTIONAL | Include external file |
-| `{{lang: code}}` / `{{/lang}}` | OPTIONAL | Language block (bilingual) |
 
 ### 10.2 Directive Rules
 
@@ -608,7 +584,7 @@ When rendering `{{ref: id}}`:
 1. Locate target section by identifier using hierarchical path resolution
 2. Determine the section number generated under the active numbering scheme
 3. Apply format variant if specified
-4. Replace directive with output text (e.g., "Section 3.2")
+4. Replace directive with respective numbering (e.g., "3.2")
 5. Create hyperlink to target section in formats supporting links
 6. If target not found, insert `[BROKEN REF: id]` and emit validation error
 
@@ -652,12 +628,9 @@ Templates SHOULD be defined in a separate configuration file (e.g., YAML or JSON
 
 ### 13.1 Overview
 
-LegalDown supports bilingual and multilingual contracts through two complementary approaches:
+LegalDown supports bilingual and multilingual contracts via **separate files** — one document per language, with metadata linking them
 
-1. **Separate files** — one document per language, with metadata linking them
-2. **Inline language blocks** — both languages in a single file using `{{lang:}}` directives
-
-### 13.2 Separate File Approach (RECOMMENDED for most cases)
+### 13.2 Separate File 
 
 Maintain separate LegalDown documents per language with identical heading structure and section identifiers:
 
@@ -708,71 +681,7 @@ authoritative: en
 - Validators MUST check structural consistency between linked files
 - Cross-references resolve to section numbers (same in both versions)
 
-### 13.3 Inline Language Blocks (for tight coupling)
-
-For documents where language alignment is critical:
-
-```markdown
-## Definitions {#definitions}
-
-### Confidential Information {#def-confidential-info}
-
-{{def: confidential-info}}
-
-{{lang: en}}
-**"Confidential Information"** means any non-public information disclosed
-by one party to the other.
-{{/lang}}
-
-{{lang: fr}}
-**« Information confidentielle »** désigne toute information non publique
-divulguée par une partie à l'autre.
-{{/lang}}
-```
-
-**Rules for inline language blocks:**
-
-- `{{lang: code}}` and `{{/lang}}` MUST be on their own lines
-- Language code MUST be a valid ISO 639-1 two-letter code
-- All sections containing `{{lang:}}` blocks MUST have blocks for all declared languages
-- Validator MUST warn on missing language blocks within a section
-
-### 13.4 Bilingual Metadata Fields
-
-| Field | Description |
-|---|---|
-| `language` | Primary language of this document (ISO 639-1) |
-| `translations` | Map of language codes to translation file paths |
-| `authoritative` | Language controlling in case of conflict (ISO 639-1) |
-| `translation_status` | `complete`, `partial`, or `draft` |
-
-### 13.5 Bilingual Rendering
-
-Renderers SHOULD support:
-
-```bash
-# Render single language from bilingual source
-legaldown render contract.lgd --language en -o contract-en.pdf
-legaldown render contract.lgd --language fr -o contract-fr.pdf
-
-# Render side-by-side bilingual PDF
-legaldown render contract-en.lgd --bilingual contract-fr.lgd --layout columns -o bilingual.pdf
-
-# Render interleaved bilingual PDF
-legaldown render contract-en.lgd --bilingual contract-fr.lgd --layout interleaved -o bilingual.pdf
-```
-
-### 13.6 Locale-Aware Section Labels
-
-Renderers SHOULD support locale-specific labels for section references. For example:
-
-- English: "Section 3.2"
-- French: "l'article 3.2"
-- German: "Abschnitt 3.2"
-
-Locale templates SHOULD be configurable and separate from document content.
-
-### 13.7 Bilingual Validation
+### 13.3 Bilingual Validation
 
 The `legaldown validate --sync` command MUST check:
 
@@ -831,86 +740,12 @@ Validators MUST categorize issues at three levels:
 | Heading hierarchy matches between translations | Error |
 | Section identifiers match between translations | Error |
 | Definition IDs match between translations | Error |
-| Missing `{{lang:}}` blocks within bilingual sections | Warning |
-| Translation status declared as `draft` | Info |
 
 ### 14.6 Validation Output
 
 Validators MUST produce structured output indicating file, line number, identifier (if applicable), issue level, and human-readable message. Validators SHOULD support output in plain text and JSON formats for integration with tooling.
 
----
-
-## 15. Conformance Levels
-
-### Level 1 — Core
-
-Minimum conformance for a LegalDown implementation:
-
-- Document structure with heading hierarchy
-- Section identifiers (explicit and auto-generated)
-- Cross-references (`{{ref:}}`) with rendering and validation
-- Basic structure and reference validation
-- Render to at least one output format (PDF or HTML)
-
-### Level 2 — Standard
-
-Recommended for full-featured implementations:
-
-- All Level 1 features
-- YAML frontmatter (all standard fields)
-- Definitions (`{{def:}}` and `{{term:}}`)
-- Full validation including definitions
-- Multiple output formats (PDF and DOCX at minimum)
-- Configurable numbering schemes
-- Style template support
-
-### Level 3 — Full
-
-For comprehensive implementations:
-
-- All Level 2 features
-- File inclusion (`{{include:}}`)
-- Bilingual support (separate files with sync validation)
-- Inline language blocks (`{{lang:}}`)
-- Bilingual rendering (side-by-side, interleaved)
-- Reference format variants
-- Locale-aware section labels
-- JSON validation output
-
----
-
-## 16. Standard Document Templates
-
-LegalDown validators MAY enforce structure against standard document templates. Templates define expected top-level section identifiers for common contract types.
-
-### 16.1 Standard NDA Template
-
-```
-definitions
-confidentiality-obligations
-  protection
-  exclusions
-term
-return-of-materials
-miscellaneous
-  governing-law
-  entire-agreement
-  amendment
-```
-
-### 16.2 Template Validation
-
-When `template` is specified in frontmatter, validators:
-
-- Check all required template sections exist in the document
-- Warn on sections present in document but not in template
-- Suggest appropriate template if none specified but `document_type` is set
-
-Template conformance does not prevent additional sections — it only validates that standard sections are present.
-
----
-
-## 17. Complete Example
+## 15. Complete Example
 
 ```markdown
 ---
@@ -1123,5 +958,3 @@ The following features are under consideration for future specification versions
 **Specification:** LegalDown v0.1 DRAFT
 **Date:** 2026-04-08
 **Status:** Draft for Comment
-**License:** Creative Commons CC0 1.0 Universal (Public Domain)
-**Repository:** github.com/legaldown/spec
