@@ -63,7 +63,6 @@ Below is a short excerpt from a mutual NDA written in LegalDown:
 ```markdown
 ---
 title: Mutual Non-Disclosure Agreement
-document_type: nda
 sides:
   - name: Disclosing Party
     legal_entity:

@@ -84,7 +84,6 @@ Documents SHOULD include YAML frontmatter as the first element, delimited by tri
 ---
 title: Master Service Agreement
 subtitle: Between Acme Corporation and Beta Industries Inc.
-document_type: service_agreement
 version: 1.0
 effective_date: 2026-02-01
 sides:
@@ -902,7 +901,6 @@ Validators MUST produce structured output indicating file, line number, identifi
 ```markdown
 ---
 title: Mutual Non-Disclosure Agreement
-document_type: nda
 effective_date: 2026-02-01
 sides:
   - name: Disclosing Party
