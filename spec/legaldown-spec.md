@@ -161,7 +161,8 @@ sides:
 
 - `sides` is an array of side objects
 - Each side object MUST contain a `name` field identifying the side (e.g., "Buyers", "Sellers")
-- Each side object MUST contain at least one party under a type key (`legal_entity` and/or `natural_person`)
+- Each side object MUST contain at least one party object in total across the `legal_entity` and/or `natural_person` arrays
+- If a side object includes `legal_entity` and/or `natural_person`, each present type key MUST map to a non-empty array of party objects
 - A side MAY contain multiple parties of the same or different types (e.g., two legal entities and one natural person acting jointly on the same side)
 
 ### 3.4 Party Structure
