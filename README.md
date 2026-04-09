@@ -145,8 +145,9 @@ definition, and formats it consistently throughout the document.
 
 **Metadata lives in frontmatter.** Party names, effective dates, and
 document type are declared in a YAML block at the top of the file.
-Parties are organized under sides, each with a defined party type.
-Structured data stays structured — not buried in paragraph text.
+Parties are organized under named sides, with parties grouped by type
+(`legal_entity` / `natural_person`). Structured data stays structured —
+not buried in paragraph text.
 
 **Numbering is never in the source.** This is worth repeating. Section
 numbers, list enumeration (a), (b), (i), (ii), and cross-reference text
