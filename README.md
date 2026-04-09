@@ -65,14 +65,26 @@ Below is a short excerpt from a mutual NDA written in LegalDown:
 title: Mutual Non-Disclosure Agreement
 document_type: nda
 sides:
-  - parties:
+  - name: Disclosing Party
+    parties:
       - name: Acme Corporation
         short_name: Provider
         party_type: legal_entity
-  - parties:
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: Receiving Party
+    parties:
       - name: Beta Industries Inc.
         short_name: Client
         party_type: legal_entity
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
 effective_date: 2026-02-01
 governing_law: Delaware
 language: en

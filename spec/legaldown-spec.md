@@ -88,22 +88,34 @@ document_type: service_agreement
 version: 1.0
 effective_date: 2026-02-01
 sides:
-  - parties:
+  - name: Providers
+    parties:
       - name: Acme Corporation
         short_name: Provider
         party_type: legal_entity
+        identification_number: DE-12345678
         address: 123 Main Street, Dover, DE 19901
         representatives:
           - name: John Smith
             title: Chief Executive Officer
-  - parties:
+  - name: Clients
+    parties:
       - name: Beta Industries Inc.
-        short_name: Client
+        short_name: Client 1
         party_type: legal_entity
+        identification_number: TX-87654321
         address: 456 Oak Avenue, Austin, TX 78701
         representatives:
           - name: Jane Doe
             title: General Counsel
+      - name: Gamma Solutions Ltd.
+        short_name: Client 2
+        party_type: legal_entity
+        identification_number: CA-11223344
+        address: 789 Pine Road, San Jose, CA 95101
+        representatives:
+          - name: Bob Johnson
+            title: Managing Director
 governing_law: Delaware
 language: en
 tags:
@@ -130,67 +142,121 @@ tags:
 
 ### 3.3 Sides and Parties
 
-Parties to a contract are organized under **sides**. Each side is an unnamed grouping that contains one or more parties. Sides represent the opposing or distinct groups in a contractual relationship (e.g., buyer vs. seller, licensor vs. licensee).
+Parties to a contract are organized under **sides**. Each side is a named grouping that contains one or more parties. Sides represent the opposing or distinct groups in a contractual relationship (e.g., "Buyers" vs. "Sellers", "Licensors" vs. "Licensees").
 
 ```yaml
 sides:
-  - parties:
+  - name: Sellers
+    parties:
       - name: ...
-  - parties:
-      - name: ...
+  - name: Buyers
+    parties:
+      - name: Buyer 1 Ltd.
+        ...
+      - name: Buyer 2 Ltd.
+        ...
 ```
 
 **Side rules:**
 
 - `sides` is an array of side objects
+- Each side object MUST contain a `name` field identifying the side (e.g., "Buyers", "Sellers")
 - Each side object MUST contain a `parties` array with at least one party
-- Sides have no `name` — they are identified only by their position in the array
+- A side MAY contain multiple parties (e.g., two buyers acting jointly on the same side)
 
 ### 3.4 Party Structure
 
 Each party object describes an individual or organization that is a party to the contract.
 
-**Party fields:**
+**Common party fields:**
 
 | Field | Status | Description |
 |---|---|---|
 | `name` | REQUIRED | Full legal name of the party |
 | `short_name` | OPTIONAL | Short name used in document text |
 | `party_type` | REQUIRED | Either `natural_person` or `legal_entity` |
-| `address` | CONDITIONAL | Party address (REQUIRED for `natural_person`) |
-| `date_of_birth` | CONDITIONAL | Date of birth in ISO 8601 format (REQUIRED for `natural_person`) |
-| `representatives` | OPTIONAL | Array of representative objects (see Section 3.5) |
 
-Additional custom fields MAY be included on any party object. Implementations MUST ignore unknown party fields rather than failing. This allows organizations to include jurisdiction-specific information, registration numbers, tax identifiers, or any other relevant party metadata.
+Additional custom fields MAY be included on any party object. Implementations MUST ignore unknown party fields rather than failing. This allows organizations to include jurisdiction-specific information, tax identifiers, or any other relevant party metadata.
 
-**Example with custom fields:**
+#### 3.4.1 Natural Person
+
+When `party_type` is `natural_person`, the party represents an individual.
+
+**Required fields for `natural_person`:**
+
+| Field | Status | Description |
+|---|---|---|
+| `name` | REQUIRED | Full legal name |
+| `date_of_birth` | REQUIRED | Date of birth in ISO 8601 format |
+| `address` | REQUIRED | Residential address |
+
+**Example:**
+
+```yaml
+- name: Jan Novák
+  short_name: Buyer
+  party_type: natural_person
+  date_of_birth: 1985-03-15
+  address: 456 Oak Avenue, Austin, TX 78701
+  nationality: Czech  # custom field
+```
+
+#### 3.4.2 Legal Entity
+
+When `party_type` is `legal_entity`, the party represents a corporation, LLC, partnership, or other legal organization.
+
+**Required fields for `legal_entity`:**
+
+| Field | Status | Description |
+|---|---|---|
+| `name` | REQUIRED | Full legal name of the entity |
+| `identification_number` | REQUIRED | Entity identification or registration number |
+| `address` | REQUIRED | Registered address of the entity |
+| `representatives` | REQUIRED | Array of at least one representative object (see Section 3.5) |
+
+**Example:**
+
+```yaml
+- name: Acme Corporation
+  short_name: Provider
+  party_type: legal_entity
+  identification_number: DE-12345678
+  address: 123 Main Street, Dover, DE 19901
+  tax_id: 12-3456789  # custom field
+  representatives:
+    - name: John Smith
+      title: Chief Executive Officer
+```
+
+### 3.4.3 Full Example with Custom Fields
 
 ```yaml
 sides:
-  - parties:
+  - name: Sellers
+    parties:
       - name: Acme Corporation
-        short_name: Provider
+        short_name: Seller
         party_type: legal_entity
+        identification_number: DE-12345678
         address: 123 Main Street, Dover, DE 19901
-        registration_number: DE-12345678
         tax_id: 12-3456789
         representatives:
           - name: John Smith
             title: Chief Executive Officer
-  - parties:
+  - name: Buyers
+    parties:
       - name: Jan Novák
-        short_name: Client
+        short_name: Buyer 1
         party_type: natural_person
         date_of_birth: 1985-03-15
         address: 456 Oak Avenue, Austin, TX 78701
         nationality: Czech
+      - name: Marie Nováková
+        short_name: Buyer 2
+        party_type: natural_person
+        date_of_birth: 1990-07-22
+        address: 456 Oak Avenue, Austin, TX 78701
 ```
-
-**Party type rules:**
-
-- `party_type` MUST be either `natural_person` or `legal_entity`
-- When `party_type` is `natural_person`, the fields `name`, `date_of_birth`, and `address` are REQUIRED
-- When `party_type` is `legal_entity`, only `name` is REQUIRED
 
 ### 3.5 Representatives
 
@@ -838,18 +904,22 @@ title: Mutual Non-Disclosure Agreement
 document_type: nda
 effective_date: 2026-02-01
 sides:
-  - parties:
+  - name: Disclosing Party
+    parties:
       - name: Acme Corporation
         short_name: Provider
         party_type: legal_entity
+        identification_number: DE-12345678
         address: 123 Main Street, Dover, DE 19901
         representatives:
           - name: John Smith
             title: Chief Executive Officer
-  - parties:
+  - name: Receiving Party
+    parties:
       - name: Beta Industries Inc.
         short_name: Client
         party_type: legal_entity
+        identification_number: TX-87654321
         address: 456 Oak Avenue, Austin, TX 78701
         representatives:
           - name: Jane Doe
