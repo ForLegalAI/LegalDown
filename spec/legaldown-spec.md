@@ -698,6 +698,92 @@ The monthly fee is {{money: 500, currency=EUR}}.
 - Renderers MUST format the amount according to the document's locale or render template settings (e.g., "$10,000.00", "10 000,00 Kč", "€500.00")
 - The raw numeric value and currency code MUST be preserved in structured output formats for machine processing
 
+### 10.4 Party Directive
+
+The `{{party:}}` directive represents a reference to a contract party inline in document text. It identifies a party by their role (such as a representative function) and provides an optional display label for rendering.
+
+**Syntax:**
+
+```markdown
+{{party: role}}
+{{party: role, label=text}}
+```
+
+**Examples:**
+
+```markdown
+Za společnost jedná {{party: jednatel, label=Jednatelem}} na základě plné moci.
+
+The obligations of {{party: director}} under this Agreement shall include...
+
+{{party: ceo, label=Chief Executive Officer}} shall have the authority to...
+```
+
+**Rules:**
+
+- The `role` value MUST be a non-empty string identifying the party's role or function (e.g., `jednatel`, `director`, `ceo`)
+- The `role` value MUST match the identifier format: lowercase ASCII letters, digits, and hyphens (`[a-z0-9]+(-[a-z0-9]+)*`)
+- The optional `label` parameter specifies a display text for rendering; if omitted, the renderer SHOULD use the `role` value as the display text
+- Renderers MUST format the party reference according to the document's locale or render template settings
+- The raw `role` value and `label` (if present) MUST be preserved in structured output formats for machine processing
+
+### 10.5 Duration Directive
+
+The `{{duration:}}` directive represents a time duration inline in document text. It specifies a numeric value and a time unit.
+
+**Syntax:**
+
+```markdown
+{{duration: value, unit=UNIT}}
+```
+
+Where `UNIT` is one of: `S` (seconds), `M` (minutes), `H` (hours), `D` (days), `MO` (months), `Y` (years).
+
+**Examples:**
+
+```markdown
+This Agreement shall remain in effect for {{duration: 12, unit=MO}}.
+
+The notice period shall be {{duration: 30, unit=D}}.
+
+The service level response time shall not exceed {{duration: 4, unit=H}}.
+```
+
+**Rules:**
+
+- The `value` MUST be a positive numeric value (integer or decimal, using period `.` as the decimal separator); zero and negative values are not allowed
+- The `unit` parameter is REQUIRED and MUST be one of: `S`, `M`, `H`, `D`, `MO`, `Y`
+- Renderers MUST format the duration according to the document's locale or render template settings (e.g., "12 months", "30 days", "4 hours", "12 měsíců")
+- The raw numeric value and unit code MUST be preserved in structured output formats for machine processing
+
+### 10.6 Percentage Directive
+
+The `{{pct:}}` directive represents a percentage value inline in document text.
+
+**Syntax:**
+
+```markdown
+{{pct: value}}
+```
+
+**Examples:**
+
+```markdown
+The interest rate shall be {{pct: 0.5}} per annum.
+
+Provider shall receive a commission of {{pct: 15}} on all sales.
+
+A late payment penalty of {{pct: 0.05}} per day shall apply.
+```
+
+**Rules:**
+
+- The `value` MUST be a numeric value (integer or decimal, using period `.` as the decimal separator)
+- The `value` represents the percentage directly (e.g., `0.5` means 0.5%, `15` means 15%)
+- The `value` MUST NOT include a percent sign (`%`) or other symbols
+- Renderers MUST format the percentage according to the document's locale or render template settings (e.g., "0.5 %", "15%", "0,5 %")
+- The raw numeric value MUST be preserved in structured output formats for machine processing
+
 ---
 
 ## 11. Directives Summary
@@ -716,6 +802,10 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{date: YYYY-MM-DD}}` | OPTIONAL | Inline date value |
 | `{{money: amount}}` | OPTIONAL | Inline monetary amount |
 | `{{money: amount, currency=CODE}}` | OPTIONAL | Inline monetary amount with currency |
+| `{{party: role}}` | OPTIONAL | Inline party reference by role |
+| `{{party: role, label=text}}` | OPTIONAL | Inline party reference with display text |
+| `{{duration: value, unit=UNIT}}` | OPTIONAL | Inline time duration with unit |
+| `{{pct: value}}` | OPTIONAL | Inline percentage value |
 | `{{include: path}}` | OPTIONAL | Include external file |
 
 ### 11.2 Directive Rules
@@ -849,6 +939,30 @@ When rendering `{{money: amount}}` or `{{money: amount, currency=CODE}}`:
 4. Replace the directive with the formatted monetary value
 5. If the amount is invalid, insert `[INVALID AMOUNT: amount]` and emit a validation error
 6. If the currency code is unrecognized, insert `[UNKNOWN CURRENCY: CODE]` and emit a validation warning
+
+When rendering `{{party: role}}` or `{{party: role, label=text}}`:
+
+1. If a `label` parameter is provided, use it as the display text
+2. If no `label` is provided, use the `role` value as the display text
+3. Format the display text according to the active locale or render template
+4. Replace the directive with the formatted party reference text
+5. If the `role` value is empty or malformed, insert `[INVALID PARTY: role]` and emit a validation error
+
+When rendering `{{duration: value, unit=UNIT}}`:
+
+1. Validate the value is a positive numeric value
+2. Validate the `unit` parameter is one of: `S`, `M`, `H`, `D`, `MO`, `Y`
+3. Format the duration according to the active locale or render template (e.g., "12 months", "30 days", "12 měsíců")
+4. Replace the directive with the formatted duration text
+5. If the value is invalid, insert `[INVALID DURATION: value]` and emit a validation error
+6. If the unit is missing or unrecognized, insert `[INVALID DURATION UNIT: UNIT]` and emit a validation error
+
+When rendering `{{pct: value}}`:
+
+1. Validate the value is a valid numeric value
+2. Format the percentage according to the active locale or render template (e.g., "0.5 %", "15%")
+3. Replace the directive with the formatted percentage text
+4. If the value is invalid, insert `[INVALID PERCENTAGE: value]` and emit a validation error
 
 ### 13.6 Output Formats
 
@@ -993,6 +1107,10 @@ Validators MUST categorize issues at three levels:
 | `{{money:}}` amount is a valid numeric value | Error |
 | `{{money:}}` `currency` parameter is a recognized ISO 4217 code | Warning |
 | `{{money:}}` used without `currency` parameter and no default configured | Warning |
+| `{{party:}}` `role` value is non-empty and matches identifier format | Error |
+| `{{duration:}}` value is a positive numeric value | Error |
+| `{{duration:}}` `unit` parameter is one of `S`, `M`, `H`, `D`, `MO`, `Y` | Error |
+| `{{pct:}}` value is a valid numeric value | Error |
 
 ### 15.6 Bilingual Validation (when translations metadata present)
 
