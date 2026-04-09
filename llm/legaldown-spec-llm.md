@@ -102,11 +102,9 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 
 ```markdown
 {{ref: identifier}}
-{{ref: identifier, format=with-title}}    ← optional format variant
-{{ref: identifier, format=title-only}}
 ```
 
-Resolves to the rendered section number (e.g., "3.2"). Links to the target section.
+Resolves to the section number (e.g., "3.2"). Links to the target section.
 Broken references render as `[BROKEN REF: identifier]`.
 
 ### Definitions
