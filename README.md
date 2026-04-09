@@ -66,20 +66,18 @@ title: Mutual Non-Disclosure Agreement
 document_type: nda
 sides:
   - name: Disclosing Party
-    parties:
+    legal_entity:
       - name: Acme Corporation
         short_name: Provider
-        party_type: legal_entity
         identification_number: DE-12345678
         address: 123 Main Street, Dover, DE 19901
         representatives:
           - name: John Smith
             title: Chief Executive Officer
   - name: Receiving Party
-    parties:
+    legal_entity:
       - name: Beta Industries Inc.
         short_name: Client
-        party_type: legal_entity
         identification_number: TX-87654321
         address: 456 Oak Avenue, Austin, TX 78701
         representatives:
