@@ -193,12 +193,14 @@ When a party is listed under the `natural_person` key, it represents an individu
 **Example:**
 
 ```yaml
-natural_person:
-  - name: Jan Novák
-    short_name: Buyer
-    date_of_birth: 1985-03-15
-    address: 456 Oak Avenue, Austin, TX 78701
-    nationality: Czech  # custom field
+sides:
+  - name: Buyer
+    natural_person:
+      - name: Jan Novák
+        short_name: Buyer
+        date_of_birth: 1985-03-15
+        address: 456 Oak Avenue, Austin, TX 78701
+        nationality: Czech  # custom field
 ```
 
 #### 3.4.2 Legal Entity
