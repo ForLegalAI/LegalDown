@@ -480,7 +480,10 @@ Defined terms are referenced using the `{{term:}}` directive:
 
 ```markdown
 {{term: definition-id}}
+{{term: definition-id, label=Custom Display Text}}
 ```
+
+The optional `label` parameter specifies text to display in place of the canonical defined term name. This is useful when the defined term must appear in a grammatically inflected form (e.g., declension, conjugation, or other morphological variation required by the document's language).
 
 **Examples:**
 
@@ -488,17 +491,29 @@ Defined terms are referenced using the `{{term:}}` directive:
 Each party shall protect the {{term: confidential-info}} from unauthorized disclosure.
 
 Provider shall deliver the {{term: services}} in accordance with the agreed specifications.
+
+Jednateli náleží za {{term: services, label=Výkon funkcí}}&nbsp;odměna ve výši 10.000,- Kč měsíčně.
 ```
+
+In the last example, the defined term is "Services" but the label `Výkon funkcí` is displayed in the rendered output, allowing the text to use the grammatically correct form.
+
+**Rules:**
+
+- The `label` parameter is OPTIONAL
+- When `label` is present, renderers MUST display the label text instead of the canonical term name
+- The label value MUST NOT contain commas or closing braces (`}}`)
+- The `label` value is plain text — it MUST NOT contain Markdown formatting or nested directives
 
 **Rendering:**
 
 Renderers MUST:
 
 1. Locate the definition by identifier
-2. Extract the defined term text from within `**"..."**`
-3. Replace `{{term: id}}` with the defined term in properly capitalized form
-4. Create a hyperlink to the definition in formats that support hyperlinking
-5. If the definition is not found, insert `[UNDEFINED: id]` and emit a validation error
+2. If a `label` parameter is provided, use the label text as the display text
+3. Otherwise, extract the defined term text from within `**"..."**`
+4. Replace `{{term: id}}` (or `{{term: id, label=...}}`) with the display text
+5. Create a hyperlink to the definition in formats that support hyperlinking
+6. If the definition is not found, insert `[UNDEFINED: id]` and emit a validation error
 
 ### 7.4 Optional Automatic Term Recognition
 
@@ -634,6 +649,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{ref: id, format=variant}}` | OPTIONAL | Cross-reference with format variant |
 | `{{def: id}}` | REQUIRED | Declare a definition |
 | `{{term: id}}` | REQUIRED | Reference a defined term |
+| `{{term: id, label=text}}` | OPTIONAL | Reference a defined term with custom display text |
 | `{{include: path}}` | OPTIONAL | Include external file |
 
 ### 10.2 Directive Rules
@@ -742,12 +758,13 @@ When rendering `{{ref: id}}`:
 
 ### 12.4 Definition Resolution
 
-When rendering `{{term: id}}`:
+When rendering `{{term: id}}` or `{{term: id, label=text}}`:
 
 1. Locate definition by identifier
-2. Extract defined term from `**"..."**` formatting
-3. Replace directive with defined term in proper case with hyperlink
-4. If definition not found, insert `[UNDEFINED: id]` and emit validation error
+2. If a `label` parameter is provided, use the label text as the display text
+3. Otherwise, extract defined term from `**"..."**` formatting
+4. Replace directive with the display text and hyperlink
+5. If definition not found, insert `[UNDEFINED: id]` and emit validation error
 
 ### 12.5 Output Formats
 

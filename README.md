@@ -114,7 +114,7 @@ information that was publicly known at the time of disclosure.
 This source renders automatically as a professionally formatted document with:
 
 - 🔢 Section numbers generated (1., 1.1, 2., 2.1, 2.2...) according to your chosen style
-- 🔗 "Confidential Information" linked to its definition wherever `{{term:}}` appears
+- 🔗 "Confidential Information" linked to its definition wherever `{{term:}}` appears (with optional custom display text via `label`)
 - 📌 "Section 2.1" resolved and hyperlinked wherever `{{ref:}}` appears
 - 🎨 Professional typography and layout applied from a style template
 
@@ -139,9 +139,12 @@ text. The renderer looks up the section, finds its number, and outputs
 just works.
 
 **Definitions are tracked.** Declare a defined term with `{{def: id}}`
-and reference it anywhere with `{{term: id}}`. The renderer validates
-that every referenced term is actually defined, links it back to its
-definition, and formats it consistently throughout the document.
+and reference it anywhere with `{{term: id}}`. An optional `label`
+parameter — `{{term: id, label=Custom Text}}` — lets you display a
+different form of the term (e.g., a grammatically inflected form).
+The renderer validates that every referenced term is actually defined,
+links it back to its definition, and formats it consistently throughout
+the document.
 
 **Metadata lives in frontmatter.** Party names, effective dates, and
 document type are declared in a YAML block at the top of the file.
@@ -168,6 +171,7 @@ contains none of them.
 **"Defined Term"** means...
 
 {{term: term-id}}                        ← Use a defined term
+{{term: term-id, label=Alt Text}}        ← Use a defined term with custom display text
 {{ref: identifier}}                      ← Cross-reference a section
 {{include: schedules/pricing.lgd}}       ← Include an external file
 {{lang: fr}} ... {{/lang}}              ← Bilingual language block
