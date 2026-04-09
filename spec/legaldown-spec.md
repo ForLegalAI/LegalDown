@@ -66,11 +66,12 @@ LegalDown documents:
 
 ### 2.2 Document Sections
 
-A LegalDown document consists of three parts in order:
+A LegalDown document consists of two parts in order:
 
 1. **Frontmatter** (OPTIONAL) — YAML metadata block
 2. **Body** (REQUIRED) — Document content in LegalDown markup
-3. **Signature Block** (OPTIONAL) — Structured signature section
+
+> **Note:** Signature blocks are NOT defined in LegalDown markup. Renderers SHOULD generate signature blocks automatically from the contract's structured data (e.g., party information in frontmatter).
 
 ---
 
@@ -577,7 +578,7 @@ Block quotes are used for recitals, WHEREAS clauses, preambles, and quoted text:
 
 ### 8.5 Horizontal Rules
 
-Horizontal rules (`---`) MAY be used to visually separate major document divisions such as before signature blocks or between the main agreement and schedules.
+Horizontal rules (`---`) MAY be used to visually separate major document divisions such as between the main agreement and schedules.
 
 ### 8.6 Comments
 
@@ -1098,7 +1099,6 @@ The following features are under consideration for future specification versions
 - **Variable substitution** — Insert party names and metadata values directly into text using `{{var: parties.0.name}}` syntax
 - **Conditional clauses** — Include or exclude sections based on metadata values
 - **Mathematical expressions** — Payment calculations and financial formulas
-- **Signature block standard** — Structured syntax for signature pages
 - **Amendment markup** — Standard syntax for amendments referencing original documents
 - **Clause library** — Standard identifiers for common clause types across documents
 - **Schema validation** — JSON Schema for frontmatter validation
