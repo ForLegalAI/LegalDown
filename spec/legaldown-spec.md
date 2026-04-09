@@ -49,7 +49,7 @@ Throughout this specification:
 - **SHOULD** / **SHOULD NOT** — recommended but not mandatory
 - **MAY** — optional feature
 
-Implementations claiming LegalDown conformance MUST support all MUST requirements at their claimed conformance level (see Section 15).
+Implementations claiming LegalDown conformance MUST support all MUST requirements at their claimed conformance level (see Section 16).
 
 ---
 
@@ -133,7 +133,7 @@ tags:
 | `sides` | RECOMMENDED | Array of sides, each containing parties keyed by type (see Section 3.3) |
 | `governing_law` | OPTIONAL | Applicable law |
 | `language` | RECOMMENDED | Primary language (ISO 639-1) |
-| `translations` | OPTIONAL | Map of translation files (see Section 13) |
+| `translations` | OPTIONAL | Map of translation files (see Section 14) |
 | `authoritative` | OPTIONAL | Authoritative language for disputes (ISO 639-1) |
 | `tags` | OPTIONAL | Classification tags array |
 
@@ -637,11 +637,74 @@ Standard Markdown tables do not support merged cells or complex formatting. For 
 
 ---
 
-## 10. Directives Summary
+## 10. Field Specs
+
+### 10.1 Purpose
+
+Field specs are typed inline directives that represent structured values — such as dates and monetary amounts — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
+
+### 10.2 Date Directive
+
+The `{{date:}}` directive represents a calendar date inline in document text.
+
+**Syntax:**
+
+```markdown
+{{date: YYYY-MM-DD}}
+```
+
+**Examples:**
+
+```markdown
+This Agreement shall terminate on {{date: 2026-06-01}}.
+
+Provider shall deliver the final report no later than {{date: 2027-03-31}}.
+```
+
+**Rules:**
+
+- The date value MUST be in ISO 8601 format (`YYYY-MM-DD`)
+- The date MUST be a valid calendar date (e.g., `2026-02-30` is invalid)
+- Renderers MUST format the date according to the document's locale or render template settings (e.g., "June 1, 2026" in `en-US`, "1. Juni 2026" in `de-DE`, "1. 6. 2026" in `cs-CZ`)
+- The raw ISO 8601 value MUST be preserved in structured output formats for machine processing
+
+### 10.3 Money Directive
+
+The `{{money:}}` directive represents a monetary amount inline in document text.
+
+**Syntax:**
+
+```markdown
+{{money: amount}}
+{{money: amount, currency=CODE}}
+```
+
+**Examples:**
+
+```markdown
+Provider shall pay a penalty of {{money: 10000, currency=CZK}} for each day of delay.
+
+The total contract value shall not exceed {{money: 1000000, currency=USD}}.
+
+The monthly fee is {{money: 500, currency=EUR}}.
+```
+
+**Rules:**
+
+- The amount MUST be a numeric value (integer or decimal, using period `.` as the decimal separator)
+- The amount MUST NOT include grouping separators, currency symbols, or whitespace
+- The optional `currency` parameter specifies the currency using an ISO 4217 three-letter code (e.g., `USD`, `EUR`, `CZK`, `GBP`)
+- If `currency` is omitted, the renderer SHOULD use a default currency from the document metadata or render template, or emit a validation warning
+- Renderers MUST format the amount according to the document's locale or render template settings (e.g., "$10,000.00", "10 000,00 Kč", "€500.00")
+- The raw numeric value and currency code MUST be preserved in structured output formats for machine processing
+
+---
+
+## 11. Directives Summary
 
 All LegalDown-specific extensions use double-brace directive syntax `{{directive: argument}}` to clearly distinguish them from standard Markdown and avoid ambiguity.
 
-### 10.1 Core Directives
+### 11.1 Core Directives
 
 | Directive | Status | Purpose |
 |---|---|---|
@@ -650,9 +713,12 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{def: id}}` | REQUIRED | Declare a definition |
 | `{{term: id}}` | REQUIRED | Reference a defined term |
 | `{{term: id, label=text}}` | OPTIONAL | Reference a defined term with custom display text |
+| `{{date: YYYY-MM-DD}}` | OPTIONAL | Inline date value |
+| `{{money: amount}}` | OPTIONAL | Inline monetary amount |
+| `{{money: amount, currency=CODE}}` | OPTIONAL | Inline monetary amount with currency |
 | `{{include: path}}` | OPTIONAL | Include external file |
 
-### 10.2 Directive Rules
+### 11.2 Directive Rules
 
 - Directives are case-sensitive — always lowercase
 - Directives MUST NOT span multiple lines
@@ -661,9 +727,9 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 
 ---
 
-## 11. File Inclusion
+## 12. File Inclusion
 
-### 11.1 Syntax
+### 12.1 Syntax
 
 Implementations MAY support including external LegalDown files:
 
@@ -677,7 +743,7 @@ Implementations MAY support including external LegalDown files:
 {{include: schedules/pricing.lgd}}
 ```
 
-### 11.2 Rules
+### 12.2 Rules
 
 If file inclusion is supported:
 
@@ -690,9 +756,9 @@ If file inclusion is supported:
 
 ---
 
-## 12. Rendering
+## 13. Rendering
 
-### 12.1 Section Numbering
+### 13.1 Section Numbering
 
 Because LegalDown source contains no hardcoded numbers, renderers MUST generate all section numbering at render time. Numbering MUST follow the heading hierarchy (`##`, `###`, `####`, etc.).
 
@@ -733,7 +799,7 @@ First Provision
 
 Numbering scheme MUST be configurable per render job and SHOULD be specifiable in document metadata or renderer configuration file. Default scheme is decimal.
 
-### 12.2 List Enumeration
+### 13.2 List Enumeration
 
 Renderers SHOULD convert Markdown lists to legal enumeration based on nesting level and active template:
 
@@ -745,7 +811,7 @@ Renderers SHOULD convert Markdown lists to legal enumeration based on nesting le
 
 This behavior MUST be configurable and MAY be disabled to preserve plain bullet points.
 
-### 12.3 Reference Resolution
+### 13.3 Reference Resolution
 
 When rendering `{{ref: id}}`:
 
@@ -756,7 +822,7 @@ When rendering `{{ref: id}}`:
 5. Create hyperlink to target section in formats supporting links
 6. If target not found, insert `[BROKEN REF: id]` and emit validation error
 
-### 12.4 Definition Resolution
+### 13.4 Definition Resolution
 
 When rendering `{{term: id}}` or `{{term: id, label=text}}`:
 
@@ -766,7 +832,25 @@ When rendering `{{term: id}}` or `{{term: id, label=text}}`:
 4. Replace directive with the display text and hyperlink
 5. If definition not found, insert `[UNDEFINED: id]` and emit validation error
 
-### 12.5 Output Formats
+### 13.5 Field Spec Resolution
+
+When rendering `{{date: value}}`:
+
+1. Validate the date value is a valid ISO 8601 date
+2. Format the date according to the active locale or render template
+3. Replace the directive with the formatted date text
+4. If the date is invalid, insert `[INVALID DATE: value]` and emit a validation error
+
+When rendering `{{money: amount}}` or `{{money: amount, currency=CODE}}`:
+
+1. Validate the amount is a valid numeric value
+2. If a `currency` parameter is provided, validate it is a recognized ISO 4217 code
+3. Format the amount according to the active locale or render template, including the currency symbol or code
+4. Replace the directive with the formatted monetary value
+5. If the amount is invalid, insert `[INVALID AMOUNT: amount]` and emit a validation error
+6. If the currency code is unrecognized, insert `[UNKNOWN CURRENCY: CODE]` and emit a validation warning
+
+### 13.6 Output Formats
 
 Implementations SHOULD support:
 
@@ -777,7 +861,7 @@ Implementations SHOULD support:
 | HTML | RECOMMENDED | Web viewing with interactive hyperlinks |
 | Plain text | OPTIONAL | Stripped output for comparison |
 
-### 12.6 Style Templates
+### 13.7 Style Templates
 
 Renderers SHOULD support external style templates specifying:
 
@@ -793,13 +877,13 @@ Templates SHOULD be defined in a separate configuration file (e.g., YAML or JSON
 
 ---
 
-## 13. Bilingual Documents
+## 14. Bilingual Documents
 
-### 13.1 Overview
+### 14.1 Overview
 
 LegalDown supports bilingual and multilingual contracts via **separate files** — one document per language, with metadata linking them
 
-### 13.2 Separate File 
+### 14.2 Separate File 
 
 Maintain separate LegalDown documents per language with identical heading structure and section identifiers:
 
@@ -850,7 +934,7 @@ authoritative: en
 - Validators MUST check structural consistency between linked files
 - Cross-references resolve to section numbers (same in both versions)
 
-### 13.3 Bilingual Validation
+### 14.3 Bilingual Validation
 
 The `legaldown validate --sync` command MUST check:
 
@@ -862,9 +946,9 @@ The `legaldown validate --sync` command MUST check:
 
 ---
 
-## 14. Validation
+## 15. Validation
 
-### 14.1 Validation Levels
+### 15.1 Validation Levels
 
 Validators MUST categorize issues at three levels:
 
@@ -872,7 +956,7 @@ Validators MUST categorize issues at three levels:
 - **Warning** — Potential issue that should be reviewed (SHOULD be reported)
 - **Info** — Suggestion for improvement (MAY be reported)
 
-### 14.2 Structure Validation
+### 15.2 Structure Validation
 
 | Check | Level |
 |---|---|
@@ -883,7 +967,7 @@ Validators MUST categorize issues at three levels:
 | Headings do not contain hardcoded numbering | Warning |
 | Directives are well-formed | Error |
 
-### 14.3 Reference Validation
+### 15.3 Reference Validation
 
 | Check | Level |
 |---|---|
@@ -893,7 +977,7 @@ Validators MUST categorize issues at three levels:
 | Definitions used before declaration | Warning |
 | Sections with no references (possible orphaned content) | Info |
 
-### 14.4 Definition Validation
+### 15.4 Definition Validation
 
 | Check | Level |
 |---|---|
@@ -901,7 +985,16 @@ Validators MUST categorize issues at three levels:
 | Defined terms follow `**"Term"**` formatting | Warning |
 | Declared definitions never referenced with `{{term:}}` | Warning |
 
-### 14.5 Bilingual Validation (when translations metadata present)
+### 15.5 Field Spec Validation
+
+| Check | Level |
+|---|---|
+| `{{date:}}` value is valid ISO 8601 date | Error |
+| `{{money:}}` amount is a valid numeric value | Error |
+| `{{money:}}` `currency` parameter is a recognized ISO 4217 code | Warning |
+| `{{money:}}` used without `currency` parameter and no default configured | Warning |
+
+### 15.6 Bilingual Validation (when translations metadata present)
 
 | Check | Level |
 |---|---|
@@ -910,11 +1003,11 @@ Validators MUST categorize issues at three levels:
 | Section identifiers match between translations | Error |
 | Definition IDs match between translations | Error |
 
-### 14.6 Validation Output
+### 15.7 Validation Output
 
 Validators MUST produce structured output indicating file, line number, identifier (if applicable), issue level, and human-readable message. Validators SHOULD support output in plain text and JSON formats for integration with tooling.
 
-## 15. Complete Example
+## 16. Complete Example
 
 ```markdown
 ---
@@ -1014,10 +1107,17 @@ information that:
 
 ## Term and Termination {#term}
 
-This Agreement commences on the {{term: effective-date}} and continues for
-two (2) years unless earlier terminated by either party upon thirty (30)
-days written notice to the other party. Obligations under
+This Agreement commences on the {{term: effective-date}} and continues
+until {{date: 2028-02-01}} unless earlier terminated by either party upon
+thirty (30) days written notice to the other party. Obligations under
 {{ref: confidentiality}} survive termination for a period of three (3) years.
+
+## Remedies {#remedies}
+
+In the event of a breach of this Agreement, the breaching party shall pay
+the non-breaching party liquidated damages in the amount of
+{{money: 50000, currency=USD}} per breach. The total liability under this
+section shall not exceed {{money: 500000, currency=USD}}.
 
 ## Return of Materials {#return}
 
@@ -1101,15 +1201,21 @@ The obligations in Section 2.1 do not apply to information that:
 
 3. TERM AND TERMINATION
 
-This Agreement commences on the Effective Date and continues for
-two (2) years... Obligations under Section 2 survive...
+This Agreement commences on the Effective Date and continues
+until February 1, 2028... Obligations under Section 2 survive...
+
+4. REMEDIES
+
+In the event of a breach of this Agreement, the breaching party shall pay
+the non-breaching party liquidated damages in the amount of $50,000.00 per
+breach. The total liability under this section shall not exceed $500,000.00.
 
 [etc.]
 ```
 
 ---
 
-## 18. Future Considerations
+## 19. Future Considerations
 
 The following features are under consideration for future specification versions:
 

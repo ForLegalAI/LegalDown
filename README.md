@@ -173,6 +173,8 @@ contains none of them.
 {{term: term-id}}                        ← Use a defined term
 {{term: term-id, label=Alt Text}}        ← Use a defined term with custom display text
 {{ref: identifier}}                      ← Cross-reference a section
+{{date: 2026-06-01}}                     ← Inline date value
+{{money: 10000, currency=CZK}}          ← Inline monetary amount
 {{include: schedules/pricing.lgd}}       ← Include an external file
 {{lang: fr}} ... {{/lang}}              ← Bilingual language block
 ```
