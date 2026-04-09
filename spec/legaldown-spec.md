@@ -83,26 +83,35 @@ Documents SHOULD include YAML frontmatter as the first element, delimited by tri
 ```yaml
 ---
 title: Master Service Agreement
-document_type: service_agreement
+subtitle: Between Acme Corporation and Beta Industries Inc.
 version: 1.0
-date: 2026-01-28
 effective_date: 2026-02-01
-parties:
-  - name: Acme Corporation
-    short_name: Provider
-    entity_type: Delaware Corporation
-    address: 123 Main Street, Dover, DE 19901
-    representative:
-      name: John Smith
-      title: Chief Executive Officer
-  - name: Beta Industries Inc.
-    short_name: Client
-    entity_type: Texas LLC
-    address: 456 Oak Avenue, Austin, TX 78701
-    representative:
-      name: Jane Doe
-      title: General Counsel
-jurisdiction: Delaware
+sides:
+  - name: Providers
+    legal_entity:
+      - name: Acme Corporation
+        short_name: Provider
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: Clients
+    legal_entity:
+      - name: Beta Industries Inc.
+        short_name: Client 1
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
+      - name: Gamma Solutions Ltd.
+        short_name: Client 2
+        identification_number: CA-11223344
+        address: 789 Pine Road, San Jose, CA 95101
+        representatives:
+          - name: Bob Johnson
+            title: Managing Director
 governing_law: Delaware
 language: en
 tags:
@@ -117,20 +126,162 @@ tags:
 | Field | Status | Description |
 |---|---|---|
 | `title` | REQUIRED | Document title |
+| `subtitle` | OPTIONAL | Document subtitle |
 | `version` | OPTIONAL | Document version identifier |
 | `effective_date` | OPTIONAL | Contract effective date (ISO 8601) |
-| `parties` | RECOMMENDED | Array of party information |
+| `sides` | RECOMMENDED | Array of sides, each containing parties keyed by type (see Section 3.3) |
 | `governing_law` | OPTIONAL | Applicable law |
 | `language` | RECOMMENDED | Primary language (ISO 639-1) |
 | `translations` | OPTIONAL | Map of translation files (see Section 13) |
 | `authoritative` | OPTIONAL | Authoritative language for disputes (ISO 639-1) |
 | `tags` | OPTIONAL | Classification tags array |
 
-### 3.3 Party References in Text
+### 3.3 Sides and Parties
+
+Parties to a contract are organized under **sides**. Each side is a named grouping that contains one or more parties. Sides represent the opposing or distinct groups in a contractual relationship (e.g., "Buyers" vs. "Sellers", "Licensors" vs. "Licensees").
+
+Parties within a side are listed under keys that correspond to their type: `legal_entity` or `natural_person`. This makes the party type implicit from the key, rather than requiring a separate `party_type` field on each party.
+
+```yaml
+sides:
+  - name: Sellers
+    legal_entity:
+      - name: ...
+  - name: Buyers
+    legal_entity:
+      - name: Buyer 1 Ltd.
+        ...
+    natural_person:
+      - name: Buyer 2
+        ...
+```
+
+**Side rules:**
+
+- `sides` is an array of side objects
+- Each side object MUST contain a `name` field identifying the side (e.g., "Buyers", "Sellers")
+- Each side object MUST contain at least one party object in total across the `legal_entity` and/or `natural_person` arrays
+- If a side object includes `legal_entity` and/or `natural_person`, each present type key MUST map to a non-empty array of party objects
+- A side MAY contain multiple parties of the same or different types (e.g., two legal entities and one natural person acting jointly on the same side)
+
+### 3.4 Party Structure
+
+Each party object describes an individual or organization that is a party to the contract. The party type is determined by the key under which it is listed (`natural_person` or `legal_entity`), not by a field on the party itself.
+
+**Common party fields:**
+
+| Field | Status | Description |
+|---|---|---|
+| `name` | REQUIRED | Full legal name of the party |
+| `short_name` | OPTIONAL | Short name used in document text |
+
+Additional custom fields MAY be included on any party object. Implementations MUST ignore unknown party fields rather than failing. This allows organizations to include jurisdiction-specific information, tax identifiers, or any other relevant party metadata.
+
+#### 3.4.1 Natural Person
+
+When a party is listed under the `natural_person` key, it represents an individual.
+
+**Required fields for `natural_person`:**
+
+| Field | Status | Description |
+|---|---|---|
+| `name` | REQUIRED | Full legal name |
+| `date_of_birth` | REQUIRED | Date of birth in ISO 8601 format |
+| `address` | REQUIRED | Residential address |
+
+**Example:**
+
+```yaml
+sides:
+  - name: Buyer
+    natural_person:
+      - name: Jan Novák
+        short_name: Buyer
+        date_of_birth: 1985-03-15
+        address: 456 Oak Avenue, Austin, TX 78701
+        nationality: Czech  # custom field
+```
+
+#### 3.4.2 Legal Entity
+
+When a party is listed under the `legal_entity` key, it represents a corporation, LLC, partnership, or other legal organization.
+
+**Required fields for `legal_entity`:**
+
+| Field | Status | Description |
+|---|---|---|
+| `name` | REQUIRED | Full legal name of the entity |
+| `identification_number` | REQUIRED | Entity identification or registration number |
+| `address` | REQUIRED | Registered address of the entity |
+| `representatives` | REQUIRED | Array of at least one representative object (see Section 3.5) |
+
+**Example:**
+
+```yaml
+sides:
+  - name: Providers
+    legal_entity:
+      - name: Acme Corporation
+        short_name: Provider
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        tax_id: 12-3456789  # custom field
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+```
+
+### 3.4.3 Full Example with Custom Fields
+
+```yaml
+sides:
+  - name: Sellers
+    legal_entity:
+      - name: Acme Corporation
+        short_name: Seller
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        tax_id: 12-3456789
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: Buyers
+    natural_person:
+      - name: Jan Novák
+        short_name: Buyer 1
+        date_of_birth: 1985-03-15
+        address: 456 Oak Avenue, Austin, TX 78701
+        nationality: Czech
+      - name: Marie Nováková
+        short_name: Buyer 2
+        date_of_birth: 1990-07-22
+        address: 456 Oak Avenue, Austin, TX 78701
+```
+
+### 3.5 Representatives
+
+Representatives are the individuals authorized to act on behalf of a party. The `representatives` field is an array of representative objects, allowing multiple representatives per party. It is REQUIRED for parties listed under `legal_entity` (with at least one representative) and OPTIONAL for parties listed under `natural_person`.
+
+```yaml
+representatives:
+  - name: John Smith
+    title: Chief Executive Officer
+  - name: Jane Doe
+    title: General Counsel
+```
+
+**Representative fields:**
+
+| Field | Status | Description |
+|---|---|---|
+| `name` | REQUIRED | Full name of the representative |
+| `title` | OPTIONAL | Title or role of the representative |
+
+### 3.6 Party References in Text
 
 Party `short_name` values from frontmatter MAY be used directly in document body text. Renderers SHOULD NOT automatically substitute or link these unless explicitly configured. The author is responsible for using party names consistently.
 
-### 3.4 Metadata Extensions
+### 3.7 Metadata Extensions
 
 Additional metadata fields in frontmatter are permitted. Implementations MUST ignore unknown metadata fields rather than failing. This allows forward compatibility and custom extensions.
 
@@ -750,24 +901,26 @@ Validators MUST produce structured output indicating file, line number, identifi
 ```markdown
 ---
 title: Mutual Non-Disclosure Agreement
-document_type: nda
-date: 2026-01-28
 effective_date: 2026-02-01
-parties:
-  - name: Acme Corporation
-    short_name: Provider
-    entity_type: Delaware Corporation
-    address: 123 Main Street, Dover, DE 19901
-    representative:
-      name: John Smith
-      title: Chief Executive Officer
-  - name: Beta Industries Inc.
-    short_name: Client
-    entity_type: Texas LLC
-    address: 456 Oak Avenue, Austin, TX 78701
-    representative:
-      name: Jane Doe
-      title: General Counsel
+sides:
+  - name: Disclosing Party
+    legal_entity:
+      - name: Acme Corporation
+        short_name: Provider
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: Receiving Party
+    legal_entity:
+      - name: Beta Industries Inc.
+        short_name: Client
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
 governing_law: Delaware
 language: en
 ---

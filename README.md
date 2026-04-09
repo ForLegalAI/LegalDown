@@ -63,12 +63,25 @@ Below is a short excerpt from a mutual NDA written in LegalDown:
 ```markdown
 ---
 title: Mutual Non-Disclosure Agreement
-document_type: nda
-parties:
-  - name: Acme Corporation
-    short_name: Provider
-  - name: Beta Industries Inc.
-    short_name: Client
+sides:
+  - name: Disclosing Party
+    legal_entity:
+      - name: Acme Corporation
+        short_name: Provider
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: Receiving Party
+    legal_entity:
+      - name: Beta Industries Inc.
+        short_name: Client
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
 effective_date: 2026-02-01
 governing_law: Delaware
 language: en
@@ -130,9 +143,11 @@ and reference it anywhere with `{{term: id}}`. The renderer validates
 that every referenced term is actually defined, links it back to its
 definition, and formats it consistently throughout the document.
 
-**Metadata lives in frontmatter.** Party names, dates, jurisdiction, and
+**Metadata lives in frontmatter.** Party names, effective dates, and
 document type are declared in a YAML block at the top of the file.
-Structured data stays structured — not buried in paragraph text.
+Parties are organized under named sides, with parties grouped by type
+(`legal_entity` / `natural_person`). Structured data stays structured —
+not buried in paragraph text.
 
 **Numbering is never in the source.** This is worth repeating. Section
 numbers, list enumeration (a), (b), (i), (ii), and cross-reference text
