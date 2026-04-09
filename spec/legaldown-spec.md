@@ -260,7 +260,7 @@ sides:
 
 ### 3.5 Representatives
 
-Representatives are the individuals authorized to act on behalf of a party. The `representatives` field is an optional array of representative objects, allowing multiple representatives per party.
+Representatives are the individuals authorized to act on behalf of a party. The `representatives` field is an array of representative objects, allowing multiple representatives per party. It is REQUIRED for `legal_entity` parties (with at least one representative) and OPTIONAL for `natural_person` parties.
 
 ```yaml
 representatives:
