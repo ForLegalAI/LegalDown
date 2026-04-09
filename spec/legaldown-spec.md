@@ -420,21 +420,9 @@ Renderers MUST:
 
 1. Locate the target section by identifier
 2. Determine the rendered section number based on the active numbering scheme
-3. Replace the reference with appropriate numbering (e.g., "3.2")
+3. Replace the reference with the section number (e.g., "3.2")
 4. Create a hyperlink to the target section in formats that support hyperlinking (HTML, PDF, DOCX)
 5. If the target identifier does not exist, insert `[BROKEN REF: identifier]` in output and emit a validation error
-
-### 6.4 Reference Format Variants
-
-Implementations MAY support format variants controlling how references render:
-
-```markdown
-Section {{ref: payment-terms}}                          → "Section 5"
-Section {{ref: payment-terms, format=with-title}}       → "Section 5 (Payment Terms)"
-in {{ref: payment-terms, format=title-only}}            → "in Payment Terms"
-```
-
-Default rendering (without format specifier) MUST include the section number (e.g., "5").
 
 ---
 
@@ -795,7 +783,6 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | Directive | Status | Purpose |
 |---|---|---|
 | `{{ref: id}}` | REQUIRED | Cross-reference to section |
-| `{{ref: id, format=variant}}` | OPTIONAL | Cross-reference with format variant |
 | `{{def: id}}` | REQUIRED | Declare a definition |
 | `{{term: id}}` | REQUIRED | Reference a defined term |
 | `{{term: id, label=text}}` | OPTIONAL | Reference a defined term with custom display text |
@@ -907,10 +894,9 @@ When rendering `{{ref: id}}`:
 
 1. Locate target section by identifier using hierarchical path resolution
 2. Determine the section number generated under the active numbering scheme
-3. Apply format variant if specified
-4. Replace directive with respective numbering (e.g., "3.2")
-5. Create hyperlink to target section in formats supporting links
-6. If target not found, insert `[BROKEN REF: id]` and emit validation error
+3. Replace directive with the section number (e.g., "3.2")
+4. Create hyperlink to target section in formats supporting links
+5. If target not found, insert `[BROKEN REF: id]` and emit validation error
 
 ### 13.4 Definition Resolution
 
