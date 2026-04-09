@@ -219,15 +219,17 @@ When a party is listed under the `legal_entity` key, it represents a corporation
 **Example:**
 
 ```yaml
-legal_entity:
-  - name: Acme Corporation
-    short_name: Provider
-    identification_number: DE-12345678
-    address: 123 Main Street, Dover, DE 19901
-    tax_id: 12-3456789  # custom field
-    representatives:
-      - name: John Smith
-        title: Chief Executive Officer
+sides:
+  - name: Providers
+    legal_entity:
+      - name: Acme Corporation
+        short_name: Provider
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        tax_id: 12-3456789  # custom field
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
 ```
 
 ### 3.4.3 Full Example with Custom Fields
