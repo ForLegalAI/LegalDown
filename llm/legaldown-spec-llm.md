@@ -61,8 +61,8 @@ tags: [tag1, tag2]                      # OPTIONAL
 ### Sides and Parties
 
 - `sides` is an array of side objects
-- Each side has a unique ASCII `name`, optional `label`, and non-empty `parties` array
-- Each party has a unique document-wide ASCII `name`, optional `label`, `type`, and `legal_name`
+- Each side has a unique ASCII `name` (lowercase letter, then lowercase letters/digits/hyphens), optional `label`, and non-empty `parties` array
+- Each party has a unique document-wide ASCII `name` (lowercase letter, then lowercase letters/digits/hyphens), optional `label`, `type`, and `legal_name`
 - Party `type` is explicit: `legal_entity` or `natural_person`
 - Unknown party fields are allowed and must be ignored by implementations
 - Display fallback: side `label` → title-cased/pluralized `name`; party `label` → `legal_name`
@@ -174,7 +174,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{party: party-name, label=Display Text, note=Primary signing contact}}
 ```
 
-- `party-name`: lowercase ASCII, digits, hyphens; resolves against `sides[].parties[].name`
+- `party-name`: lowercase ASCII identifier starting with a letter, then lowercase letters/digits/hyphens; resolves against `sides[].parties[].name`
 - `label`: optional inline display override
 - Without `label`, render the party `label` and fall back to `legal_name`
 - `note`: optional plain-text explanation for automation

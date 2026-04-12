@@ -158,7 +158,7 @@ Parties to a document are organized under **sides**. Each side is a named groupi
 
 | Field | Status | Description |
 |---|---|---|
-| `name` | REQUIRED | ASCII identifier (`[a-z][a-z0-9-]*`), unique across sides |
+| `name` | REQUIRED | ASCII identifier (`[a-z][a-z0-9-]*`), starting with a lowercase ASCII letter and then containing only lowercase ASCII letters, digits, or hyphens; unique across sides |
 | `label` | OPTIONAL | Display name (free-form Unicode, any language) |
 | `parties` | REQUIRED | Non-empty array of party objects |
 
@@ -207,7 +207,7 @@ Each party object describes an individual or organization that appears in the do
 
 | Field | Status | Description |
 |---|---|---|
-| `name` | REQUIRED | ASCII identifier (`[a-z][a-z0-9-]*`), unique across ALL parties in the document |
+| `name` | REQUIRED | ASCII identifier (`[a-z][a-z0-9-]*`), starting with a lowercase ASCII letter and then containing only lowercase ASCII letters, digits, or hyphens; unique across ALL parties in the document |
 | `label` | OPTIONAL | Display name (free-form Unicode) |
 | `type` | REQUIRED | `legal_entity` or `natural_person` |
 | `legal_name` | REQUIRED | Full legal name as it appears on official documents |
@@ -673,7 +673,7 @@ Notices under this Agreement shall be delivered to {{party: beta-industries}}.
 
 **Rules:**
 
-- The `party-name` value MUST be a non-empty string matching the identifier format `[a-z][a-z0-9-]*`
+- The `party-name` value MUST be a non-empty string matching the identifier format `[a-z][a-z0-9-]*` (a lowercase ASCII letter followed by zero or more lowercase ASCII letters, digits, or hyphens)
 - The directive MUST resolve against a party `name` in the frontmatter `sides[].parties[]` arrays
 - The optional `label` parameter specifies display text for rendering; if omitted, the renderer MUST use the party's `label` and fall back to `legal_name`
 - The `label` value is plain text — it MUST NOT contain commas or closing braces (`}}`)
@@ -1046,7 +1046,7 @@ Violations of the following additional checks MUST be reported as **Error**:
 
 - Every party `name` is unique across the entire document
 - Every side `name` is unique
-- All side and party `name` values follow the identifier format `[a-z][a-z0-9-]*`
+- All side and party `name` values follow the identifier format `[a-z][a-z0-9-]*` (a lowercase ASCII letter followed by zero or more lowercase ASCII letters, digits, or hyphens)
 - Every party `type` is `legal_entity` or `natural_person`
 
 ### 15.7 Bilingual Validation (when translations metadata present)
