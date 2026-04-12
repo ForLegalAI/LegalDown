@@ -89,6 +89,9 @@ subtitle: Between Acme Corporation and Beta Industries Inc.
 version: 1.0
 document_type: contract
 effective_date: 2026-02-01
+field_types:
+  invoice-id: Invoice identifier
+  cadastral-id: Cadastral territory identifier
 sides:
   - name: providers
     label: Providers
@@ -141,6 +144,7 @@ tags:
 | `version` | OPTIONAL | Document version identifier |
 | `document_type` | OPTIONAL | Document type. Valid values: `contract`, `unilateral_act`, `collective_act`. Default: `contract` |
 | `effective_date` | OPTIONAL | Document effective date (ISO 8601) |
+| `field_types` | OPTIONAL | Map of custom field type declarations for `{{field:}}` (type name → description) |
 | `sides` | RECOMMENDED | Array of sides, each containing a non-empty `parties` array (see Section 3.3) |
 | `governing_law` | OPTIONAL | Applicable law |
 | `language` | RECOMMENDED | Primary language (ISO 639-1) |
@@ -150,6 +154,13 @@ tags:
 | `adoption_date` | OPTIONAL | Adoption date (ISO 8601) |
 | `supersedes` | OPTIONAL | Prior document or version superseded by this document |
 | `tags` | OPTIONAL | Classification tags array |
+
+If `field_types` is present, it MUST be a YAML map where each entry is `type-name: description`.
+
+- Each `type-name` MUST follow the identifier format `[a-z][a-z0-9-]*`
+- Each description MUST be plain text describing the custom value type
+- `type-name` values MUST NOT collide with built-in directive names `date`, `money`, `duration`, or `party`
+- If `field_types` is absent entirely, implementations MUST still accept all `{{field:}}` type names that follow the identifier format
 
 ### 3.3 Sides and Parties
 
@@ -587,7 +598,7 @@ Standard Markdown tables do not support merged cells or complex formatting. For 
 
 ### 10.1 Purpose
 
-Field specs are typed inline directives that represent structured values — including dates, monetary amounts, and fillable placeholders — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
+Field specs are typed inline directives that represent structured values — including dates, monetary amounts, pass-through custom values, and fillable placeholders — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
 
 All field specs MAY include an optional `note` parameter to provide a plain-text explanation of the value for automation or machine-processing purposes. The `note` value MUST NOT affect rendered output, MUST NOT contain commas or closing braces (`}}`), and MUST be preserved in structured output formats when present.
 
@@ -711,7 +722,46 @@ The service level response time shall not exceed {{duration: 4, unit=H, note=Cri
 - Renderers MUST format the duration according to the document's locale or render template settings (e.g., "12 months", "30 days", "4 hours", "1 year")
 - The raw numeric value, unit code, and `note` (if present) MUST be preserved in structured output formats for machine processing
 
-### 10.6 Placeholder Directive
+### 10.6 Custom Field Directive
+
+The `{{field:}}` directive represents a custom structured value inline in document text. It uses a caller-defined type name and passes the raw value through unchanged for rendering.
+
+**Syntax:**
+
+```markdown
+{{field: value, type=type-name}}
+{{field: value, type=type-name, note=text}}
+```
+
+**Examples:**
+
+```markdown
+The property {{field: CZ0100000001, type=cadastral-id}} is transferred...
+
+Pursuant to {{field: 25 Cdo 1234/2025, type=case-number}}...
+
+Invoice {{field: INV-2026-0042, type=invoice-id}} remains unpaid.
+```
+
+**Relationship to built-ins:**
+
+| Directive | Formatting | Validation | Declaration needed |
+|---|---|---|---|
+| `{{date:}}` | Locale-aware | Built-in | No |
+| `{{money:}}` | Locale-aware | Built-in | No |
+| `{{duration:}}` | Locale-aware | Built-in | No |
+| `{{field:}}` | Pass-through | By declaration | Yes (recommended) |
+
+**Rules:**
+
+- The `value` is REQUIRED and MUST be preserved exactly as provided for machine processing
+- The `type` parameter is REQUIRED and MUST follow the identifier format `[a-z][a-z0-9-]*`
+- If present, the `type` SHOULD match a declaration in frontmatter `field_types`
+- If `field_types` is absent entirely, implementations MUST accept any `type` value that follows the identifier format without emitting a warning
+- Renderers MUST pass the `value` through as-is with no locale-aware formatting
+- The raw `value`, `type`, and `note` (if present) MUST be preserved in structured output formats for machine processing
+
+### 10.7 Placeholder Directive
 
 The `{{placeholder:}}` directive represents a fillable inline blank. Placeholders are declared directly where they are used in document text and MUST NOT require any frontmatter declaration.
 
@@ -768,6 +818,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{party: role}}` | OPTIONAL | Inline party reference by role |
 | `{{party: role, label=text}}` | OPTIONAL | Inline party reference with display text |
 | `{{duration: value, unit=UNIT}}` | OPTIONAL | Inline time duration with unit |
+| `{{field: value, type=type-name}}` | OPTIONAL | Inline custom typed value with pass-through rendering |
 | `{{placeholder: placeholder-id}}` | OPTIONAL | Inline fillable blank (defaults to `type=text`) |
 | `{{placeholder: placeholder-id, type=money, currency=CODE}}` | OPTIONAL | Inline typed blank with type-specific parameters |
 | `{{include: path}}` | OPTIONAL | Include external file |
@@ -923,6 +974,15 @@ When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT
 5. Replace the directive with the formatted duration text
 6. If the value is invalid, insert `[INVALID DURATION: value]` and emit a validation error
 7. If the unit is missing or unrecognized, insert `[INVALID DURATION UNIT: UNIT]` and emit a validation error
+
+When rendering `{{field: value, type=type-name}}` or `{{field: value, type=type-name, note=text}}`:
+
+1. Validate the `type-name` value matches the identifier format
+2. If `field_types` is present, check whether `type-name` is declared there
+3. Ignore any `note` parameter for rendered output
+4. Replace the directive with the raw `value` exactly as provided
+5. If the `type` parameter is missing or malformed, insert `[INVALID FIELD]` or `[INVALID FIELD: value]` when the `value` can be determined, and emit a validation error
+6. If `field_types` is present and `type-name` is not declared, keep rendering the raw `value` and emit a validation warning
 
 When rendering `{{placeholder: id}}` or `{{placeholder: id, ...}}`:
 
@@ -1082,6 +1142,10 @@ Validators MUST categorize issues at three levels:
 | `{{party:}}` `role` value is non-empty and matches identifier format | Error |
 | `{{duration:}}` value is a positive numeric value | Error |
 | `{{duration:}}` `unit` parameter is one of `S`, `M`, `H`, `D`, `MO`, `Y` | Error |
+| `field_types` keys follow the identifier format `[a-z][a-z0-9-]*` | Error |
+| `field_types` keys do not collide with built-in directive names `date`, `money`, `duration`, `party` | Error |
+| `{{field:}}` `type` parameter is present and matches identifier format | Error |
+| `{{field:}}` uses a type declared in `field_types` when `field_types` is present | Warning |
 | `{{placeholder:}}` `placeholder-id` value is non-empty and matches identifier format | Error |
 | `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, or `money` | Error |
 | Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type` | Error |

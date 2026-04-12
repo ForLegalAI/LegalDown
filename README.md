@@ -90,6 +90,9 @@ sides:
           - name: Jane Doe
             title: General Counsel
 effective_date: 2026-02-01
+field_types:
+  invoice-id: Invoice identifier
+  case-number: Court case reference number
 governing_law: Delaware
 language: en
 ---
@@ -161,6 +164,10 @@ paragraph text.
 `{{placeholder: fee, type=money, currency=EUR}}` directly in the text when a
 document needs a fillable blank. No frontmatter declaration is required.
 
+**Custom fields stay structured.** Declare reusable custom value types in
+frontmatter under `field_types`, then reference them inline with
+`{{field: value, type=type-name}}`. Renderers pass the value through as-is.
+
 **Numbering is never in the source.** This is worth repeating. Section
 numbers, list enumeration (a), (b), (i), (ii), and cross-reference text
 like "Section 3.2" are all generated at render time. The source file
@@ -184,6 +191,7 @@ contains none of them.
 {{ref: identifier}}                      ← Cross-reference a section
 {{date: 2026-06-01}}                     ← Inline date value
 {{money: 10000, currency=CZK}}          ← Inline monetary amount
+{{field: INV-2026-0042, type=invoice-id}} ← Inline custom typed value
 {{placeholder: governing-law}}          ← Inline fillable blank (`type=text` by default)
 {{placeholder: fee, type=money, currency=EUR}} ← Typed inline blank
 {{party: acme}}                          ← Inline party reference
