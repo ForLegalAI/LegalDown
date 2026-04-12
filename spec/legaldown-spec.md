@@ -364,22 +364,11 @@ If no explicit identifier is provided, implementations MUST auto-generate one us
 
 Example: "Confidential Information & Trade Secrets" → `confidential-information-trade-secrets`
 
-### 5.4 Hierarchical Identifier Paths
+### 5.4 Identifier Scope
 
-Cross-references use hierarchical dot-separated paths to identify sections unambiguously:
+Section identifiers are document-global. Each section MUST have a unique identifier within the document, whether the identifier is provided explicitly or auto-generated.
 
-```
-## Payment Terms {#payment-terms}
-### Late Payment Fees {#late-fees}
-#### Monthly Calculation {#monthly}
-```
-
-Full hierarchical paths:
-- `payment-terms`
-- `payment-terms.late-fees`
-- `payment-terms.late-fees.monthly`
-
-When using cross-references, authors SHOULD use the full hierarchical path to avoid ambiguity, especially when section names may repeat across the document.
+Implementations MUST resolve cross-references by matching the referenced identifier directly. Implementations MUST NOT construct, require, or interpret hierarchical dot-separated paths based on heading nesting.
 
 ### 5.5 Duplicate Identifier Handling
 
@@ -401,7 +390,6 @@ Cross-references create links between sections within a document. Because sectio
 
 ```markdown
 {{ref: identifier}}
-{{ref: hierarchical.identifier.path}}
 ```
 
 **Examples:**
@@ -409,9 +397,9 @@ Cross-references create links between sections within a document. Because sectio
 ```markdown
 As described in Section {{ref: definitions}}, terms have specific meanings.
 
-Subject to Clause {{ref: liability.limitations.cap}}, Provider shall indemnify Client.
+Subject to Clause {{ref: liability-cap}}, Provider shall indemnify Client.
 
-The payment schedule in Article {{ref: payment-terms.schedule}} applies from the Effective Date.
+The payment schedule in Article {{ref: payment-schedule}} applies from the Effective Date.
 ```
 
 ### 6.3 Reference Rendering
@@ -868,7 +856,7 @@ This behavior MUST be configurable and MAY be disabled to preserve plain bullet 
 
 When rendering `{{ref: id}}`:
 
-1. Locate target section by identifier using hierarchical path resolution
+1. Locate target section by identifier
 2. Determine the section number generated under the active numbering scheme
 3. Replace directive with the section number (e.g., "3.2")
 4. Create hyperlink to target section in formats supporting links
