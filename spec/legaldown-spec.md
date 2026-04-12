@@ -932,7 +932,10 @@ When rendering `{{placeholder: id}}` or `{{placeholder: id, ...}}`:
 4. Ignore any `note` parameter for rendered output
 5. Replace the directive with a visible blank marker according to renderer settings, such as `[_____]`
 6. If the renderer cannot emit a visual blank, it MUST fall back to `[TBD: id]`
-7. If the `id` is malformed, the `type` is unsupported, or repeated occurrences use inconsistent types, insert `[INVALID PLACEHOLDER]` or `[INVALID PLACEHOLDER: id]` when the `id` can be determined, and emit a validation error
+7. If a type-specific parameter name is not defined for the effective `type`, implementations MUST ignore that parameter for rendered output and emit a validation warning
+8. If a type-specific parameter value is invalid, unrecognized, or a required type-specific parameter is missing, implementations MUST apply the rendering fallback and validation severity defined for that type-specific rule when such a rule exists; for example, for `type=money`, an unrecognized `currency` MUST render as `[UNKNOWN CURRENCY: CURRENCY]` and emit a validation warning, consistent with `{{money: ...}}`
+9. If no type-specific fallback is defined for an invalid, unrecognized, or missing required type-specific parameter, insert `[INVALID PLACEHOLDER]` or `[INVALID PLACEHOLDER: id]` when the `id` can be determined, and emit a validation error
+10. If the `id` is malformed, the `type` is unsupported, or repeated occurrences use inconsistent types, insert `[INVALID PLACEHOLDER]` or `[INVALID PLACEHOLDER: id]` when the `id` can be determined, and emit a validation error
 
 ### 13.6 Output Formats
 
