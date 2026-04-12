@@ -20,14 +20,14 @@ is for a lawyer. Summarize it, analyze risk, extract key terms, compare it
 against a standard — all trivial when the document is structured plain text
 rather than a formatting nightmare in disguise.
 
-Thank to LegalDown, people may again focus on the contents of the legal document,
+Thanks to LegalDown, people may again focus on the contents of the legal document,
 with the formatting being only a final addition to the document, not something to be dealt with from the start.
 
 ---
 
 ### Why LegalDown? 🤔
 
-LegalDown addresses the abobe described issues with this with a few core ideas:
+LegalDown addresses the above described issues with a few core ideas:
 
 📝 **Write in plain text.** Documents are readable in any text editor without
 proprietary software, plugins, or compatibility concerns. If you can read
