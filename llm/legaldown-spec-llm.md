@@ -131,46 +131,47 @@ Broken references render as `[BROKEN REF: identifier]`.
 
 ```markdown
 {{date: 2026-06-01}}
+{{date: 2026-06-01, note=Execution date}}
 ```
 
-Value must be valid ISO 8601 (`YYYY-MM-DD`). Rendered per locale.
+Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automation-facing explanation and is not rendered.
 
 ### Money
 
 ```markdown
 {{money: 10000, currency=USD}}
 {{money: 500}}
+{{money: 500, note=Estimated onboarding fee}}
+{{money: 500, currency=EUR, note=Base monthly service fee}}
 ```
 
 - Amount: numeric (period decimal separator), no grouping separators or symbols
 - `currency`: optional, ISO 4217 code
+- `note`: optional plain-text explanation for automation
 
 ### Party
 
 ```markdown
 {{party: role}}
 {{party: role, label=Display Text}}
+{{party: role, note=Primary signing contact}}
+{{party: role, label=Display Text, note=Primary signing contact}}
 ```
 
 - `role`: lowercase ASCII, digits, hyphens
 - `label`: optional display text
+- `note`: optional plain-text explanation for automation
 
 ### Duration
 
 ```markdown
 {{duration: 30, unit=D}}
+{{duration: 30, unit=D, note=Standard notice period}}
 ```
 
 - Value: positive numeric
 - `unit` (required): `S` | `M` | `H` | `D` | `MO` | `Y`
-
-### Percentage
-
-```markdown
-{{pct: 15}}
-```
-
-Value is the percentage directly (15 = 15%). No `%` symbol.
+- `note`: optional plain-text explanation for automation
 
 ### File Inclusion
 
@@ -203,7 +204,7 @@ Separate files per language with identical heading structure and section identif
 - Duplicate or malformed section identifiers
 - Broken `{{ref:}}` or `{{term:}}` targets
 - Duplicate `{{def:}}` declarations
-- Invalid `{{date:}}`, `{{money:}}`, `{{duration:}}`, `{{pct:}}` values
+- Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
 - Mismatched bilingual structure
 
 **Warnings** (should fix):

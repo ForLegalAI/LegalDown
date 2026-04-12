@@ -196,7 +196,7 @@ When a party is listed under the `natural_person` key, it represents an individu
 sides:
   - name: Buyer
     natural_person:
-      - name: Jan Novák
+      - name: John Novak
         short_name: Buyer
         date_of_birth: 1985-03-15
         address: 456 Oak Avenue, Austin, TX 78701
@@ -248,12 +248,12 @@ sides:
             title: Chief Executive Officer
   - name: Buyers
     natural_person:
-      - name: Jan Novák
+      - name: John Novak
         short_name: Buyer 1
         date_of_birth: 1985-03-15
         address: 456 Oak Avenue, Austin, TX 78701
         nationality: Czech
-      - name: Marie Nováková
+      - name: Mary Novak
         short_name: Buyer 2
         date_of_birth: 1990-07-22
         address: 456 Oak Avenue, Austin, TX 78701
@@ -480,10 +480,10 @@ Each party shall protect the {{term: confidential-info}} from unauthorized discl
 
 Provider shall deliver the {{term: services}} in accordance with the agreed specifications.
 
-Jednateli náleží za {{term: services, label=Výkon funkcí}}&nbsp;odměna ve výši 10.000,- Kč měsíčně.
+Client may use the {{term: services, label=Hosted Services}} solely for its internal business operations.
 ```
 
-In the last example, the defined term is "Services" but the label `Výkon funkcí` is displayed in the rendered output, allowing the text to use the grammatically correct form.
+In the last example, the defined term is "Services" but the label `Hosted Services` is displayed in the rendered output, allowing the text to use a context-appropriate English label.
 
 **Rules:**
 
@@ -631,6 +631,8 @@ Standard Markdown tables do not support merged cells or complex formatting. For 
 
 Field specs are typed inline directives that represent structured values — such as dates and monetary amounts — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
 
+All field specs MAY include an optional `note` parameter to provide a plain-text explanation of the value for automation or machine-processing purposes. The `note` value MUST NOT affect rendered output, MUST NOT contain commas or closing braces (`}}`), and MUST be preserved in structured output formats when present.
+
 ### 10.2 Date Directive
 
 The `{{date:}}` directive represents a calendar date inline in document text.
@@ -639,6 +641,7 @@ The `{{date:}}` directive represents a calendar date inline in document text.
 
 ```markdown
 {{date: YYYY-MM-DD}}
+{{date: YYYY-MM-DD, note=text}}
 ```
 
 **Examples:**
@@ -646,15 +649,15 @@ The `{{date:}}` directive represents a calendar date inline in document text.
 ```markdown
 This Agreement shall terminate on {{date: 2026-06-01}}.
 
-Provider shall deliver the final report no later than {{date: 2027-03-31}}.
+Provider shall deliver the final report no later than {{date: 2027-03-31, note=Final delivery deadline}}.
 ```
 
 **Rules:**
 
 - The date value MUST be in ISO 8601 format (`YYYY-MM-DD`)
 - The date MUST be a valid calendar date (e.g., `2026-02-30` is invalid)
-- Renderers MUST format the date according to the document's locale or render template settings (e.g., "June 1, 2026" in `en-US`, "1. Juni 2026" in `de-DE`, "1. 6. 2026" in `cs-CZ`)
-- The raw ISO 8601 value MUST be preserved in structured output formats for machine processing
+- Renderers MUST format the date according to the document's locale or render template settings (e.g., "June 1, 2026", "1 June 2026", "2026-06-01")
+- The raw ISO 8601 value and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ### 10.3 Money Directive
 
@@ -664,17 +667,19 @@ The `{{money:}}` directive represents a monetary amount inline in document text.
 
 ```markdown
 {{money: amount}}
+{{money: amount, note=text}}
 {{money: amount, currency=CODE}}
+{{money: amount, currency=CODE, note=text}}
 ```
 
 **Examples:**
 
 ```markdown
-Provider shall pay a penalty of {{money: 10000, currency=CZK}} for each day of delay.
+Provider shall pay a penalty of {{money: 10000, currency=USD}} for each day of delay.
 
 The total contract value shall not exceed {{money: 1000000, currency=USD}}.
 
-The monthly fee is {{money: 500, currency=EUR}}.
+The monthly fee is {{money: 500, currency=EUR, note=Base monthly service fee}}.
 ```
 
 **Rules:**
@@ -683,8 +688,8 @@ The monthly fee is {{money: 500, currency=EUR}}.
 - The amount MUST NOT include grouping separators, currency symbols, or whitespace
 - The optional `currency` parameter specifies the currency using an ISO 4217 three-letter code (e.g., `USD`, `EUR`, `CZK`, `GBP`)
 - If `currency` is omitted, the renderer SHOULD use a default currency from the document metadata or render template, or emit a validation warning
-- Renderers MUST format the amount according to the document's locale or render template settings (e.g., "$10,000.00", "10 000,00 Kč", "€500.00")
-- The raw numeric value and currency code MUST be preserved in structured output formats for machine processing
+- Renderers MUST format the amount according to the document's locale or render template settings (e.g., "$10,000.00", "USD 10,000.00", "€500.00")
+- The raw numeric value, currency code, and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ### 10.4 Party Directive
 
@@ -695,25 +700,27 @@ The `{{party:}}` directive represents a reference to a contract party inline in 
 ```markdown
 {{party: role}}
 {{party: role, label=text}}
+{{party: role, note=text}}
+{{party: role, label=text, note=text}}
 ```
 
 **Examples:**
 
 ```markdown
-Za společnost jedná {{party: jednatel, label=Jednatelem}} na základě plné moci.
+The Company acts through {{party: authorized-signatory, label=its Authorized Signatory}} under this Agreement.
 
 The obligations of {{party: director}} under this Agreement shall include...
 
-{{party: ceo, label=Chief Executive Officer}} shall have the authority to...
+{{party: ceo, label=Chief Executive Officer, note=Primary executive contact}} shall have the authority to...
 ```
 
 **Rules:**
 
-- The `role` value MUST be a non-empty string identifying the party's role or function (e.g., `jednatel`, `director`, `ceo`)
+- The `role` value MUST be a non-empty string identifying the party's role or function (e.g., `authorized-signatory`, `director`, `ceo`)
 - The `role` value MUST match the identifier format: lowercase ASCII letters, digits, and hyphens (`[a-z0-9]+(-[a-z0-9]+)*`)
 - The optional `label` parameter specifies a display text for rendering; if omitted, the renderer SHOULD use the `role` value as the display text
 - Renderers MUST format the party reference according to the document's locale or render template settings
-- The raw `role` value and `label` (if present) MUST be preserved in structured output formats for machine processing
+- The raw `role` value, `label` (if present), and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ### 10.5 Duration Directive
 
@@ -723,6 +730,7 @@ The `{{duration:}}` directive represents a time duration inline in document text
 
 ```markdown
 {{duration: value, unit=UNIT}}
+{{duration: value, unit=UNIT, note=text}}
 ```
 
 Where `UNIT` is one of: `S` (seconds), `M` (minutes), `H` (hours), `D` (days), `MO` (months), `Y` (years).
@@ -734,43 +742,15 @@ This Agreement shall remain in effect for {{duration: 12, unit=MO}}.
 
 The notice period shall be {{duration: 30, unit=D}}.
 
-The service level response time shall not exceed {{duration: 4, unit=H}}.
+The service level response time shall not exceed {{duration: 4, unit=H, note=Critical incident response target}}.
 ```
 
 **Rules:**
 
 - The `value` MUST be a positive numeric value (integer or decimal, using period `.` as the decimal separator); zero and negative values are not allowed
 - The `unit` parameter is REQUIRED and MUST be one of: `S`, `M`, `H`, `D`, `MO`, `Y`
-- Renderers MUST format the duration according to the document's locale or render template settings (e.g., "12 months", "30 days", "4 hours", "12 měsíců")
-- The raw numeric value and unit code MUST be preserved in structured output formats for machine processing
-
-### 10.6 Percentage Directive
-
-The `{{pct:}}` directive represents a percentage value inline in document text.
-
-**Syntax:**
-
-```markdown
-{{pct: value}}
-```
-
-**Examples:**
-
-```markdown
-The interest rate shall be {{pct: 0.5}} per annum.
-
-Provider shall receive a commission of {{pct: 15}} on all sales.
-
-A late payment penalty of {{pct: 0.05}} per day shall apply.
-```
-
-**Rules:**
-
-- The `value` MUST be a numeric value (integer or decimal, using period `.` as the decimal separator)
-- The `value` represents the percentage directly (e.g., `0.5` means 0.5%, `15` means 15%)
-- The `value` MUST NOT include a percent sign (`%`) or other symbols
-- Renderers MUST format the percentage according to the document's locale or render template settings (e.g., "0.5 %", "15%", "0,5 %")
-- The raw numeric value MUST be preserved in structured output formats for machine processing
+- Renderers MUST format the duration according to the document's locale or render template settings (e.g., "12 months", "30 days", "4 hours", "1 year")
+- The raw numeric value, unit code, and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ---
 
@@ -792,7 +772,6 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{party: role}}` | OPTIONAL | Inline party reference by role |
 | `{{party: role, label=text}}` | OPTIONAL | Inline party reference with display text |
 | `{{duration: value, unit=UNIT}}` | OPTIONAL | Inline time duration with unit |
-| `{{pct: value}}` | OPTIONAL | Inline percentage value |
 | `{{include: path}}` | OPTIONAL | Include external file |
 
 ### 11.2 Directive Rules
@@ -910,45 +889,42 @@ When rendering `{{term: id}}` or `{{term: id, label=text}}`:
 
 ### 13.5 Field Spec Resolution
 
-When rendering `{{date: value}}`:
+When rendering `{{date: value}}` or `{{date: value, note=text}}`:
 
 1. Validate the date value is a valid ISO 8601 date
 2. Format the date according to the active locale or render template
-3. Replace the directive with the formatted date text
-4. If the date is invalid, insert `[INVALID DATE: value]` and emit a validation error
+3. Ignore any `note` parameter for rendered output
+4. Replace the directive with the formatted date text
+5. If the date is invalid, insert `[INVALID DATE: value]` and emit a validation error
 
-When rendering `{{money: amount}}` or `{{money: amount, currency=CODE}}`:
+When rendering `{{money: amount}}`, `{{money: amount, note=text}}`, `{{money: amount, currency=CODE}}`, or `{{money: amount, currency=CODE, note=text}}`:
 
 1. Validate the amount is a valid numeric value
 2. If a `currency` parameter is provided, validate it is a recognized ISO 4217 code
 3. Format the amount according to the active locale or render template, including the currency symbol or code
-4. Replace the directive with the formatted monetary value
-5. If the amount is invalid, insert `[INVALID AMOUNT: amount]` and emit a validation error
-6. If the currency code is unrecognized, insert `[UNKNOWN CURRENCY: CODE]` and emit a validation warning
+4. Ignore any `note` parameter for rendered output
+5. Replace the directive with the formatted monetary value
+6. If the amount is invalid, insert `[INVALID AMOUNT: amount]` and emit a validation error
+7. If the currency code is unrecognized, insert `[UNKNOWN CURRENCY: CODE]` and emit a validation warning
 
-When rendering `{{party: role}}` or `{{party: role, label=text}}`:
+When rendering `{{party: role}}`, `{{party: role, note=text}}`, `{{party: role, label=text}}`, or `{{party: role, label=text, note=text}}`:
 
 1. If a `label` parameter is provided, use it as the display text
 2. If no `label` is provided, use the `role` value as the display text
 3. Format the display text according to the active locale or render template
-4. Replace the directive with the formatted party reference text
-5. If the `role` value is empty or malformed, insert `[INVALID PARTY: role]` and emit a validation error
+4. Ignore any `note` parameter for rendered output
+5. Replace the directive with the formatted party reference text
+6. If the `role` value is empty or malformed, insert `[INVALID PARTY: role]` and emit a validation error
 
-When rendering `{{duration: value, unit=UNIT}}`:
+When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT, note=text}}`:
 
 1. Validate the value is a positive numeric value
 2. Validate the `unit` parameter is one of: `S`, `M`, `H`, `D`, `MO`, `Y`
-3. Format the duration according to the active locale or render template (e.g., "12 months", "30 days", "12 měsíců")
-4. Replace the directive with the formatted duration text
-5. If the value is invalid, insert `[INVALID DURATION: value]` and emit a validation error
-6. If the unit is missing or unrecognized, insert `[INVALID DURATION UNIT: UNIT]` and emit a validation error
-
-When rendering `{{pct: value}}`:
-
-1. Validate the value is a valid numeric value
-2. Format the percentage according to the active locale or render template (e.g., "0.5 %", "15%")
-3. Replace the directive with the formatted percentage text
-4. If the value is invalid, insert `[INVALID PERCENTAGE: value]` and emit a validation error
+3. Format the duration according to the active locale or render template (e.g., "12 months", "30 days", "1 year")
+4. Ignore any `note` parameter for rendered output
+5. Replace the directive with the formatted duration text
+6. If the value is invalid, insert `[INVALID DURATION: value]` and emit a validation error
+7. If the unit is missing or unrecognized, insert `[INVALID DURATION UNIT: UNIT]` and emit a validation error
 
 ### 13.6 Output Formats
 
@@ -1096,7 +1072,7 @@ Validators MUST categorize issues at three levels:
 | `{{party:}}` `role` value is non-empty and matches identifier format | Error |
 | `{{duration:}}` value is a positive numeric value | Error |
 | `{{duration:}}` `unit` parameter is one of `S`, `M`, `H`, `D`, `MO`, `Y` | Error |
-| `{{pct:}}` value is a valid numeric value | Error |
+| Field spec `note` parameter is plain text and does not contain commas or closing braces | Error |
 
 ### 15.6 Bilingual Validation (when translations metadata present)
 
