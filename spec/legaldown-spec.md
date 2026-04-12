@@ -750,7 +750,7 @@ Invoice {{field: INV-2026-0042, type=invoice-id}} remains unpaid.
 | `{{date:}}` | Locale-aware | Built-in | No |
 | `{{money:}}` | Locale-aware | Built-in | No |
 | `{{duration:}}` | Locale-aware | Built-in | No |
-| `{{field:}}` | Pass-through | By declaration | Yes (recommended) |
+| `{{field:}}` | Pass-through | By declaration | Optional (recommended when using `field_types`) |
 
 **Rules:**
 
