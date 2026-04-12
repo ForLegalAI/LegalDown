@@ -26,6 +26,9 @@ subtitle: Optional Subtitle             # OPTIONAL
 version: 1.0                            # OPTIONAL
 document_type: contract                 # OPTIONAL: contract | unilateral_act | collective_act
 effective_date: 2026-02-01              # OPTIONAL, ISO 8601
+field_types:                            # OPTIONAL: custom {{field:}} type declarations
+  invoice-id: Invoice identifier
+  case-number: Court case reference number
 sides:                                  # RECOMMENDED
   - name: providers
     label: Providers                    # OPTIONAL
@@ -61,6 +64,8 @@ tags: [tag1, tag2]                      # OPTIONAL
 ### Sides and Parties
 
 - `sides` is an array of side objects
+- `field_types`, when present, is a map of `type-name: description` entries for custom `{{field:}}` directives
+- Custom field type names use the same lowercase identifier format as side and party names and must not be `date`, `money`, `duration`, or `party`
 - Each side has a unique ASCII `name` (lowercase letter, then lowercase letters/digits/hyphens), optional `label`, and non-empty `parties` array
 - Each party has a unique document-wide ASCII `name` (lowercase letter, then lowercase letters/digits/hyphens), optional `label`, `type`, and `legal_name`
 - Party `type` is explicit: `legal_entity` or `natural_person`
@@ -190,6 +195,19 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 - `unit` (required): `S` | `M` | `H` | `D` | `MO` | `Y`
 - `note`: optional plain-text explanation for automation
 
+### Custom Field
+
+```markdown
+{{field: INV-2026-0042, type=invoice-id}}
+{{field: 25 Cdo 1234/2025, type=case-number, note=Relevant precedent}}
+```
+
+- `value`: required raw value; preserved exactly and rendered as-is
+- `type` (required): lowercase ASCII identifier starting with a letter, then lowercase letters/digits/hyphens
+- If frontmatter `field_types` exists, undeclared custom field types should trigger a warning
+- If `field_types` is absent entirely, any well-formed custom field type is accepted without warning
+- `note`: optional plain-text explanation for automation
+
 ### Placeholder
 
 ```markdown
@@ -244,6 +262,8 @@ Separate files per language with identical heading structure and section identif
 - Too few sides or parties for the selected `document_type`
 - Missing `issuer` side for `unilateral_act` or `collective_act`
 - Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
+- `field_types` keys that are malformed or collide with built-in directive names
+- Missing or malformed `type` on `{{field:}}`
 - Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
 - Mismatched bilingual structure
 
@@ -252,6 +272,7 @@ Separate files per language with identical heading structure and section identif
 - Defined terms not following `**"Term"**` format
 - Declared definitions never referenced
 - Missing `currency` on `{{money:}}`
+- Undeclared `{{field:}}` type when `field_types` frontmatter is present
 - Unknown currency on `{{placeholder: ..., type=money}}`
 
 ## Minimal Example
