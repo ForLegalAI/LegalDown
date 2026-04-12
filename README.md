@@ -1,13 +1,13 @@
 ## LegalDown 📄
 
-> Plain text markup language for legal contracts and agreements for the age of AI.
+> Plain text markup language for legal documents for the age of AI.
 
-LegalDown is an **open specification for writing legal contracts in plain text**.
+LegalDown is an **open specification for writing legal documents in plain text**.
 It extends standard Markdown with legal-specific constructs — structured
 sections, cross-references, and defined terms — enabling automated validation,
 flexible rendering, and native version control integration.
 
-A LegalDown contract is a human-readable plain text file that can be rendered to a
+A LegalDown document is a human-readable plain text file that can be rendered to a
 professionally formatted PDF or DOCX is needed (with all section numbering, cross-references,
 and defined term links generated automatically).
 
@@ -15,13 +15,13 @@ and defined term links generated automatically).
 enough, but because Word files and other similar file types are a mess of hidden formatting, inconsistent
 structure, and binary noise that no machine was ever meant to read. LegalDown
 fixes this at the source. Clean structure, explicit hierarchy, validated
-cross-references — a LegalDown contract is as easy for an AI to read  and write as it
+cross-references — a LegalDown document is as easy for an AI to read and write as it
 is for a lawyer. Summarize it, analyze risk, extract key terms, compare it
 against a standard — all trivial when the document is structured plain text
 rather than a formatting nightmare in disguise.
 
 Thank to LegalDown, people may again focus on the contents of the legal document,
-with the formatting being only a final addition to the contract, not something to be deals with from the start.
+with the formatting being only a final addition to the document, not something to be dealt with from the start.
 
 ---
 
@@ -29,17 +29,17 @@ with the formatting being only a final addition to the contract, not something t
 
 LegalDown addresses the abobe described issues with this with a few core ideas:
 
-📝 **Write in plain text.** Contracts are readable in any text editor without
+📝 **Write in plain text.** Documents are readable in any text editor without
 proprietary software, plugins, or compatibility concerns. If you can read
-this README, you can read a LegalDown contract.
+this README, you can read a LegalDown document.
 
 🔢 **Never write section numbers.** There are no hardcoded numbers in LegalDown
 source. Move, add, or remove sections freely — all numbering and cross-references
 update automatically when you render.
 
-🎨 **Content and presentation are separate.** Write the contract once. Render
+🎨 **Content and presentation are separate.** Write the document once. Render
 it to PDF, DOCX, or HTML using any style template you want. Change fonts, margins,
-and numbering style without ever touching the contract text.
+and numbering style without ever touching the document text.
 
 ✅ **Errors are caught before you send.** Broken cross-references, undefined
 terms, and structural mistakes are validated automatically. The document
@@ -49,9 +49,9 @@ either passes or it tells you exactly what is wrong and where.
 change is tracked, every version is recoverable, and comparing two versions
 produces a meaningful, readable diff — not a corrupted Track Changes mess.
 
-✂️ **Simpler by design.** LegalDown encourages clearer, shorter contracts.
+✂️ **Simpler by design.** LegalDown encourages clearer, shorter legal documents.
 The format does not try to replicate every complexity found in traditional
-legal drafting - it forces legal drafting to simplify. Standardized structure makes contracts easier to read,
+legal drafting - it forces legal drafting to simplify. Standardized structure makes documents easier to read,
 compare, and negotiate.
 
 ---
@@ -63,20 +63,27 @@ Below is a short excerpt from a mutual NDA written in LegalDown:
 ```markdown
 ---
 title: Mutual Non-Disclosure Agreement
+document_type: contract
 sides:
-  - name: Disclosing Party
-    legal_entity:
-      - name: Acme Corporation
-        short_name: Provider
+  - name: disclosers
+    label: Disclosing Parties
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
         identification_number: DE-12345678
         address: 123 Main Street, Dover, DE 19901
         representatives:
           - name: John Smith
             title: Chief Executive Officer
-  - name: Receiving Party
-    legal_entity:
-      - name: Beta Industries Inc.
-        short_name: Client
+  - name: recipients
+    label: Receiving Parties
+    parties:
+      - name: beta
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
         identification_number: TX-87654321
         address: 456 Oak Avenue, Austin, TX 78701
         representatives:
@@ -91,31 +98,28 @@ language: en
 
 ## Definitions {#definitions}
 
-### Confidential Information {#def-confidential-info}
-
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information disclosed
-by one party to the other, whether orally or in writing, that is designated
+by one side to the other, whether orally or in writing, that is designated
 as confidential or that reasonably should be understood to be confidential.
 
 ## Confidentiality Obligations {#confidentiality}
 
-### Protection of Information {#confidentiality-protection}
+{{party: beta, label=the Receiving Party}} shall protect the
+{{term: confidential-info}} using at least the same degree of care it uses
+for its own confidential information.
 
-Each party shall protect the {{term: confidential-info}} using at least
-the same degree of care it uses for its own confidential information.
+## Exceptions {#confidentiality-exceptions}
 
-### Exceptions {#confidentiality-exceptions}
-
-The obligations in {{ref: confidentiality-protection}} do not apply to
-information that was publicly known at the time of disclosure.
+The obligations in {{ref: confidentiality}} do not apply to information
+that was publicly known at the time of disclosure.
 ```
 
 This source renders automatically as a professionally formatted document with:
 
 - 🔢 Section numbers generated (1., 1.1, 2., 2.1, 2.2...) according to your chosen style
 - 🔗 "Confidential Information" linked to its definition wherever `{{term:}}` appears (with optional custom display text via `label`)
-- 📌 "Section 2.1" resolved and hyperlinked wherever `{{ref:}}` appears
+- 📌 "Section 2" resolved and hyperlinked wherever `{{ref:}}` appears
 - 🎨 Professional typography and layout applied from a style template
 
 The source file itself remains clean, readable, and numbering-free.
@@ -148,9 +152,10 @@ the document.
 
 **Metadata lives in frontmatter.** Party names, effective dates, and
 document type are declared in a YAML block at the top of the file.
-Parties are organized under named sides, with parties grouped by type
-(`legal_entity` / `natural_person`). Structured data stays structured —
-not buried in paragraph text.
+Parties are organized under named sides, with each side containing a
+`parties` array of party objects with explicit `type` values (`legal_entity`
+or `natural_person`). Structured data stays structured — not buried in
+paragraph text.
 
 **Numbering is never in the source.** This is worth repeating. Section
 numbers, list enumeration (a), (b), (i), (ii), and cross-reference text
@@ -162,7 +167,7 @@ contains none of them.
 ### Document Structure at a Glance 🗂️
 
 ```
-# Contract Title                         ← Document title (exactly one)
+# Document Title                         ← Document title (exactly one)
 ## Top-level Provision {#identifier}     ← Article / Section
 ### Subsection                           ← Nested provision
 #### Further detail                      ← Deeper nesting (up to 6 levels)
@@ -175,6 +180,7 @@ contains none of them.
 {{ref: identifier}}                      ← Cross-reference a section
 {{date: 2026-06-01}}                     ← Inline date value
 {{money: 10000, currency=CZK}}          ← Inline monetary amount
+{{party: acme}}                          ← Inline party reference
 {{include: schedules/pricing.lgd}}       ← Include an external file
 {{lang: fr}} ... {{/lang}}              ← Bilingual language block
 ```
@@ -212,7 +218,7 @@ following this repository for changes.
 LegalDown is in early draft stage. Current priorities:
 
 - [ ] Finalize v0.1 specification
-- [ ] Publish reference examples for common contract types
+- [ ] Publish reference examples for common document types
 - [ ] Release reference parser and validator
 - [ ] Release CLI rendering tool
 - [ ] Gather community feedback and publish v0.2

@@ -7,17 +7,17 @@
 
 ### 1.1 Purpose
 
-LegalDown is a plain text markup language for authoring legal contracts and agreements. It extends standard Markdown with legal-specific constructs enabling structured authoring, automated validation, intelligent rendering, and version control integration. LegalDown is the document format standard of the LeGit contract management ecosystem, but is designed as an open, independent standard usable with any compatible tooling.
+LegalDown is a plain text markup language for authoring legal documents — including contracts, unilateral acts (notices, declarations, powers of attorney), and collective acts (internal regulations, bylaws, policies). It extends standard Markdown with legal-specific constructs enabling structured authoring, automated validation, intelligent rendering, and version control integration. LegalDown is the document format standard of the LeGit legal document management ecosystem, but is designed as an open, independent standard usable with any compatible tooling.
 
 ### 1.2 Design Principles
 
-**Human-readable first.** Legal professionals must be able to read and edit LegalDown source files without specialized tools. A contract in LegalDown should be immediately comprehensible to any lawyer opening it in a plain text editor.
+**Human-readable first.** Legal professionals must be able to read and edit LegalDown source files without specialized tools. A document in LegalDown should be immediately comprehensible to any lawyer opening it in a plain text editor.
 
 **Separation of content and presentation.** Document structure, hierarchy, and content are defined independently of visual formatting, numbering, and styling. A LegalDown document contains no hardcoded section numbers. All numbering is generated at render time by the renderer according to a configurable scheme. This means sections can be freely added, removed, or reordered without any manual renumbering.
 
 **Machine-parseable.** Document structure must be unambiguous for automated processing, validation, transformation, and AI analysis.
 
-**Simplicity through standardization.** LegalDown intentionally encourages simpler contract structures. The format does not attempt to reproduce every complexity found in traditional legal drafting. Standardized templates and enforced structure make contracts easier to read, compare, and negotiate.
+**Simplicity through standardization.** LegalDown intentionally encourages simpler legal document structures. The format does not attempt to reproduce every complexity found in traditional legal drafting. Standardized templates and enforced structure make documents easier to read, compare, and review.
 
 **Version control native.** Plain text format is optimized for meaningful diffs, intelligent merging, and collaborative editing through Git-based tooling.
 
@@ -39,7 +39,7 @@ LegalDown is a superset of CommonMark (standard Markdown). All valid CommonMark 
 
 ### 1.4 Relationship to LeGit
 
-LegalDown is the document format. LeGit is the Git-based contract versioning and negotiation platform. LegalDown documents are the native format of LeGit repositories, but LegalDown can be used independently of LeGit with any compatible renderer or validator.
+LegalDown is the document format. LeGit is the Git-based legal document versioning and negotiation platform. LegalDown documents are the native format of LeGit repositories, but LegalDown can be used independently of LeGit with any compatible renderer or validator.
 
 ### 1.5 Conformance
 
@@ -71,7 +71,7 @@ A LegalDown document consists of two parts in order:
 1. **Frontmatter** (OPTIONAL) — YAML metadata block
 2. **Body** (REQUIRED) — Document content in LegalDown markup
 
-> **Note:** Signature blocks are NOT defined in LegalDown markup. Renderers SHOULD generate signature blocks automatically from the contract's structured data (e.g., party information in frontmatter).
+> **Note:** Signature blocks are NOT defined in LegalDown markup. Renderers SHOULD generate signature blocks automatically from frontmatter. For contracts, from all sides. For unilateral acts, from the issuer side. For collective acts, from the issuer side and `adopted_by`.
 
 ---
 
@@ -86,28 +86,37 @@ Documents SHOULD include YAML frontmatter as the first element, delimited by tri
 title: Master Service Agreement
 subtitle: Between Acme Corporation and Beta Industries Inc.
 version: 1.0
+document_type: contract
 effective_date: 2026-02-01
 sides:
-  - name: Providers
-    legal_entity:
-      - name: Acme Corporation
-        short_name: Provider
+  - name: providers
+    label: Providers
+    parties:
+      - name: acme-corporation
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
         identification_number: DE-12345678
         address: 123 Main Street, Dover, DE 19901
         representatives:
           - name: John Smith
             title: Chief Executive Officer
-  - name: Clients
-    legal_entity:
-      - name: Beta Industries Inc.
-        short_name: Client 1
+  - name: clients
+    label: Clients
+    parties:
+      - name: beta-industries
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
         identification_number: TX-87654321
         address: 456 Oak Avenue, Austin, TX 78701
         representatives:
           - name: Jane Doe
             title: General Counsel
-      - name: Gamma Solutions Ltd.
-        short_name: Client 2
+      - name: gamma-solutions
+        label: Gamma
+        type: legal_entity
+        legal_name: Gamma Solutions Ltd.
         identification_number: CA-11223344
         address: 789 Pine Road, San Jose, CA 95101
         representatives:
@@ -129,139 +138,99 @@ tags:
 | `title` | REQUIRED | Document title |
 | `subtitle` | OPTIONAL | Document subtitle |
 | `version` | OPTIONAL | Document version identifier |
-| `effective_date` | OPTIONAL | Contract effective date (ISO 8601) |
-| `sides` | RECOMMENDED | Array of sides, each containing parties keyed by type (see Section 3.3) |
+| `document_type` | OPTIONAL | Document type. Valid values: `contract`, `unilateral_act`, `collective_act`. Default: `contract` |
+| `effective_date` | OPTIONAL | Document effective date (ISO 8601) |
+| `sides` | RECOMMENDED | Array of sides, each containing a non-empty `parties` array (see Section 3.3) |
 | `governing_law` | OPTIONAL | Applicable law |
 | `language` | RECOMMENDED | Primary language (ISO 639-1) |
 | `translations` | OPTIONAL | Map of translation files (see Section 14) |
 | `authoritative` | OPTIONAL | Authoritative language for disputes (ISO 639-1) |
+| `adopted_by` | OPTIONAL | Body or authority that adopted the document |
+| `adoption_date` | OPTIONAL | Adoption date (ISO 8601) |
+| `supersedes` | OPTIONAL | Prior document or version superseded by this document |
 | `tags` | OPTIONAL | Classification tags array |
 
 ### 3.3 Sides and Parties
 
-Parties to a contract are organized under **sides**. Each side is a named grouping that contains one or more parties. Sides represent the opposing or distinct groups in a contractual relationship (e.g., "Buyers" vs. "Sellers", "Licensors" vs. "Licensees").
+Parties to a document are organized under **sides**. Each side is a named grouping that contains one or more parties acting together in the document. Contracts typically have multiple sides (for example, "Providers" and "Clients"). Unilateral acts and collective acts typically include a side named `issuer`.
 
-Parties within a side are listed under keys that correspond to their type: `legal_entity` or `natural_person`. This makes the party type implicit from the key, rather than requiring a separate `party_type` field on each party.
+**Side object:**
+
+| Field | Status | Description |
+|---|---|---|
+| `name` | REQUIRED | ASCII identifier (`[a-z][a-z0-9-]*`), unique across sides |
+| `label` | OPTIONAL | Display name (free-form Unicode, any language) |
+| `parties` | REQUIRED | Non-empty array of party objects |
 
 ```yaml
 sides:
-  - name: Sellers
-    legal_entity:
-      - name: ...
-  - name: Buyers
-    legal_entity:
-      - name: Buyer 1 Ltd.
-        ...
-    natural_person:
-      - name: Buyer 2
-        ...
+  - name: providers
+    label: Providers
+    parties:
+      - name: acme-corporation
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: clients
+    label: Clients
+    parties:
+      - name: beta-industries
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+      - name: john-novak
+        type: natural_person
+        legal_name: John Novak
+        date_of_birth: 1985-03-15
+        address: 456 Oak Avenue, Austin, TX 78701
 ```
 
 **Side rules:**
 
 - `sides` is an array of side objects
-- Each side object MUST contain a `name` field identifying the side (e.g., "Buyers", "Sellers")
-- Each side object MUST contain at least one party object in total across the `legal_entity` and/or `natural_person` arrays
-- If a side object includes `legal_entity` and/or `natural_person`, each present type key MUST map to a non-empty array of party objects
-- A side MAY contain multiple parties of the same or different types (e.g., two legal entities and one natural person acting jointly on the same side)
+- Each side object MUST contain a unique `name`
+- Each side object MAY contain a `label`
+- Each side object MUST contain a `parties` array with at least one party object
 
 ### 3.4 Party Structure
 
-Each party object describes an individual or organization that is a party to the contract. The party type is determined by the key under which it is listed (`natural_person` or `legal_entity`), not by a field on the party itself.
+Each party object describes an individual or organization that appears in the document's structured metadata.
 
-**Common party fields:**
+**Universal party fields:**
 
 | Field | Status | Description |
 |---|---|---|
-| `name` | REQUIRED | Full legal name of the party |
-| `short_name` | OPTIONAL | Short name used in document text |
+| `name` | REQUIRED | ASCII identifier (`[a-z][a-z0-9-]*`), unique across ALL parties in the document |
+| `label` | OPTIONAL | Display name (free-form Unicode) |
+| `type` | REQUIRED | `legal_entity` or `natural_person` |
+| `legal_name` | REQUIRED | Full legal name as it appears on official documents |
+| `address` | RECOMMENDED | Address |
+
+**Additional fields for `legal_entity`:**
+
+| Field | Status | Description |
+|---|---|---|
+| `identification_number` | RECOMMENDED | Registration or identification number |
+| `representatives` | RECOMMENDED | Array of representative objects (see Section 3.5) |
+
+**Additional fields for `natural_person`:**
+
+| Field | Status | Description |
+|---|---|---|
+| `date_of_birth` | RECOMMENDED | Date of birth in ISO 8601 format |
 
 Additional custom fields MAY be included on any party object. Implementations MUST ignore unknown party fields rather than failing. This allows organizations to include jurisdiction-specific information, tax identifiers, or any other relevant party metadata.
 
-#### 3.4.1 Natural Person
-
-When a party is listed under the `natural_person` key, it represents an individual.
-
-**Required fields for `natural_person`:**
-
-| Field | Status | Description |
-|---|---|---|
-| `name` | REQUIRED | Full legal name |
-| `date_of_birth` | REQUIRED | Date of birth in ISO 8601 format |
-| `address` | REQUIRED | Residential address |
-
-**Example:**
-
-```yaml
-sides:
-  - name: Buyer
-    natural_person:
-      - name: John Novak
-        short_name: Buyer
-        date_of_birth: 1985-03-15
-        address: 456 Oak Avenue, Austin, TX 78701
-        nationality: Czech  # custom field
-```
-
-#### 3.4.2 Legal Entity
-
-When a party is listed under the `legal_entity` key, it represents a corporation, LLC, partnership, or other legal organization.
-
-**Required fields for `legal_entity`:**
-
-| Field | Status | Description |
-|---|---|---|
-| `name` | REQUIRED | Full legal name of the entity |
-| `identification_number` | REQUIRED | Entity identification or registration number |
-| `address` | REQUIRED | Registered address of the entity |
-| `representatives` | REQUIRED | Array of at least one representative object (see Section 3.5) |
-
-**Example:**
-
-```yaml
-sides:
-  - name: Providers
-    legal_entity:
-      - name: Acme Corporation
-        short_name: Provider
-        identification_number: DE-12345678
-        address: 123 Main Street, Dover, DE 19901
-        tax_id: 12-3456789  # custom field
-        representatives:
-          - name: John Smith
-            title: Chief Executive Officer
-```
-
-### 3.4.3 Full Example with Custom Fields
-
-```yaml
-sides:
-  - name: Sellers
-    legal_entity:
-      - name: Acme Corporation
-        short_name: Seller
-        identification_number: DE-12345678
-        address: 123 Main Street, Dover, DE 19901
-        tax_id: 12-3456789
-        representatives:
-          - name: John Smith
-            title: Chief Executive Officer
-  - name: Buyers
-    natural_person:
-      - name: John Novak
-        short_name: Buyer 1
-        date_of_birth: 1985-03-15
-        address: 456 Oak Avenue, Austin, TX 78701
-        nationality: Czech
-      - name: Mary Novak
-        short_name: Buyer 2
-        date_of_birth: 1990-07-22
-        address: 456 Oak Avenue, Austin, TX 78701
-```
-
 ### 3.5 Representatives
 
-Representatives are the individuals authorized to act on behalf of a party. The `representatives` field is an array of representative objects, allowing multiple representatives per party. It is REQUIRED for parties listed under `legal_entity` (with at least one representative) and OPTIONAL for parties listed under `natural_person`.
+Representatives are the individuals authorized to act on behalf of a party. The `representatives` field is an array of representative objects, allowing multiple representatives per party. It is RECOMMENDED for `legal_entity` parties and MAY be used for any party where such information is relevant.
 
 ```yaml
 representatives:
@@ -278,9 +247,12 @@ representatives:
 | `name` | REQUIRED | Full name of the representative |
 | `title` | OPTIONAL | Title or role of the representative |
 
-### 3.6 Party References in Text
+### 3.6 Rendering Rules
 
-Party `short_name` values from frontmatter MAY be used directly in document body text. Renderers SHOULD NOT automatically substitute or link these unless explicitly configured. The author is responsible for using party names consistently.
+- Side `label` is used for display; if absent, renderers SHOULD title-case and pluralize `name` as a fallback
+- Party `label` is used for display; if absent, renderers MUST fall back to `legal_name`
+- `legal_name` MUST always appear on signature blocks
+- `{{party: <party-name>}}` resolves against party `name` and renders `label`, falling back to `legal_name`
 
 ### 3.7 Metadata Extensions
 
@@ -678,34 +650,35 @@ The monthly fee is {{money: 500, currency=EUR, note=Base monthly service fee}}.
 
 ### 10.4 Party Directive
 
-The `{{party:}}` directive represents a reference to a contract party inline in document text. It identifies a party by their role (such as a representative function) and provides an optional display label for rendering.
+The `{{party:}}` directive represents a reference to a party declared in frontmatter. It identifies a party by its `name` identifier and allows an optional inline display override for grammatical or stylistic inflection.
 
 **Syntax:**
 
 ```markdown
-{{party: role}}
-{{party: role, label=text}}
-{{party: role, note=text}}
-{{party: role, label=text, note=text}}
+{{party: party-name}}
+{{party: party-name, label=text}}
+{{party: party-name, note=text}}
+{{party: party-name, label=text, note=text}}
 ```
 
 **Examples:**
 
 ```markdown
-The Company acts through {{party: authorized-signatory, label=its Authorized Signatory}} under this Agreement.
+The Company acts through {{party: acme-corporation, label=the Company}} under this Agreement.
 
-The obligations of {{party: director}} under this Agreement shall include...
+Notices under this Agreement shall be delivered to {{party: beta-industries}}.
 
-{{party: ceo, label=Chief Executive Officer, note=Primary executive contact}} shall have the authority to...
+{{party: board-of-directors, label=the Board, note=Collective body adopting the policy}} may amend this Policy from time to time.
 ```
 
 **Rules:**
 
-- The `role` value MUST be a non-empty string identifying the party's role or function (e.g., `authorized-signatory`, `director`, `ceo`)
-- The `role` value MUST match the identifier format: lowercase ASCII letters, digits, and hyphens (`[a-z0-9]+(-[a-z0-9]+)*`)
-- The optional `label` parameter specifies a display text for rendering; if omitted, the renderer SHOULD use the `role` value as the display text
-- Renderers MUST format the party reference according to the document's locale or render template settings
-- The raw `role` value, `label` (if present), and `note` (if present) MUST be preserved in structured output formats for machine processing
+- The `party-name` value MUST be a non-empty string matching the identifier format `[a-z][a-z0-9-]*`
+- The directive MUST resolve against a party `name` in the frontmatter `sides[].parties[]` arrays
+- The optional `label` parameter specifies display text for rendering; if omitted, the renderer MUST use the party's `label` and fall back to `legal_name`
+- The `label` value is plain text — it MUST NOT contain commas or closing braces (`}}`)
+- Renderers MUST format the resolved party reference according to the document's locale or render template settings
+- The raw `party-name` value, `label` (if present), and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ### 10.5 Duration Directive
 
@@ -1058,7 +1031,25 @@ Validators MUST categorize issues at three levels:
 | `{{duration:}}` `unit` parameter is one of `S`, `M`, `H`, `D`, `MO`, `Y` | Error |
 | Field spec `note` parameter is plain text and does not contain commas or closing braces | Error |
 
-### 15.6 Bilingual Validation (when translations metadata present)
+### 15.6 Document Metadata Validation
+
+If `document_type` is omitted, validators MUST treat it as `contract` when applying the following checks:
+
+| Rule | `contract` | `unilateral_act` | `collective_act` |
+|---|---|---|---|
+| Minimum distinct sides | ≥ 2 | ≥ 1 | ≥ 1 |
+| Side named `issuer` required | No | Yes | Yes |
+| Minimum total parties | ≥ 2 | ≥ 1 | ≥ 1 |
+| `document_type` is valid value | Error if not | Error if not | Error if not |
+
+Violations of the following additional checks MUST be reported as **Error**:
+
+- Every party `name` is unique across the entire document
+- Every side `name` is unique
+- All side and party `name` values follow the identifier format `[a-z][a-z0-9-]*`
+- Every party `type` is `legal_entity` or `natural_person`
+
+### 15.7 Bilingual Validation (when translations metadata present)
 
 | Check | Level |
 |---|---|
@@ -1067,30 +1058,39 @@ Validators MUST categorize issues at three levels:
 | Section identifiers match between translations | Error |
 | Definition IDs match between translations | Error |
 
-### 15.7 Validation Output
+### 15.8 Validation Output
 
 Validators MUST produce structured output indicating file, line number, identifier (if applicable), issue level, and human-readable message. Validators SHOULD support output in plain text and JSON formats for integration with tooling.
 
-## 16. Complete Example
+## 16. Complete Examples
+
+### 16.1 Contract Example
 
 ```markdown
 ---
 title: Mutual Non-Disclosure Agreement
+document_type: contract
 effective_date: 2026-02-01
 sides:
-  - name: Disclosing Party
-    legal_entity:
-      - name: Acme Corporation
-        short_name: Provider
+  - name: disclosers
+    label: Disclosing Parties
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
         identification_number: DE-12345678
         address: 123 Main Street, Dover, DE 19901
         representatives:
           - name: John Smith
             title: Chief Executive Officer
-  - name: Receiving Party
-    legal_entity:
-      - name: Beta Industries Inc.
-        short_name: Client
+  - name: recipients
+    label: Receiving Parties
+    parties:
+      - name: beta
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
         identification_number: TX-87654321
         address: 456 Oak Avenue, Austin, TX 78701
         representatives:
@@ -1102,187 +1102,116 @@ language: en
 
 # Mutual Non-Disclosure Agreement
 
-This Mutual Non-Disclosure Agreement (this "Agreement") is entered into as
-of the Effective Date by and between the parties identified above.
+This Mutual Non-Disclosure Agreement (this "Agreement") is entered into on
+{{date: 2026-02-01}} between {{party: acme}} and {{party: beta}}.
 
 ## Definitions {#definitions}
 
 {{def: confidential-info}}
-**"Confidential Information"** means any non-public information disclosed
-by one party (the "Disclosing Party") to the other party (the "Receiving
-Party"), whether orally or in writing, that is designated as confidential
-or that reasonably should be understood to be confidential given the nature
-of the information and circumstances of disclosure.
-
-{{def: effective-date}}
-**"Effective Date"** means the date first written above.
-
-{{def: representative}}
-**"Representative"** means a party's employees, officers, directors, and
-professional advisors who have a need to know the {{term: confidential-info}}
-for the purposes contemplated by this Agreement.
-
-## Recitals
-
-> WHEREAS, the parties wish to explore a potential business relationship
-> and may disclose certain confidential information to each other; and
->
-> WHEREAS, the parties wish to protect such confidential information from
-> unauthorized use or disclosure;
->
-> NOW, THEREFORE, in consideration of the mutual covenants herein, the
-> parties agree as follows:
+**"Confidential Information"** means any non-public information disclosed by
+one side to the other in connection with evaluating a potential business
+relationship.
 
 ## Confidentiality Obligations {#confidentiality}
 
-### Protection of Information {#confidentiality-protection}
+Each party shall protect the {{term: confidential-info}} using at least
+reasonable care.
 
-The Receiving Party shall:
+## Use Restrictions {#use}
 
-- hold the {{term: confidential-info}} in strict confidence
-- not disclose the {{term: confidential-info}} to any person other than its
-  {{term: representative}} without prior written consent of the Disclosing Party
-- use the {{term: confidential-info}} solely for evaluating the potential
-  business relationship between the parties
-- protect the {{term: confidential-info}} using at least the same degree of
-  care it uses to protect its own confidential information, but in no event
-  less than reasonable care
+{{party: beta, label=the Receiving Party}} may use the
+{{term: confidential-info}} solely for evaluating a potential business
+relationship with {{party: acme, label=the Disclosing Party}}.
 
-### Exceptions {#confidentiality-exceptions}
+## Governing Law {#governing-law}
 
-The obligations in {{ref: confidentiality-protection}} do not apply to
-information that:
-
-- was publicly known at the time of disclosure to the Receiving Party
-- becomes publicly known after disclosure through no act or omission of the
-  Receiving Party
-- was rightfully in the Receiving Party's possession prior to disclosure
-  without restriction on disclosure
-- is independently developed by the Receiving Party without use of the
-  {{term: confidential-info}}
-- is required to be disclosed by applicable law or court order, provided that
-  the Receiving Party gives prompt written notice to the Disclosing Party
-
-## Term and Termination {#term}
-
-This Agreement commences on the {{term: effective-date}} and continues
-until {{date: 2028-02-01}} unless earlier terminated by either party upon
-thirty (30) days written notice to the other party. Obligations under
-{{ref: confidentiality}} survive termination for a period of three (3) years.
-
-## Remedies {#remedies}
-
-In the event of a breach of this Agreement, the breaching party shall pay
-the non-breaching party liquidated damages in the amount of
-{{money: 50000, currency=USD}} per breach. The total liability under this
-section shall not exceed {{money: 500000, currency=USD}}.
-
-## Return of Materials {#return}
-
-Upon termination of this Agreement or upon written request of the Disclosing
-Party, the Receiving Party shall promptly return or destroy all
-{{term: confidential-info}} in its possession and certify such return or
-destruction in writing within ten (10) business days.
-
-## Miscellaneous {#misc}
-
-### Governing Law {#governing-law}
-
-This Agreement shall be governed by and construed in accordance with the
-laws of the State of Delaware, without regard to its conflicts of law
-principles.
-
-### Entire Agreement {#entire-agreement}
-
-This Agreement constitutes the entire agreement between the parties with
-respect to the subject matter hereof and supersedes all prior and
-contemporaneous agreements, understandings, and negotiations.
-
-### Amendment {#amendment}
-
-This Agreement may only be amended by a written instrument signed by
-authorized representatives of both parties.
-
-### Severability {#severability}
-
-If any provision of this Agreement is found invalid or unenforceable, the
-remaining provisions shall remain in full force and effect.
-
----
-
-**IN WITNESS WHEREOF**, the parties have executed this Agreement as of the
-{{term: effective-date}}.
+This Agreement is governed by the laws of Delaware.
 ```
 
-**The above source renders with decimal numbering as:**
+### 16.2 Unilateral Act Example
 
-```
-MUTUAL NON-DISCLOSURE AGREEMENT
-
-This Mutual Non-Disclosure Agreement...
-
-1. DEFINITIONS
-
-"Confidential Information" means any non-public information...
-
-"Effective Date" means the date first written above.
-
-"Representative" means a party's employees...
-
-RECITALS
-
-WHEREAS, the parties wish to explore...
-
-2. CONFIDENTIALITY OBLIGATIONS
-
-2.1 Protection of Information
-
-The Receiving Party shall:
-
-(a) hold the Confidential Information in strict confidence;
-(b) not disclose the Confidential Information to any person...
-(c) use the Confidential Information solely for evaluating...
-(d) protect the Confidential Information using at least the same...
-
-2.2 Exceptions
-
-The obligations in Section 2.1 do not apply to information that:
-
-(a) was publicly known at the time of disclosure...
-...
-
-3. TERM AND TERMINATION
-
-This Agreement commences on the Effective Date and continues
-until February 1, 2028... Obligations under Section 2 survive...
-
-4. REMEDIES
-
-In the event of a breach of this Agreement, the breaching party shall pay
-the non-breaching party liquidated damages in the amount of $50,000.00 per
-breach. The total liability under this section shall not exceed $500,000.00.
-
-[etc.]
-```
-
+```markdown
+---
+title: Notice of Termination
+document_type: unilateral_act
+effective_date: 2026-05-01
+sides:
+  - name: issuer
+    label: Issuer
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+language: en
 ---
 
-## 19. Future Considerations
+# Notice of Termination
 
-The following features are under consideration for future specification versions:
+This notice is issued by {{party: acme}}.
 
-- **Variable substitution** — Insert party names and metadata values directly into text using `{{var: parties.0.name}}` syntax
-- **Conditional clauses** — Include or exclude sections based on metadata values
-- **Mathematical expressions** — Payment calculations and financial formulas
-- **Amendment markup** — Standard syntax for amendments referencing original documents
-- **Clause library** — Standard identifiers for common clause types across documents
-- **Schema validation** — JSON Schema for frontmatter validation
-- **Digital signature integration** — Metadata fields for cryptographic signatures
-- **Multi-language glossary** — Shared definition libraries across documents
-- **AI annotation layer** — Standard syntax for automated clause analysis metadata
+## Definitions {#definitions}
 
+{{def: termination-date}}
+**"Termination Date"** means {{date: 2026-06-01}}.
+
+## Notice {#notice}
+
+{{party: acme, label=the Issuer}} hereby terminates the Services Agreement
+effective on the {{term: termination-date}}.
+
+## Delivery {#delivery}
+
+This notice shall be delivered in accordance with the notice provisions of the
+Services Agreement.
+```
+
+### 16.3 Collective Act Example
+
+```markdown
+---
+title: Remote Work Policy
+document_type: collective_act
+effective_date: 2026-04-01
+adopted_by: Board of Directors of Acme Corporation
+adoption_date: 2026-03-15
+supersedes: Remote Work Policy adopted on 2025-01-10
+sides:
+  - name: issuer
+    label: Issuer
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+language: en
 ---
 
-**Specification:** LegalDown v0.1 DRAFT
-**Date:** 2026-04-08
-**Status:** Draft for Comment
+# Remote Work Policy
+
+This Policy is adopted by the Board of Directors of {{party: acme}} and takes
+effect on {{date: 2026-04-01}}.
+
+## Definitions {#definitions}
+
+{{def: remote-work}}
+**"Remote Work"** means performance of assigned duties at a location other
+than the Issuer's premises.
+
+## Eligibility {#eligibility}
+
+Employees of {{party: acme}} may perform {{term: remote-work}} when approved
+by their manager and consistent with applicable law.
+
+## Equipment {#equipment}
+
+The Issuer may issue equipment and security requirements needed to support
+{{term: remote-work}}.
+```

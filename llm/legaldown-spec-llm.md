@@ -1,6 +1,6 @@
 # LegalDown Spec — LLM Reference
 
-LegalDown is a plain-text markup language for legal contracts. It is a CommonMark superset with legal-specific directives. This document is a condensed technical reference for reading, understanding, and generating LegalDown documents.
+LegalDown is a plain-text markup language for legal documents, including contracts, unilateral acts, and collective acts. It is a CommonMark superset with legal-specific directives. This document is a condensed technical reference for reading, understanding, and generating LegalDown documents.
 
 ## File Format
 
@@ -21,40 +21,51 @@ YAML block at the top of the file:
 
 ```yaml
 ---
-title: Contract Title                    # REQUIRED
+title: Document Title                    # REQUIRED
 subtitle: Optional Subtitle             # OPTIONAL
 version: 1.0                            # OPTIONAL
+document_type: contract                 # OPTIONAL: contract | unilateral_act | collective_act
 effective_date: 2026-02-01              # OPTIONAL, ISO 8601
 sides:                                  # RECOMMENDED
-  - name: Side Name
-    legal_entity:
-      - name: Full Legal Name           # REQUIRED
-        short_name: ShortRef            # OPTIONAL
-        identification_number: ID-123   # REQUIRED for legal_entity
-        address: Full Address           # REQUIRED
-        representatives:                # REQUIRED for legal_entity (≥1)
+  - name: providers
+    label: Providers                    # OPTIONAL
+    parties:
+      - name: acme-corporation          # REQUIRED, unique identifier
+        label: Acme                     # OPTIONAL
+        type: legal_entity              # REQUIRED
+        legal_name: Acme Corporation    # REQUIRED
+        identification_number: ID-123   # RECOMMENDED for legal_entity
+        address: Full Address           # RECOMMENDED
+        representatives:                # RECOMMENDED for legal_entity
           - name: Person Name           # REQUIRED
             title: Role Title           # OPTIONAL
-    natural_person:
-      - name: Full Legal Name           # REQUIRED
-        short_name: ShortRef            # OPTIONAL
-        date_of_birth: 1985-03-15       # REQUIRED for natural_person
-        address: Full Address           # REQUIRED
+  - name: issuer
+    parties:
+      - name: john-novak
+        type: natural_person
+        legal_name: John Novak
+        date_of_birth: 1985-03-15       # RECOMMENDED for natural_person
+        address: Full Address
 governing_law: Jurisdiction             # OPTIONAL
 language: en                            # RECOMMENDED, ISO 639-1
 translations:                           # OPTIONAL
-  fr: contract-fr.lgd
+  fr: document-fr.lgd
 authoritative: en                       # OPTIONAL, ISO 639-1
+adopted_by: Board of Directors          # OPTIONAL
+adoption_date: 2026-03-15               # OPTIONAL, ISO 8601
+supersedes: Prior policy v1             # OPTIONAL
 tags: [tag1, tag2]                      # OPTIONAL
 ---
 ```
 
 ### Sides and Parties
 
-- `sides` is an array of side objects (e.g., Buyers vs. Sellers)
-- Each side has a `name` and contains parties under `legal_entity` and/or `natural_person` keys
-- Each key maps to a non-empty array of party objects
+- `sides` is an array of side objects
+- Each side has a unique ASCII `name`, optional `label`, and non-empty `parties` array
+- Each party has a unique document-wide ASCII `name`, optional `label`, `type`, and `legal_name`
+- Party `type` is explicit: `legal_entity` or `natural_person`
 - Unknown party fields are allowed and must be ignored by implementations
+- Display fallback: side `label` → title-cased/pluralized `name`; party `label` → `legal_name`
 
 ## Heading Hierarchy
 
@@ -157,14 +168,15 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 ### Party
 
 ```markdown
-{{party: role}}
-{{party: role, label=Display Text}}
-{{party: role, note=Primary signing contact}}
-{{party: role, label=Display Text, note=Primary signing contact}}
+{{party: party-name}}
+{{party: party-name, label=Display Text}}
+{{party: party-name, note=Primary signing contact}}
+{{party: party-name, label=Display Text, note=Primary signing contact}}
 ```
 
-- `role`: lowercase ASCII, digits, hyphens
-- `label`: optional display text
+- `party-name`: lowercase ASCII, digits, hyphens; resolves against `sides[].parties[].name`
+- `label`: optional inline display override
+- Without `label`, render the party `label` and fall back to `legal_name`
 - `note`: optional plain-text explanation for automation
 
 ### Duration
@@ -212,6 +224,9 @@ Separate files per language with identical heading structure and section identif
 - `{{def:}}` declarations outside the Definitions section
 - Broken `{{ref:}}` or `{{term:}}` targets
 - Duplicate `{{def:}}` declarations
+- Invalid `document_type`, side names, party names, or party `type` values
+- Too few sides or parties for the selected `document_type`
+- Missing `issuer` side for `unilateral_act` or `collective_act`
 - Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
 - Mismatched bilingual structure
 
@@ -226,20 +241,27 @@ Separate files per language with identical heading structure and section identif
 ```markdown
 ---
 title: Mutual Non-Disclosure Agreement
+document_type: contract
 sides:
-  - name: Disclosing Party
-    legal_entity:
-      - name: Acme Corporation
-        short_name: Provider
+  - name: disclosers
+    label: Disclosing Parties
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
         identification_number: DE-12345678
         address: 123 Main Street, Dover, DE 19901
         representatives:
           - name: John Smith
             title: Chief Executive Officer
-  - name: Receiving Party
-    legal_entity:
-      - name: Beta Industries Inc.
-        short_name: Client
+  - name: recipients
+    label: Receiving Parties
+    parties:
+      - name: beta
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
         identification_number: TX-87654321
         address: 456 Oak Avenue, Austin, TX 78701
         representatives:
@@ -256,7 +278,7 @@ language: en
 
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information disclosed
-by one party to the other, whether orally or in writing, that is designated
+by one side to the other, whether orally or in writing, that is designated
 as confidential.
 
 {{def: effective-date}}
@@ -264,29 +286,13 @@ as confidential.
 
 ## Confidentiality Obligations {#confidentiality}
 
-### Protection of Information {#confidentiality-protection}
-
-Each party shall protect the {{term: confidential-info}} using at least
-the same degree of care it uses for its own confidential information.
-
-### Exceptions {#confidentiality-exceptions}
-
-The obligations in {{ref: confidentiality-protection}} do not apply to
-information that was publicly known at the time of disclosure.
+{{party: beta, label=the Receiving Party}} shall protect the
+{{term: confidential-info}} using at least the same degree of care it uses
+for its own confidential information.
 
 ## Term and Termination {#term}
 
 This Agreement commences on the {{term: effective-date}} and continues
 until {{date: 2028-02-01}} unless earlier terminated by either party upon
 {{duration: 30, unit=D}} written notice.
-
-## Remedies {#remedies}
-
-The breaching party shall pay liquidated damages of
-{{money: 50000, currency=USD}} per breach, not to exceed
-{{money: 500000, currency=USD}} total.
-
-## Governing Law {#governing-law}
-
-This Agreement is governed by the laws of the State of Delaware.
 ```
