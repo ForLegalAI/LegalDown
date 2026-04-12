@@ -981,12 +981,12 @@ When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT
 
 When rendering `{{field: value, type=type-name}}` or `{{field: value, type=type-name, note=text}}`:
 
-1. Validate the `type-name` value matches the identifier format
-2. If `field_types` is present, check whether `type-name` is declared there
+1. Validate the `type` parameter value matches the identifier format
+2. If `field_types` is present, check whether the `type` value is declared there
 3. Ignore any `note` parameter for rendered output
 4. Replace the directive with the raw `value` exactly as provided
 5. If the `type` parameter is missing or malformed, insert `[INVALID FIELD]` or `[INVALID FIELD: value]` when the `value` can be determined, and emit a validation error
-6. If `field_types` is present and `type-name` is not declared, keep rendering the raw `value` and emit a validation warning
+6. If `field_types` is present and the `type` value is not declared, keep rendering the raw `value` and emit a validation warning
 
 When rendering `{{placeholder: id}}` or `{{placeholder: id, ...}}`:
 
