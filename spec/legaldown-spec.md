@@ -754,12 +754,16 @@ Invoice {{field: INV-2026-0042, type=invoice-id}} remains unpaid.
 
 **Rules:**
 
-- The `value` is REQUIRED and MUST be preserved exactly as provided for machine processing
+- The `value` is REQUIRED
+- The `value` is the first positional parameter of the directive
+- Because commas separate directive parameters and `}}` terminates the directive, the `value` MUST NOT contain a comma (`,`) or the sequence `}}`
+- Optional whitespace immediately after `{{field:` and optional whitespace surrounding parameter separators is directive syntax and is not part of the `value`
+- After parsing, implementations MUST preserve the `value` exactly as parsed, with no trimming, normalization, character escaping/unescaping, or locale-aware formatting
 - The `type` parameter is REQUIRED and MUST follow the identifier format `[a-z][a-z0-9-]*`
-- If present, the `type` SHOULD match a declaration in frontmatter `field_types`
+- If frontmatter `field_types` is present, the `type` SHOULD match a declaration in `field_types`
 - If `field_types` is absent entirely, implementations MUST accept any `type` value that follows the identifier format without emitting a warning
-- Renderers MUST pass the `value` through as-is with no locale-aware formatting
-- The raw `value`, `type`, and `note` (if present) MUST be preserved in structured output formats for machine processing
+- Renderers MUST pass the parsed `value` through unchanged
+- The raw parsed `value`, `type`, and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ### 10.7 Placeholder Directive
 
