@@ -587,7 +587,7 @@ Standard Markdown tables do not support merged cells or complex formatting. For 
 
 ### 10.1 Purpose
 
-Field specs are typed inline directives that represent structured values or fillable blanks — such as dates, monetary amounts, and placeholders — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
+Field specs are typed inline directives that represent structured values — including dates, monetary amounts, and fillable placeholders — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
 
 All field specs MAY include an optional `note` parameter to provide a plain-text explanation of the value for automation or machine-processing purposes. The `note` value MUST NOT affect rendered output, MUST NOT contain commas or closing braces (`}}`), and MUST be preserved in structured output formats when present.
 
@@ -745,6 +745,7 @@ Governed by the laws of {{placeholder: governing-jurisdiction}}.
 - The `note` parameter is OPTIONAL and follows the general field spec rules in Section 10.1
 - Multiple occurrences using the same `placeholder-id` refer to the same logical blank
 - All occurrences of the same `placeholder-id` MUST use the same effective `type`
+- When the same `placeholder-id` appears multiple times with type-specific parameters, those parameters SHOULD remain consistent across occurrences; validators MAY emit a warning when they differ
 - Renderers MUST preserve the raw `placeholder-id`, effective `type`, any type-specific parameters, and `note` (if present) in structured output formats for machine processing
 
 ---
@@ -931,7 +932,7 @@ When rendering `{{placeholder: id}}` or `{{placeholder: id, ...}}`:
 4. Ignore any `note` parameter for rendered output
 5. Replace the directive with a visible blank marker according to renderer settings, such as `[_____]`
 6. If the renderer cannot emit a visual blank, it MUST fall back to `[TBD: id]`
-7. If the `id` is malformed, the `type` is unsupported, or repeated occurrences use inconsistent types, insert `[INVALID PLACEHOLDER: id]` and emit a validation error
+7. If the `id` is malformed, the `type` is unsupported, or repeated occurrences use inconsistent types, insert `[INVALID PLACEHOLDER]` or `[INVALID PLACEHOLDER: id]` when the `id` can be determined, and emit a validation error
 
 ### 13.6 Output Formats
 
