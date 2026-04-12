@@ -87,12 +87,10 @@ Explicit identifier syntax appended to headings:
 - Must be unique within the document
 - Auto-generated if omitted: lowercase → spaces/underscores to hyphens → strip non-alphanumeric → truncate to 64 chars
 
-**Hierarchical paths** (dot-separated):
-```
-payment-terms
-payment-terms.late-fees
-payment-terms.late-fees.monthly
-```
+**Identifier scope:**
+- Each section identifier must be unique within the document
+- Cross-references resolve the exact identifier directly
+- Dot-separated hierarchical paths are not used
 
 ## Directives
 
