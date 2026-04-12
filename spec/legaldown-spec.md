@@ -768,8 +768,8 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{party: role}}` | OPTIONAL | Inline party reference by role |
 | `{{party: role, label=text}}` | OPTIONAL | Inline party reference with display text |
 | `{{duration: value, unit=UNIT}}` | OPTIONAL | Inline time duration with unit |
-| `{{placeholder: id}}` | OPTIONAL | Inline fillable blank (defaults to `type=text`) |
-| `{{placeholder: id, type=money, currency=CODE}}` | OPTIONAL | Inline typed blank with type-specific parameters |
+| `{{placeholder: placeholder-id}}` | OPTIONAL | Inline fillable blank (defaults to `type=text`) |
+| `{{placeholder: placeholder-id, type=money, currency=CODE}}` | OPTIONAL | Inline typed blank with type-specific parameters |
 | `{{include: path}}` | OPTIONAL | Include external file |
 
 ### 11.2 Directive Rules
