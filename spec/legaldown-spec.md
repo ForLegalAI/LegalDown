@@ -439,14 +439,10 @@ Definitions are declared using the `{{def:}}` directive placed at the start of a
 ```markdown
 ## Definitions {#definitions}
 
-### Confidential Information {#def-confidential-info}
-
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information disclosed by
 one party to the other, including technical data, business plans, customer
 information, and any other information designated as confidential.
-
-### Services {#def-services}
 
 {{def: services}}
 **"Services"** means the software development services described in Section
@@ -459,8 +455,9 @@ information, and any other information designated as confidential.
 - Definition IDs follow the same rules as section identifiers
 - Definition IDs MUST be unique within the document
 - The defined term SHOULD be formatted as bold quoted text: `**"Term Name"**`
-- Definitions SHOULD be grouped in a dedicated Definitions section
-- Definitions MAY appear in other sections where contextually appropriate
+- All definitions MUST be placed in a single Definitions section
+- The Definitions section MUST be the first level 2 (`##`) heading in the document body (i.e., the first `##` after the document title)
+- The Definitions section MUST NOT contain any subheadings (level 3 or deeper) — all `{{def:}}` declarations appear directly under the `##` heading as consecutive paragraphs
 
 ### 7.3 Definition Reference
 
@@ -977,8 +974,6 @@ authoritative: en
 
 ## Definitions {#definitions}
 
-### Confidential Information {#def-confidential-info}
-
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information...
 ```
@@ -996,8 +991,6 @@ authoritative: en
 # Accord de service {#agreement}
 
 ## Définitions {#definitions}
-
-### Information confidentielle {#def-confidential-info}
 
 {{def: confidential-info}}
 **« Information confidentielle »** désigne toute information non publique...
@@ -1042,6 +1035,8 @@ Validators MUST categorize issues at three levels:
 | Section identifiers follow naming rules | Error |
 | Headings do not contain hardcoded numbering | Warning |
 | Directives are well-formed | Error |
+| Definitions section is the first level 2 heading | Error |
+| Definitions section contains no subheadings (level 3 or deeper) | Error |
 
 ### 15.3 Reference Validation
 
@@ -1058,6 +1053,7 @@ Validators MUST categorize issues at three levels:
 | Check | Level |
 |---|---|
 | All `{{def: id}}` declarations are unique | Error |
+| All `{{def: id}}` declarations appear in the Definitions section | Error |
 | Defined terms follow `**"Term"**` formatting | Warning |
 | Declared definitions never referenced with `{{term:}}` | Warning |
 
@@ -1121,6 +1117,23 @@ language: en
 This Mutual Non-Disclosure Agreement (this "Agreement") is entered into as
 of the Effective Date by and between the parties identified above.
 
+## Definitions {#definitions}
+
+{{def: confidential-info}}
+**"Confidential Information"** means any non-public information disclosed
+by one party (the "Disclosing Party") to the other party (the "Receiving
+Party"), whether orally or in writing, that is designated as confidential
+or that reasonably should be understood to be confidential given the nature
+of the information and circumstances of disclosure.
+
+{{def: effective-date}}
+**"Effective Date"** means the date first written above.
+
+{{def: representative}}
+**"Representative"** means a party's employees, officers, directors, and
+professional advisors who have a need to know the {{term: confidential-info}}
+for the purposes contemplated by this Agreement.
+
 ## Recitals
 
 > WHEREAS, the parties wish to explore a potential business relationship
@@ -1131,29 +1144,6 @@ of the Effective Date by and between the parties identified above.
 >
 > NOW, THEREFORE, in consideration of the mutual covenants herein, the
 > parties agree as follows:
-
-## Definitions {#definitions}
-
-### Confidential Information {#def-confidential-info}
-
-{{def: confidential-info}}
-**"Confidential Information"** means any non-public information disclosed
-by one party (the "Disclosing Party") to the other party (the "Receiving
-Party"), whether orally or in writing, that is designated as confidential
-or that reasonably should be understood to be confidential given the nature
-of the information and circumstances of disclosure.
-
-### Effective Date {#def-effective-date}
-
-{{def: effective-date}}
-**"Effective Date"** means the date first written above.
-
-### Representative {#def-representative}
-
-{{def: representative}}
-**"Representative"** means a party's employees, officers, directors, and
-professional advisors who have a need to know the {{term: confidential-info}}
-for the purposes contemplated by this Agreement.
 
 ## Confidentiality Obligations {#confidentiality}
 
@@ -1243,23 +1233,17 @@ MUTUAL NON-DISCLOSURE AGREEMENT
 
 This Mutual Non-Disclosure Agreement...
 
-RECITALS
-
-WHEREAS, the parties wish to explore...
-
 1. DEFINITIONS
-
-1.1 Confidential Information
 
 "Confidential Information" means any non-public information...
 
-1.2 Effective Date
-
 "Effective Date" means the date first written above.
 
-1.3 Representative
-
 "Representative" means a party's employees...
+
+RECITALS
+
+WHEREAS, the parties wish to explore...
 
 2. CONFIDENTIALITY OBLIGATIONS
 

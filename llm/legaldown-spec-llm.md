@@ -116,6 +116,13 @@ Broken references render as `[BROKEN REF: identifier]`.
 **"Term Name"** means ...
 ```
 
+**Rules:**
+
+- All definitions MUST be placed in a single Definitions section
+- The Definitions section MUST be the first `##` heading in the document body
+- The Definitions section MUST NOT contain any subheadings (level 3 or deeper)
+- All `{{def:}}` declarations appear directly under the `##` heading as consecutive paragraphs
+
 **Reference** a defined term inline:
 
 ```markdown
@@ -202,6 +209,9 @@ Separate files per language with identical heading structure and section identif
 - Not exactly one `#` heading
 - Skipped heading levels
 - Duplicate or malformed section identifiers
+- Definitions section is not the first `##` heading
+- Definitions section contains subheadings
+- `{{def:}}` declarations outside the Definitions section
 - Broken `{{ref:}}` or `{{term:}}` targets
 - Duplicate `{{def:}}` declarations
 - Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
@@ -246,14 +256,10 @@ language: en
 
 ## Definitions {#definitions}
 
-### Confidential Information {#def-confidential-info}
-
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information disclosed
 by one party to the other, whether orally or in writing, that is designated
 as confidential.
-
-### Effective Date {#def-effective-date}
 
 {{def: effective-date}}
 **"Effective Date"** means the date first written above.
