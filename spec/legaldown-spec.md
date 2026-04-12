@@ -33,6 +33,7 @@ LegalDown is a superset of CommonMark (standard Markdown). All valid CommonMark 
 - Section identifier syntax
 - Cross-reference directives
 - Definition declaration and reference directives
+- Placeholder directives
 - Language block directives for bilingual documents
 - File inclusion directives
 - Validation requirements for legal-specific constraints
@@ -586,7 +587,7 @@ Standard Markdown tables do not support merged cells or complex formatting. For 
 
 ### 10.1 Purpose
 
-Field specs are typed inline directives that represent structured values — such as dates and monetary amounts — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
+Field specs are typed inline directives that represent structured values — including dates, monetary amounts, and fillable placeholders — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
 
 All field specs MAY include an optional `note` parameter to provide a plain-text explanation of the value for automation or machine-processing purposes. The `note` value MUST NOT affect rendered output, MUST NOT contain commas or closing braces (`}}`), and MUST be preserved in structured output formats when present.
 
@@ -710,6 +711,43 @@ The service level response time shall not exceed {{duration: 4, unit=H, note=Cri
 - Renderers MUST format the duration according to the document's locale or render template settings (e.g., "12 months", "30 days", "4 hours", "1 year")
 - The raw numeric value, unit code, and `note` (if present) MUST be preserved in structured output formats for machine processing
 
+### 10.6 Placeholder Directive
+
+The `{{placeholder:}}` directive represents a fillable inline blank. Placeholders are declared directly where they are used in document text and MUST NOT require any frontmatter declaration.
+
+**Syntax:**
+
+```markdown
+{{placeholder: placeholder-id}}
+{{placeholder: placeholder-id, type=text}}
+{{placeholder: placeholder-id, type=date}}
+{{placeholder: placeholder-id, type=money, currency=EUR}}
+{{placeholder: placeholder-id, note=text}}
+{{placeholder: placeholder-id, type=money, currency=EUR, note=text}}
+```
+
+**Examples:**
+
+```markdown
+The purchase price shall be {{placeholder: purchase-price, type=money}}.
+
+Delivery by {{placeholder: delivery-date, type=date}}.
+
+Governed by the laws of {{placeholder: governing-jurisdiction}}.
+```
+
+**Rules:**
+
+- The `placeholder-id` value MUST be a non-empty string matching the identifier format `[a-z][a-z0-9-]*` (a lowercase ASCII letter followed by zero or more lowercase ASCII letters, digits, or hyphens)
+- The `type` parameter is OPTIONAL; if omitted, implementations MUST treat it as `text`
+- Implementations MUST support placeholder types `text`, `date`, and `money`
+- Additional type-specific parameters MAY be provided when defined for the selected `type`; for `type=money`, `currency` MAY be provided using an ISO 4217 three-letter code
+- The `note` parameter is OPTIONAL and follows the general field spec rules in Section 10.1
+- Multiple occurrences using the same `placeholder-id` refer to the same logical blank
+- All occurrences of the same `placeholder-id` MUST use the same effective `type`
+- When the same `placeholder-id` appears multiple times with type-specific parameters, those parameters SHOULD remain consistent across occurrences; validators MAY emit a warning when they differ
+- Renderers MUST preserve the raw `placeholder-id`, effective `type`, any type-specific parameters, and `note` (if present) in structured output formats for machine processing
+
 ---
 
 ## 11. Directives Summary
@@ -730,6 +768,8 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{party: role}}` | OPTIONAL | Inline party reference by role |
 | `{{party: role, label=text}}` | OPTIONAL | Inline party reference with display text |
 | `{{duration: value, unit=UNIT}}` | OPTIONAL | Inline time duration with unit |
+| `{{placeholder: placeholder-id}}` | OPTIONAL | Inline fillable blank (defaults to `type=text`) |
+| `{{placeholder: placeholder-id, type=money, currency=CODE}}` | OPTIONAL | Inline typed blank with type-specific parameters |
 | `{{include: path}}` | OPTIONAL | Include external file |
 
 ### 11.2 Directive Rules
@@ -884,6 +924,19 @@ When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT
 6. If the value is invalid, insert `[INVALID DURATION: value]` and emit a validation error
 7. If the unit is missing or unrecognized, insert `[INVALID DURATION UNIT: UNIT]` and emit a validation error
 
+When rendering `{{placeholder: id}}` or `{{placeholder: id, ...}}`:
+
+1. Validate the `id` value and determine the effective `type`, defaulting to `text` when `type` is omitted
+2. Validate any type-specific parameters provided for the effective `type`
+3. Treat repeated occurrences of the same `id` as the same logical blank
+4. Ignore any `note` parameter for rendered output
+5. Replace the directive with a visible blank marker according to renderer settings, such as `[_____]`
+6. If the renderer cannot emit a visual blank, it MUST fall back to `[TBD: id]`
+7. If a type-specific parameter name is not defined for the effective `type`, implementations MUST ignore that parameter for rendered output and emit a validation warning
+8. If a type-specific parameter value is invalid, unrecognized, or a required type-specific parameter is missing, implementations MUST apply the rendering fallback and validation severity defined for that type-specific rule when such a rule exists; for example, for `type=money`, an unrecognized `currency` MUST render as `[UNKNOWN CURRENCY: CURRENCY]` and emit a validation warning, consistent with `{{money: ...}}`
+9. If no type-specific fallback is defined for an invalid, unrecognized, or missing required type-specific parameter, insert `[INVALID PLACEHOLDER]` or `[INVALID PLACEHOLDER: id]` when the `id` can be determined, and emit a validation error
+10. If the `id` is malformed, the `type` is unsupported, or repeated occurrences use inconsistent types, insert `[INVALID PLACEHOLDER]` or `[INVALID PLACEHOLDER: id]` when the `id` can be determined, and emit a validation error
+
 ### 13.6 Output Formats
 
 Implementations SHOULD support:
@@ -1029,6 +1082,10 @@ Validators MUST categorize issues at three levels:
 | `{{party:}}` `role` value is non-empty and matches identifier format | Error |
 | `{{duration:}}` value is a positive numeric value | Error |
 | `{{duration:}}` `unit` parameter is one of `S`, `M`, `H`, `D`, `MO`, `Y` | Error |
+| `{{placeholder:}}` `placeholder-id` value is non-empty and matches identifier format | Error |
+| `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, or `money` | Error |
+| Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type` | Error |
+| `{{placeholder:}}` `currency` parameter for `type=money` is a recognized ISO 4217 code | Warning |
 | Field spec `note` parameter is plain text and does not contain commas or closing braces | Error |
 
 ### 15.6 Document Metadata Validation

@@ -157,6 +157,10 @@ Parties are organized under named sides, with each side containing a
 or `natural_person`). Structured data stays structured — not buried in
 paragraph text.
 
+**Placeholders stay inline.** Write `{{placeholder: closing-date}}` or
+`{{placeholder: fee, type=money, currency=EUR}}` directly in the text when a
+document needs a fillable blank. No frontmatter declaration is required.
+
 **Numbering is never in the source.** This is worth repeating. Section
 numbers, list enumeration (a), (b), (i), (ii), and cross-reference text
 like "Section 3.2" are all generated at render time. The source file
@@ -180,6 +184,8 @@ contains none of them.
 {{ref: identifier}}                      ← Cross-reference a section
 {{date: 2026-06-01}}                     ← Inline date value
 {{money: 10000, currency=CZK}}          ← Inline monetary amount
+{{placeholder: governing-law}}          ← Inline fillable blank (`type=text` by default)
+{{placeholder: fee, type=money, currency=EUR}} ← Typed inline blank
 {{party: acme}}                          ← Inline party reference
 {{include: schedules/pricing.lgd}}       ← Include an external file
 {{lang: fr}} ... {{/lang}}              ← Bilingual language block

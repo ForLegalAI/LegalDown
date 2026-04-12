@@ -190,6 +190,22 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 - `unit` (required): `S` | `M` | `H` | `D` | `MO` | `Y`
 - `note`: optional plain-text explanation for automation
 
+### Placeholder
+
+```markdown
+{{placeholder: governing-jurisdiction}}
+{{placeholder: delivery-date, type=date}}
+{{placeholder: fee, type=money, currency=EUR, note=Base monthly fee}}
+```
+
+- Pure inline directive; no frontmatter declaration needed
+- `type`: optional, defaults to `text`
+- Supported types: `text` | `date` | `money`
+- Same placeholder id used multiple times means the same logical blank
+- Repeated uses of the same placeholder id must keep the same effective type
+- Render as a visible blank such as `[_____]`; if unavailable, fall back to `[TBD: id]`
+- `note`: optional plain-text explanation for automation
+
 ### File Inclusion
 
 ```markdown
@@ -228,6 +244,7 @@ Separate files per language with identical heading structure and section identif
 - Too few sides or parties for the selected `document_type`
 - Missing `issuer` side for `unilateral_act` or `collective_act`
 - Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
+- Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
 - Mismatched bilingual structure
 
 **Warnings** (should fix):
@@ -235,6 +252,7 @@ Separate files per language with identical heading structure and section identif
 - Defined terms not following `**"Term"**` format
 - Declared definitions never referenced
 - Missing `currency` on `{{money:}}`
+- Unknown currency on `{{placeholder: ..., type=money}}`
 
 ## Minimal Example
 
