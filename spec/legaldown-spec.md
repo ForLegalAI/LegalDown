@@ -667,6 +667,7 @@ The `{{money:}}` directive represents a monetary amount inline in document text.
 
 ```markdown
 {{money: amount}}
+{{money: amount, note=text}}
 {{money: amount, currency=CODE}}
 {{money: amount, currency=CODE, note=text}}
 ```
@@ -888,7 +889,7 @@ When rendering `{{term: id}}` or `{{term: id, label=text}}`:
 
 ### 13.5 Field Spec Resolution
 
-When rendering `{{date: value}}`:
+When rendering `{{date: value}}` or `{{date: value, note=text}}`:
 
 1. Validate the date value is a valid ISO 8601 date
 2. Format the date according to the active locale or render template
@@ -896,7 +897,7 @@ When rendering `{{date: value}}`:
 4. Replace the directive with the formatted date text
 5. If the date is invalid, insert `[INVALID DATE: value]` and emit a validation error
 
-When rendering `{{money: amount}}` or `{{money: amount, currency=CODE}}`:
+When rendering `{{money: amount}}`, `{{money: amount, note=text}}`, `{{money: amount, currency=CODE}}`, or `{{money: amount, currency=CODE, note=text}}`:
 
 1. Validate the amount is a valid numeric value
 2. If a `currency` parameter is provided, validate it is a recognized ISO 4217 code
@@ -906,7 +907,7 @@ When rendering `{{money: amount}}` or `{{money: amount, currency=CODE}}`:
 6. If the amount is invalid, insert `[INVALID AMOUNT: amount]` and emit a validation error
 7. If the currency code is unrecognized, insert `[UNKNOWN CURRENCY: CODE]` and emit a validation warning
 
-When rendering `{{party: role}}` or `{{party: role, label=text}}`:
+When rendering `{{party: role}}`, `{{party: role, note=text}}`, `{{party: role, label=text}}`, or `{{party: role, label=text, note=text}}`:
 
 1. If a `label` parameter is provided, use it as the display text
 2. If no `label` is provided, use the `role` value as the display text
@@ -915,7 +916,7 @@ When rendering `{{party: role}}` or `{{party: role, label=text}}`:
 5. Replace the directive with the formatted party reference text
 6. If the `role` value is empty or malformed, insert `[INVALID PARTY: role]` and emit a validation error
 
-When rendering `{{duration: value, unit=UNIT}}`:
+When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT, note=text}}`:
 
 1. Validate the value is a positive numeric value
 2. Validate the `unit` parameter is one of: `S`, `M`, `H`, `D`, `MO`, `Y`

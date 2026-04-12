@@ -141,6 +141,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 ```markdown
 {{money: 10000, currency=USD}}
 {{money: 500}}
+{{money: 500, note=Estimated onboarding fee}}
 {{money: 500, currency=EUR, note=Base monthly service fee}}
 ```
 
