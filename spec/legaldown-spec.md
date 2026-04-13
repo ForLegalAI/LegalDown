@@ -1269,9 +1269,9 @@ Violations of the following additional checks MUST be reported as **Error**:
 |---|---|
 | `amends.title` is non-empty when `amends` is present | Error |
 | `amends.file` path exists when specified | Error |
-| `{{term:}}` references id not found in amendment or imported original (original `.lgd` available) | Error |
-| `{{term:}}` references id not found in amendment (original not available or not `.lgd`) | Info |
-| Amendment declares `{{def:}}` with same id as definition in original | Warning |
+| `{{term:}}` references id not found in amendment or imported original (original LegalDown source available, e.g. `.lgd`, `.legaldown`, or `.legal.md`) | Error |
+| `{{term:}}` references id not found in amendment (original not available or not LegalDown source) | Info |
+| Amendment declares `{{def:}}` with same id as definition in original LegalDown source | Warning |
 
 ### 15.9 Validation Output
 
