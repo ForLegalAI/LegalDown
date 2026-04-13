@@ -154,6 +154,7 @@ tags:
 | `adoption_date` | OPTIONAL | Adoption date (ISO 8601) |
 | `supersedes` | OPTIONAL | Prior document or version superseded by this document |
 | `amends` | OPTIONAL | Object identifying the original document this document amends (see Section 3.8) |
+| `attachments` | OPTIONAL | Array of attachment objects declaring documents attached to this document (see Section 3.9) |
 | `tags` | OPTIONAL | Classification tags array |
 
 If `field_types` is present, it MUST be a YAML map where each entry is `type-name: description`.
@@ -329,6 +330,51 @@ language: en
 ---
 ```
 
+### 3.9 Attachments Metadata
+
+The `attachments` key declares files that form an integral part of the document.
+
+Each attachment object has the following fields:
+
+| Field | Status | Description |
+|---|---|---|
+| `id` | REQUIRED | Identifier following standard identifier rules |
+| `title` | REQUIRED | Full attachment title as it should appear in rendered output |
+| `file` | REQUIRED | Relative path to the attachment file |
+
+**Rules:**
+
+- `attachments` is an OPTIONAL array in frontmatter
+- Attachment ids MUST be unique within the document
+- Attachment ids share the same namespace as section identifiers — collisions are not allowed
+- The `title` is author-written and rendered verbatim — the renderer does not generate labels such as "Schedule" or "Annex" (to remain language-agnostic)
+- The `file` path MAY point to a LegalDown file (`.lgd`, `.legaldown`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
+
+**Two modes based on file type:**
+
+| File type | Rendered inline | Content validated | Keeps numbering position |
+|---|---|---|---|
+| `.lgd` / `.legaldown` | Yes | Yes | Yes |
+| Any other (`.pdf`, `.docx`, etc.) | No | No | Yes |
+
+**Example:**
+
+```yaml
+---
+title: Master Service Agreement
+attachments:
+  - id: schedule-a
+    title: "Schedule A: Service Description"
+    file: attachments/service-description.lgd
+  - id: schedule-b
+    title: "Schedule B: Pricing"
+    file: attachments/pricing.lgd
+  - id: schedule-c
+    title: "Schedule C: Technical Specifications"
+    file: attachments/tech-specs.pdf
+---
+```
+
 ---
 
 ## 4. Document Structure
@@ -454,6 +500,32 @@ Renderers MUST:
 3. Replace the reference with the section number (e.g., "3.2")
 4. Create a hyperlink to the target section in formats that support hyperlinking (HTML, PDF, DOCX)
 5. If the target identifier does not exist, insert `[BROKEN REF: identifier]` in output and emit a validation error
+
+### 6.4 Attachment References
+
+**Syntax:**
+
+```markdown
+{{attach: attachment-id}}
+```
+
+**Examples:**
+
+```markdown
+Services are described in {{attach: schedule-a}}.
+
+Pricing is set out in {{attach: schedule-b}}.
+
+Technical requirements per {{attach: schedule-c}} shall apply.
+```
+
+**Rendering rules:**
+
+- Resolves to the attachment `title` from frontmatter
+- Creates a hyperlink to the attachment in formats that support linking
+- For LegalDown attachments — links to the rendered attachment section
+- For non-LegalDown attachments — links to the external file
+- If the id is not found, insert `[UNKNOWN ATTACHMENT: id]` in output and emit a validation error
 
 ---
 
@@ -906,6 +978,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{placeholder: placeholder-id}}` | OPTIONAL | Inline fillable blank (defaults to `type=text`) |
 | `{{placeholder: placeholder-id, type=money, currency=CODE}}` | OPTIONAL | Inline typed blank with type-specific parameters |
 | `{{include: path}}` | OPTIONAL | Include external file |
+| `{{attach: id}}` | OPTIONAL | Reference a declared attachment |
 
 ### 11.2 Directive Rules
 
@@ -942,6 +1015,58 @@ If file inclusion is supported:
 - Section identifiers from included files MUST be checked for conflicts with the main document
 - Included file frontmatter SHOULD be ignored (main document frontmatter applies)
 - Validation of the combined document (including all inclusions) is REQUIRED
+
+### 12.3 Distinction from Attachments
+
+| Aspect | `{{include:}}` | Attachments |
+|---|---|---|
+| Purpose | Inline content insertion at directive position | Structurally distinct appendix to the document |
+| Position in output | Where the directive appears in body | After main body, in declared order |
+| Heading | Author writes it in body | Renderer generates from frontmatter `title` |
+| Metadata | None | `id`, `title`, `file` in frontmatter |
+| Referenceable by | Section ids only | `{{attach: id}}` directive |
+| Non-LegalDown files | Not supported | Supported (tracked but not rendered) |
+
+### 12.4 Attachment Files
+
+LegalDown attachment files are body-only LegalDown files. They MUST NOT contain frontmatter. They MUST NOT contain a level 1 heading (`#`). They inherit the parent document's context — definitions, field types, metadata.
+
+**What attachment files can use:**
+
+- All standard LegalDown body syntax (headings, lists, tables, block quotes, etc.)
+- `{{term:}}` referencing definitions declared in the main document
+- `{{ref:}}` referencing sections in the main document or other attachments
+- `{{attach:}}` referencing other attachments
+- All field spec directives (`{{date:}}`, `{{money:}}`, `{{duration:}}`, `{{field:}}`, etc.)
+- Their own section identifiers (validated for uniqueness across the entire combined document)
+
+**What attachment files MUST NOT contain:**
+
+- YAML frontmatter (delimited by `---`)
+- Level 1 heading (`#`) — the renderer generates the attachment heading from the `title` in frontmatter
+
+**Example attachment file (attachments/service-description.lgd):**
+
+```markdown
+Provider shall deliver the following {{term: services}}:
+
+- Platform hosting and maintenance
+- Technical support during {{term: business-hours}}
+- Monthly performance reporting
+
+### Service Levels {#service-levels}
+
+Provider shall maintain system uptime of {{pct: 99.9}} measured monthly.
+Response time for critical issues shall not exceed {{duration: 4, unit=H}}.
+```
+
+**Non-LegalDown attachment files:**
+
+- Declared in frontmatter identically to LegalDown attachments
+- Referenceable via `{{attach: id}}`
+- Occupy their position in attachment order so that subsequent attachments number correctly
+- Validators check that the file exists but perform no content validation
+- Renderers MAY insert a placeholder page showing the title, or omit from rendered output depending on style template configuration
 
 ---
 
@@ -1105,6 +1230,18 @@ Renderers SHOULD support external style templates specifying:
 - Cover page format
 
 Templates SHOULD be defined in a separate configuration file (e.g., YAML or JSON) completely independent of document content. The same LegalDown source SHOULD render correctly with any compatible template.
+
+### 13.8 Attachment Rendering
+
+Attachments are rendered after the main document body, in the order declared in frontmatter.
+
+**Rendering rules:**
+
+- The renderer outputs the attachment `title` as the attachment heading — verbatim, with no generated labels
+- A separator (e.g., horizontal rule, page break) SHOULD be inserted before each attachment
+- Section numbering within LegalDown attachments follows the active numbering scheme — either continuing from the main body or restarting per attachment, configurable in the style template
+- Non-LegalDown attachments MAY render as a placeholder page (showing the title) or be omitted from rendered output, depending on style template configuration
+- Non-LegalDown attachments occupy their declared position so that numbering of subsequent attachments remains correct
 
 ---
 
@@ -1277,6 +1414,21 @@ Violations of the following additional checks MUST be reported as **Error**:
 
 Validators MUST produce structured output indicating file, line number, identifier (if applicable), issue level, and human-readable message. Validators SHOULD support output in plain text and JSON formats for integration with tooling.
 
+### 15.10 Attachment Validation
+
+| Check | Level |
+|---|---|
+| Attachment `id` is unique across document | Error |
+| Attachment `id` does not collide with any section identifier | Error |
+| Attachment `file` path exists | Error |
+| LegalDown attachment file contains frontmatter | Error |
+| LegalDown attachment file contains level 1 heading | Error |
+| Section identifiers in LegalDown attachment files are unique across entire combined document (main + all attachments) | Error |
+| Attachment declared but never referenced via `{{attach:}}` | Warning |
+| `{{attach:}}` references undeclared attachment id | Error |
+
+Non-LegalDown attachments: only file existence is checked.
+
 ## 16. Complete Examples
 
 ### 16.1 Contract Example
@@ -1313,6 +1465,13 @@ sides:
             title: General Counsel
 governing_law: Delaware
 language: en
+attachments:
+  - id: schedule-a
+    title: "Schedule A: Service Description"
+    file: attachments/service-description.lgd
+  - id: exhibit-1
+    title: "Exhibit 1: Prior Agreements"
+    file: attachments/prior-agreements.pdf
 ---
 
 # Mutual Non-Disclosure Agreement
@@ -1338,9 +1497,27 @@ reasonable care.
 {{term: confidential-info}} solely for evaluating a potential business
 relationship with {{party: acme, label=the Disclosing Party}}.
 
+Services shall be delivered as described in {{attach: schedule-a}}.
+
+This Agreement supersedes all prior agreements listed in {{attach: exhibit-1}}.
+
 ## Governing Law {#governing-law}
 
 This Agreement is governed by the laws of Delaware.
+```
+
+**attachments/service-description.lgd:**
+
+```markdown
+Provider shall deliver the following {{term: services}}:
+
+- Platform hosting and maintenance
+- Technical support
+- Monthly performance reporting
+
+### Service Levels {#service-levels}
+
+Provider shall maintain system uptime of {{pct: 99.9}} measured monthly.
 ```
 
 ### 16.2 Unilateral Act Example
