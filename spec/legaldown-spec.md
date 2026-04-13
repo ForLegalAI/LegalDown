@@ -1029,11 +1029,11 @@ If file inclusion is supported:
 
 ### 12.4 Attachment Files
 
-LegalDown attachment files are body-only LegalDown files. They MUST NOT contain frontmatter. They MUST NOT contain a level 1 heading (`#`). They inherit the parent document's context — definitions, field types, metadata.
+LegalDown attachment files are body-only LegalDown content fragments included by a parent LegalDown document. They MUST NOT contain frontmatter. They MUST NOT contain a level 1 heading (`#`). They inherit the parent document's context — definitions, field types, metadata. Attachment files are not standalone LegalDown documents for purposes of §4.1 and §15.2 validation, and are therefore exempt from the requirement that a document contain exactly one level 1 heading. Instead, attachment files are validated using the attachment-specific rules in this section and §15.10, plus any validation that applies across the combined document such as identifier uniqueness.
 
 **What attachment files can use:**
 
-- All standard LegalDown body syntax (headings, lists, tables, block quotes, etc.)
+- All standard LegalDown body syntax, except standalone-document structure requirements (for example, frontmatter and the single level 1 heading rule)
 - `{{term:}}` referencing definitions declared in the main document
 - `{{ref:}}` referencing sections in the main document or other attachments
 - `{{attach:}}` referencing other attachments
