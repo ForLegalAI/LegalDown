@@ -153,6 +153,7 @@ tags:
 | `adopted_by` | OPTIONAL | Body or authority that adopted the document |
 | `adoption_date` | OPTIONAL | Adoption date (ISO 8601) |
 | `supersedes` | OPTIONAL | Prior document or version superseded by this document |
+| `amends` | OPTIONAL | Object identifying the original document this document amends (see Section 3.8) |
 | `tags` | OPTIONAL | Classification tags array |
 
 If `field_types` is present, it MUST be a YAML map where each entry is `type-name: description`.
@@ -269,6 +270,64 @@ representatives:
 ### 3.7 Metadata Extensions
 
 Additional metadata fields in frontmatter are permitted. Implementations MUST ignore unknown metadata fields rather than failing. This allows forward compatibility and custom extensions.
+
+### 3.8 Amendments Metadata
+
+When the `amends` key is present, the document is an amendment to an existing document.
+
+The `amends` object has the following fields:
+
+| Field | Status | Description |
+|---|---|---|
+| `title` | REQUIRED | Title of the amended document |
+| `file` | OPTIONAL | Relative path to the original document file |
+
+**Rules:**
+
+- The `amends.title` field MUST be a non-empty string
+- The `amends.file` field, if present, is a relative path to the original document
+- The original file MAY be a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
+- The amendment document itself follows the same structure rules as any other LegalDown document — all existing features (headings, section identifiers, cross-references, definitions, field specs, etc.) work unchanged
+- An amendment MAY declare its own definitions using `{{def:}}` for new terms introduced by the amendment
+
+**Example:**
+
+```yaml
+---
+title: First Amendment to Master Service Agreement
+amends:
+  title: Master Service Agreement
+  file: ../original/msa.lgd
+effective_date: 2026-06-01
+sides:
+  - name: providers
+    label: Providers
+    parties:
+      - name: acme-corporation
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: clients
+    label: Clients
+    parties:
+      - name: beta-industries
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
+governing_law: Delaware
+language: en
+---
+```
 
 ---
 
@@ -479,6 +538,27 @@ Implementations MAY support automatic recognition of defined terms without expli
 - Implementations SHOULD make this behavior configurable
 - The feature SHOULD be disabled by default to avoid false positives
 - Explicit `{{term:}}` is RECOMMENDED for precision
+
+### 7.5 Definition Resolution in Amendments
+
+When a document contains an `amends` key in frontmatter, definition validation follows special resolution rules based on whether the original document is available and in LegalDown format:
+
+**When `amends.file` points to a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`):**
+
+- The validator MUST load the original document and import its `{{def:}}` declarations into the amendment's validation scope
+- `{{term:}}` directives in the amendment resolve against both the amendment's own definitions and the imported definitions from the original
+- Imported definitions do not need to be redeclared in the amendment
+- If the amendment declares a `{{def:}}` with the same id as a definition in the original, the validator MUST emit a Warning (intentional override of original definition)
+
+**When `amends.file` points to a non-LegalDown file (`.pdf`, `.docx`, etc.):**
+
+- The validator cannot import definitions from the original
+- `{{term:}}` directives referencing ids not declared in the amendment itself MUST emit an Info-level message rather than a validation Error; this amendment-specific rule overrides the general missing-definition validation error requirement (including Section 7.3 Rendering step 6)
+
+**When `amends.file` is absent:**
+
+- No cross-validation is possible
+- `{{term:}}` directives referencing ids not declared in the amendment itself MUST emit an Info-level message rather than a validation Error; this amendment-specific rule overrides the general missing-definition validation error requirement (including Section 7.3 Rendering step 6)
 
 ---
 
@@ -1183,7 +1263,17 @@ Violations of the following additional checks MUST be reported as **Error**:
 | Section identifiers match between translations | Error |
 | Definition IDs match between translations | Error |
 
-### 15.8 Validation Output
+### 15.8 Amendment Validation (when amends metadata present)
+
+| Check | Level |
+|---|---|
+| `amends.title` is non-empty when `amends` is present | Error |
+| `amends.file` path exists when specified | Error |
+| `{{term:}}` references id not found in amendment or imported original (original LegalDown source available, e.g. `.lgd`, `.legaldown`, or `.legal.md`) | Error |
+| `{{term:}}` references id not found in amendment (original not available or not LegalDown source) | Info |
+| Amendment declares `{{def:}}` with same id as definition in original LegalDown source | Warning |
+
+### 15.9 Validation Output
 
 Validators MUST produce structured output indicating file, line number, identifier (if applicable), issue level, and human-readable message. Validators SHOULD support output in plain text and JSON formats for integration with tooling.
 
@@ -1339,4 +1429,68 @@ by their manager and consistent with applicable law.
 
 The Issuer may issue equipment and security requirements needed to support
 {{term: remote-work}}.
+```
+
+### 16.4 Amendment Example
+
+```markdown
+---
+title: First Amendment to Master Service Agreement
+amends:
+  title: Master Service Agreement
+  file: ../original/msa.lgd
+effective_date: 2026-06-01
+sides:
+  - name: providers
+    label: Providers
+    parties:
+      - name: acme-corporation
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: clients
+    label: Clients
+    parties:
+      - name: beta-industries
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
+governing_law: Delaware
+language: en
+---
+
+# First Amendment to Master Service Agreement
+
+The parties hereby agree to amend the Master Service Agreement
+dated {{date: 2025-01-15}} (the "Agreement") as follows:
+
+## Payment Terms {#payment-terms}
+
+Section 5.1 of the Agreement is amended to read as follows:
+
+Client shall pay Provider within fifteen (15) days of invoice
+date. Late payments shall bear interest at {{money: 500, currency=USD}}
+per day of delay.
+
+## Data Protection {#data-protection}
+
+The following new section is added after Section 8 of the Agreement:
+
+Provider shall process all {{term: confidential-info}} in
+accordance with applicable data protection laws.
+
+## Unchanged Provisions {#unchanged}
+
+All other terms and conditions of the Agreement remain in full
+force and effect.
 ```
