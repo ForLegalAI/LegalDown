@@ -86,8 +86,8 @@ When `amends` is present in frontmatter, the document is an amendment to an exis
 
 **Definition resolution in amendments:**
 
-- If `amends.file` points to a `.lgd`/`.legaldown` file: import original definitions; `{{term:}}` resolves against both amendment and original definitions; redeclaring a definition from the original emits a Warning
-- If `amends.file` points to a non-LegalDown file or is absent: unresolved `{{term:}}` references emit Info (not Error)
+- If `amends.file` points to a `.lgd`, `.legaldown`, or `.legal.md` file: import original definitions; `{{term:}}` resolves against both amendment and original definitions; redeclaring a definition from the original emits a Warning
+- If `amends.file` points to a non-LegalDown file other than `.lgd`, `.legaldown`, or `.legal.md`, or is absent: unresolved `{{term:}}` references emit Info (not Error)
 
 ## Heading Hierarchy
 
