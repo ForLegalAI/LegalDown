@@ -103,7 +103,7 @@ When `attachments` is present in frontmatter, the document has attached files (s
 - Each attachment has `id` (required, unique identifier), `title` (required, rendered verbatim), and `file` (required, relative path)
 - Attachment ids share the same namespace as section identifiers — collisions are not allowed
 - The `title` is author-written; the renderer does not generate labels like "Schedule" or "Annex"
-- `.lgd` / `.legaldown` files: rendered inline after the main body, content validated, body-only format (must not contain frontmatter or level 1 heading)
+- `.lgd`, `.legaldown`, and `.legal.md` files: rendered inline after the main body, content validated, body-only format (must not contain frontmatter or level 1 heading)
 - Other file types (`.pdf`, `.docx`, etc.): tracked for referencing and numbering but not rendered inline
 - Attachments are rendered in declared order after the main body
 - LegalDown attachment files inherit the parent document's context (definitions, field types, metadata)
