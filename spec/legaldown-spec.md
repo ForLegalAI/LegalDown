@@ -553,12 +553,12 @@ When a document contains an `amends` key in frontmatter, definition validation f
 **When `amends.file` points to a non-LegalDown file (`.pdf`, `.docx`, etc.):**
 
 - The validator cannot import definitions from the original
-- `{{term:}}` directives referencing ids not declared in the amendment itself MUST emit an Info-level message instead of an Error
+- `{{term:}}` directives referencing ids not declared in the amendment itself MUST emit an Info-level message rather than a validation Error; this amendment-specific rule overrides the general missing-definition validation error requirement (including Section 7.3 Rendering step 6)
 
 **When `amends.file` is absent:**
 
 - No cross-validation is possible
-- `{{term:}}` directives referencing ids not declared in the amendment itself MUST emit an Info-level message instead of an Error
+- `{{term:}}` directives referencing ids not declared in the amendment itself MUST emit an Info-level message rather than a validation Error; this amendment-specific rule overrides the general missing-definition validation error requirement (including Section 7.3 Rendering step 6)
 
 ---
 
