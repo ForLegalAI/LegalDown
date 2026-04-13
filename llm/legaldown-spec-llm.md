@@ -60,6 +60,13 @@ supersedes: Prior policy v1             # OPTIONAL
 amends:                                  # OPTIONAL: amendment metadata
   title: Original Document Title         # REQUIRED when amends is present
   file: ../original/document.lgd         # OPTIONAL: relative path to original
+attachments:                             # OPTIONAL: array of attachment objects
+  - id: schedule-a                       # REQUIRED: unique identifier
+    title: "Schedule A: Service Description"  # REQUIRED: rendered verbatim
+    file: attachments/service-description.lgd # REQUIRED: relative path
+  - id: exhibit-1
+    title: "Exhibit 1: Prior Agreements"
+    file: attachments/prior-agreements.pdf
 tags: [tag1, tag2]                      # OPTIONAL
 ---
 ```
@@ -88,6 +95,19 @@ When `amends` is present in frontmatter, the document is an amendment to an exis
 
 - If `amends.file` points to a `.lgd`, `.legaldown`, or `.legal.md` file: import original definitions; `{{term:}}` resolves against both amendment and original definitions; redeclaring a definition from the original emits a Warning
 - If `amends.file` points to a non-LegalDown file other than `.lgd`, `.legaldown`, or `.legal.md`, or is absent: unresolved `{{term:}}` references emit Info (not Error)
+
+### Attachments
+
+When `attachments` is present in frontmatter, the document has attached files (schedules, annexes, exhibits) that are integral parts of the document.
+
+- Each attachment has `id` (required, unique identifier), `title` (required, rendered verbatim), and `file` (required, relative path)
+- Attachment ids share the same namespace as section identifiers — collisions are not allowed
+- The `title` is author-written; the renderer does not generate labels like "Schedule" or "Annex"
+- `.lgd`, `.legaldown`, and `.legal.md` files: rendered inline after the main body, content validated, body-only format (must not contain frontmatter or level 1 heading)
+- Other file types (`.pdf`, `.docx`, etc.): tracked for referencing and numbering but not rendered inline
+- Attachments are rendered in declared order after the main body
+- LegalDown attachment files inherit the parent document's context (definitions, field types, metadata)
+- Section identifiers in attachment files must be unique across the entire combined document
 
 ## Heading Hierarchy
 
@@ -249,6 +269,16 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 
 Path is relative to the including document. Circular includes are invalid.
 
+### Attachment Reference
+
+```markdown
+{{attach: attachment-id}}
+```
+
+- Resolves to the attachment `title` from frontmatter
+- Creates a hyperlink to the attachment (rendered section for LegalDown files, external file for others)
+- If the id is not found, renders as `[UNKNOWN ATTACHMENT: id]`
+
 ## Text Formatting
 
 Standard CommonMark:
@@ -286,6 +316,13 @@ Separate files per language with identical heading structure and section identif
 - `amends.title` is empty or missing when `amends` is present
 - `amends.file` path does not exist when specified
 - `{{term:}}` references id not found in amendment or imported original (when original is a LegalDown file)
+- Attachment `id` is not unique across document
+- Attachment `id` collides with a section identifier
+- Attachment `file` path does not exist
+- LegalDown attachment file contains frontmatter
+- LegalDown attachment file contains level 1 heading
+- Section identifiers in attachment files are not unique across entire combined document
+- `{{attach:}}` references undeclared attachment id
 
 **Warnings** (should fix):
 - Hardcoded numbering in headings
@@ -293,6 +330,7 @@ Separate files per language with identical heading structure and section identif
 - Declared definitions never referenced
 - Missing `currency` on `{{money:}}`
 - Undeclared `{{field:}}` type when `field_types` frontmatter is present
+- Attachment declared but never referenced via `{{attach:}}`
 - Unknown currency on `{{placeholder: ..., type=money}}`
 - Amendment declares `{{def:}}` with same id as definition in original LegalDown source
 
