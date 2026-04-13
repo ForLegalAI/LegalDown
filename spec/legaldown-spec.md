@@ -348,13 +348,13 @@ Each attachment object has the following fields:
 - Attachment ids MUST be unique within the document
 - Attachment ids share the same namespace as section identifiers (see Section 5) — collisions are not allowed
 - The `title` is author-written and rendered verbatim — the renderer does not generate labels such as "Schedule" or "Annex" (to remain language-agnostic)
-- The `file` path MAY point to a LegalDown file (`.lgd`, `.legaldown`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
+- The `file` path MAY point to a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
 
 **Two modes based on file type:**
 
 | File type | Rendered inline | Content validated | Keeps numbering position |
 |---|---|---|---|
-| `.lgd` / `.legaldown` | Yes | Yes | Yes |
+| `.lgd` / `.legaldown` / `.legal.md` | Yes | Yes | Yes |
 | Any other (`.pdf`, `.docx`, etc.) | No | No | Yes |
 
 **Example:**
