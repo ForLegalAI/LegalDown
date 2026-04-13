@@ -57,6 +57,9 @@ authoritative: en                       # OPTIONAL, ISO 639-1
 adopted_by: Board of Directors          # OPTIONAL
 adoption_date: 2026-03-15               # OPTIONAL, ISO 8601
 supersedes: Prior policy v1             # OPTIONAL
+amends:                                  # OPTIONAL: amendment metadata
+  title: Original Document Title         # REQUIRED when amends is present
+  file: ../original/document.lgd         # OPTIONAL: relative path to original
 tags: [tag1, tag2]                      # OPTIONAL
 ---
 ```
@@ -71,6 +74,20 @@ tags: [tag1, tag2]                      # OPTIONAL
 - Party `type` is explicit: `legal_entity` or `natural_person`
 - Unknown party fields are allowed and must be ignored by implementations
 - Display fallback: side `label` → title-cased/pluralized `name`; party `label` → `legal_name`
+
+### Amendments
+
+When `amends` is present in frontmatter, the document is an amendment to an existing document:
+
+- `amends.title` (required): non-empty string identifying the original document
+- `amends.file` (optional): relative path to the original document (`.lgd`, `.legaldown`, `.pdf`, `.docx`, etc.)
+- The amendment follows the same structure rules as any other LegalDown document
+- An amendment MAY declare its own `{{def:}}` definitions for new terms
+
+**Definition resolution in amendments:**
+
+- If `amends.file` points to a `.lgd`/`.legaldown` file: import original definitions; `{{term:}}` resolves against both amendment and original definitions; redeclaring a definition from the original emits a Warning
+- If `amends.file` points to a non-LegalDown file or is absent: unresolved `{{term:}}` references emit Info (not Error)
 
 ## Heading Hierarchy
 
@@ -266,6 +283,9 @@ Separate files per language with identical heading structure and section identif
 - Missing or malformed `type` on `{{field:}}`
 - Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
 - Mismatched bilingual structure
+- `amends.title` is empty or missing when `amends` is present
+- `amends.file` path does not exist when specified
+- `{{term:}}` references id not found in amendment or imported original (when original `.lgd` is available)
 
 **Warnings** (should fix):
 - Hardcoded numbering in headings
@@ -274,6 +294,10 @@ Separate files per language with identical heading structure and section identif
 - Missing `currency` on `{{money:}}`
 - Undeclared `{{field:}}` type when `field_types` frontmatter is present
 - Unknown currency on `{{placeholder: ..., type=money}}`
+- Amendment declares `{{def:}}` with same id as definition in original
+
+**Info** (suggestions):
+- `{{term:}}` references id not found in amendment (when original is not available or not `.lgd`)
 
 ## Minimal Example
 
