@@ -346,7 +346,7 @@ Each attachment object has the following fields:
 
 - `attachments` is an OPTIONAL array in frontmatter
 - Attachment ids MUST be unique within the document
-- Attachment ids share the same namespace as section identifiers — collisions are not allowed
+- Attachment ids share the same namespace as section identifiers (see Section 5) — collisions are not allowed
 - The `title` is author-written and rendered verbatim — the renderer does not generate labels such as "Schedule" or "Annex" (to remain language-agnostic)
 - The `file` path MAY point to a LegalDown file (`.lgd`, `.legaldown`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
 
