@@ -286,7 +286,7 @@ The `amends` object has the following fields:
 
 - The `amends.title` field MUST be a non-empty string
 - The `amends.file` field, if present, is a relative path to the original document
-- The original file MAY be a LegalDown file (`.lgd`, `.legaldown`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
+- The original file MAY be a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
 - The amendment document itself follows the same structure rules as any other LegalDown document — all existing features (headings, section identifiers, cross-references, definitions, field specs, etc.) work unchanged
 - An amendment MAY declare its own definitions using `{{def:}}` for new terms introduced by the amendment
 
