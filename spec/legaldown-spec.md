@@ -543,7 +543,7 @@ Implementations MAY support automatic recognition of defined terms without expli
 
 When a document contains an `amends` key in frontmatter, definition validation follows special resolution rules based on whether the original document is available and in LegalDown format:
 
-**When `amends.file` points to a LegalDown file (`.lgd`, `.legaldown`):**
+**When `amends.file` points to a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`):**
 
 - The validator MUST load the original document and import its `{{def:}}` declarations into the amendment's validation scope
 - `{{term:}}` directives in the amendment resolve against both the amendment's own definitions and the imported definitions from the original

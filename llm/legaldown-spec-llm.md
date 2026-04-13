@@ -285,7 +285,7 @@ Separate files per language with identical heading structure and section identif
 - Mismatched bilingual structure
 - `amends.title` is empty or missing when `amends` is present
 - `amends.file` path does not exist when specified
-- `{{term:}}` references id not found in amendment or imported original (when original `.lgd` is available)
+- `{{term:}}` references id not found in amendment or imported original (when original is a LegalDown file)
 
 **Warnings** (should fix):
 - Hardcoded numbering in headings
@@ -294,10 +294,10 @@ Separate files per language with identical heading structure and section identif
 - Missing `currency` on `{{money:}}`
 - Undeclared `{{field:}}` type when `field_types` frontmatter is present
 - Unknown currency on `{{placeholder: ..., type=money}}`
-- Amendment declares `{{def:}}` with same id as definition in original
+- Amendment declares `{{def:}}` with same id as definition in original LegalDown source
 
 **Info** (suggestions):
-- `{{term:}}` references id not found in amendment (when original is not available or not `.lgd`)
+- `{{term:}}` references id not found in amendment (when original is not available or not a LegalDown file)
 
 ## Minimal Example
 
