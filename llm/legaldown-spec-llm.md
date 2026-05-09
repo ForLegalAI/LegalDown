@@ -112,17 +112,15 @@ When `attachments` is present in frontmatter, the document has attached files (s
 ## Heading Hierarchy
 
 ```
-# Document Title              ← Exactly one per document
-## Top-level Provision         ← Articles / Sections (level 2)
-### Subsection                 ← Level 3
-#### Sub-subsection            ← Level 4
+# Top-level Provision          ← Articles / Sections (level 1)
+## Subsection                  ← Level 2
+### Sub-subsection             ← Level 3
+#### Level 4
 ##### Level 5
-###### Level 6
 ```
 
 **Rules:**
-- `#` must appear exactly once (document title)
-- Heading levels must not skip (no `##` → `####` without `###`)
+- Heading levels must not skip (no `#` → `###` without `##`)
 - Heading text must be plain text only — no numbering, no directives, no Markdown formatting
 - All section numbering is generated at render time — never write numbers in headings
 
@@ -131,7 +129,7 @@ When `attachments` is present in frontmatter, the document has attached files (s
 Explicit identifier syntax appended to headings:
 
 ```markdown
-## Payment Terms {#payment-terms}
+# Payment Terms {#payment-terms}
 ```
 
 **Identifier rules:**
@@ -170,9 +168,9 @@ Broken references render as `[BROKEN REF: identifier]`.
 **Rules:**
 
 - All definitions MUST be placed in a single Definitions section
-- The Definitions section MUST be the first `##` heading in the document body
-- The Definitions section MUST NOT contain any subheadings (level 3 or deeper)
-- All `{{def:}}` declarations appear directly under the `##` heading as consecutive paragraphs
+- The Definitions section MUST be the first `#` heading in the document body
+- The Definitions section MUST NOT contain any subheadings (level 2 or deeper)
+- All `{{def:}}` declarations appear directly under the `#` heading as consecutive paragraphs
 
 **Reference** a defined term inline:
 
@@ -297,10 +295,9 @@ Separate files per language with identical heading structure and section identif
 ## Validation Summary
 
 **Errors** (must fix):
-- Not exactly one `#` heading
 - Skipped heading levels
 - Duplicate or malformed section identifiers
-- Definitions section is not the first `##` heading
+- Definitions section is not the first `#` heading
 - Definitions section contains subheadings
 - `{{def:}}` declarations outside the Definitions section
 - Broken `{{ref:}}` or `{{term:}}` targets
@@ -373,9 +370,7 @@ governing_law: Delaware
 language: en
 ---
 
-# Mutual Non-Disclosure Agreement
-
-## Definitions {#definitions}
+# Definitions {#definitions}
 
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information disclosed
@@ -385,13 +380,13 @@ as confidential.
 {{def: effective-date}}
 **"Effective Date"** means the date first written above.
 
-## Confidentiality Obligations {#confidentiality}
+# Confidentiality Obligations {#confidentiality}
 
 {{party: beta, label=the Receiving Party}} shall protect the
 {{term: confidential-info}} using at least the same degree of care it uses
 for its own confidential information.
 
-## Term and Termination {#term}
+# Term and Termination {#term}
 
 This Agreement commences on the {{term: effective-date}} and continues
 until {{date: 2028-02-01}} unless earlier terminated by either party upon
