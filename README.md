@@ -1,33 +1,34 @@
-## LegalDown 📄
+<div align="center">
 
-> Plain text markup language for legal documents for the age of AI.
+# LegalDown 📄
 
-LegalDown is an **open specification for writing legal documents in plain text**.
-It extends standard Markdown with legal-specific constructs — structured
-sections, cross-references, and defined terms — enabling automated validation,
-flexible rendering, and native version control integration.
+### Markdown for Legal Documents
 
-A LegalDown document is a human-readable plain text file that can be rendered to a
-professionally formatted PDF or DOCX is needed (with all section numbering, cross-references,
-and defined term links generated automatically).
+**Write contracts in plain text. Render to PDF or DOCX. Track changes with Git.**
 
-**AI tools struggle with legal documents today** — not because AI is not smart
-enough, but because Word files and other similar file types are a mess of hidden formatting, inconsistent
-structure, and binary noise that no machine was ever meant to read. LegalDown
-fixes this at the source. Clean structure, explicit hierarchy, validated
-cross-references — a LegalDown document is as easy for an AI to read and write as it
-is for a lawyer. Summarize it, analyze risk, extract key terms, compare it
-against a standard — all trivial when the document is structured plain text
-rather than a formatting nightmare in disguise.
+LegalDown is an open specification that extends Markdown with legal-specific constructs —
+structured sections, cross-references, defined terms, and party references —
+so legal documents are human-readable, machine-parseable, and AI-friendly.
 
-Thanks to LegalDown, people may again focus on the contents of the legal document,
-with the formatting being only a final addition to the document, not something to be dealt with from the start.
+[Specification](spec/legaldown-spec.md) · [Examples](llm) · [Discussions](../../discussions)
+
+</div>
+
+---
+
+### The Problem
+
+Legal documents live in Word files — a mess of hidden formatting, inconsistent structure, and binary noise. This makes them hard to version-control, hard for AI to process, and fragile to edit. Move one section and half your cross-references break.
+
+### The Fix
+
+A LegalDown document is a **plain text file** you can read in any editor, diff with Git, and feed directly to an LLM. Write once, render anywhere — all section numbering, cross-references, and defined-term links are generated automatically at render time.
 
 ---
 
 ### Why LegalDown? 🤔
 
-LegalDown addresses the above described issues with a few core ideas:
+LegalDown is built on a few core ideas:
 
 📝 **Write in plain text.** Documents are readable in any text editor without
 proprietary software, plugins, or compatibility concerns. If you can read
