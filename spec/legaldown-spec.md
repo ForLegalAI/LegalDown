@@ -384,19 +384,17 @@ attachments:
 LegalDown uses Markdown heading syntax to define legal document hierarchy:
 
 ```
-# Document Title                    (Level 1 — Document root)
-## Top-level Provision              (Level 2 — Articles / Sections)
-### Second-level Provision          (Level 3 — Subsections)
-#### Third-level Provision          (Level 4)
-##### Fourth-level Provision        (Level 5)
-###### Fifth-level Provision        (Level 6)
+# Top-level Provision               (Level 1 — Articles / Sections)
+## Second-level Provision            (Level 2 — Subsections)
+### Third-level Provision            (Level 3)
+#### Fourth-level Provision          (Level 4)
+##### Fifth-level Provision          (Level 5)
 ```
 
 **Rules:**
 
-- Level 1 (`#`) MUST appear exactly once in the document as the document title
-- Level 2 (`##`) represents top-level provisions (articles, sections)
-- Heading levels MUST NOT skip levels — jumping from `##` to `####` without an intervening `###` is invalid
+- Level 1 (`#`) represents top-level provisions (articles, sections)
+- Heading levels MUST NOT skip levels — jumping from `#` to `###` without an intervening `##` is invalid
 - Heading text MUST NOT contain hardcoded section numbers — numbering is generated at render time
 - Headings SHOULD be concise and descriptive
 
@@ -427,9 +425,9 @@ Section identifiers (anchors) provide stable targets for cross-references that r
 Any heading MAY include an explicit identifier:
 
 ```markdown
-## Payment Terms {#payment-terms}
-### Late Payment Fees {#payment-late-fees}
-#### Monthly Calculation {#payment-late-fees-monthly}
+# Payment Terms {#payment-terms}
+## Late Payment Fees {#payment-late-fees}
+### Monthly Calculation {#payment-late-fees-monthly}
 ```
 
 **Rules for identifiers:**
@@ -540,7 +538,7 @@ Defined terms are a fundamental feature of legal contracts. LegalDown provides s
 Definitions are declared using the `{{def:}}` directive placed at the start of a paragraph, immediately before the defined term:
 
 ```markdown
-## Definitions {#definitions}
+# Definitions {#definitions}
 
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information disclosed by
@@ -559,8 +557,8 @@ information, and any other information designated as confidential.
 - Definition IDs MUST be unique within the document
 - The defined term SHOULD be formatted as bold quoted text: `**"Term Name"**`
 - All definitions MUST be placed in a single Definitions section
-- The Definitions section MUST be the first level 2 (`##`) heading in the document body (i.e., the first `##` after the document title)
-- The Definitions section MUST NOT contain any subheadings (level 3 or deeper) — all `{{def:}}` declarations appear directly under the `##` heading as consecutive paragraphs
+- The Definitions section MUST be the first level 1 (`#`) heading in the document body
+- The Definitions section MUST NOT contain any subheadings (level 2 or deeper) — all `{{def:}}` declarations appear directly under the `#` heading as consecutive paragraphs
 
 ### 7.3 Definition Reference
 
@@ -711,7 +709,7 @@ HTML-style comments are valid in LegalDown and MUST be stripped from all rendere
 ```markdown
 <!-- Internal note: this clause was revised on 2026-01-15 per partner review -->
 
-## Limitation of Liability {#liability-limitations}
+# Limitation of Liability {#liability-limitations}
 ```
 
 ---
@@ -996,11 +994,11 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 Implementations MAY support including external LegalDown files:
 
 ```markdown
-## Schedule A — Service Description {#schedule-a}
+# Schedule A — Service Description {#schedule-a}
 
 {{include: schedules/service-description.lgd}}
 
-## Schedule B — Pricing {#schedule-b}
+# Schedule B — Pricing {#schedule-b}
 
 {{include: schedules/pricing.lgd}}
 ```
@@ -1029,11 +1027,11 @@ If file inclusion is supported:
 
 ### 12.4 Attachment Files
 
-LegalDown attachment files are body-only LegalDown content fragments included by a parent LegalDown document. They MUST NOT contain frontmatter. They MUST NOT contain a level 1 heading (`#`). They inherit the parent document's context — definitions, field types, metadata. Attachment files are not standalone LegalDown documents for purposes of §4.1 and §15.2 validation, and are therefore exempt from the requirement that a document contain exactly one level 1 heading. Instead, attachment files are validated using the attachment-specific rules in this section and §15.10, plus any validation that applies across the combined document such as identifier uniqueness.
+LegalDown attachment files are body-only LegalDown content fragments included by a parent LegalDown document. They MUST NOT contain frontmatter. They MUST NOT contain a level 1 heading (`#`). They inherit the parent document's context — definitions, field types, metadata. Attachment files are not standalone LegalDown documents for purposes of §4.1 and §15.2 validation. Instead, attachment files are validated using the attachment-specific rules in this section and §15.10, plus any validation that applies across the combined document such as identifier uniqueness.
 
 **What attachment files can use:**
 
-- All standard LegalDown body syntax, except standalone-document structure requirements (for example, frontmatter and the single level 1 heading rule)
+- All standard LegalDown body syntax, except standalone-document structure requirements (for example, frontmatter)
 - `{{term:}}` referencing definitions declared in the main document
 - `{{ref:}}` referencing sections in the main document or other attachments
 - `{{attach:}}` referencing other attachments
@@ -1054,7 +1052,7 @@ Provider shall deliver the following {{term: services}}:
 - Technical support during {{term: business-hours}}
 - Monthly performance reporting
 
-### Service Levels {#service-levels}
+## Service Levels {#service-levels}
 
 Provider shall maintain system uptime of {{pct: 99.9}} measured monthly.
 Response time for critical issues shall not exceed {{duration: 4, unit=H}}.
@@ -1074,7 +1072,7 @@ Response time for critical issues shall not exceed {{duration: 4, unit=H}}.
 
 ### 13.1 Section Numbering
 
-Because LegalDown source contains no hardcoded numbers, renderers MUST generate all section numbering at render time. Numbering MUST follow the heading hierarchy (`##`, `###`, `####`, etc.).
+Because LegalDown source contains no hardcoded numbers, renderers MUST generate all section numbering at render time. Numbering MUST follow the heading hierarchy (`#`, `##`, `###`, etc.).
 
 **Supported numbering schemes:**
 
@@ -1265,9 +1263,7 @@ translations:
 authoritative: en
 ---
 
-# Service Agreement {#agreement}
-
-## Definitions {#definitions}
+# Definitions {#definitions}
 
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information...
@@ -1283,9 +1279,7 @@ translations:
 authoritative: en
 ---
 
-# Accord de service {#agreement}
-
-## Définitions {#definitions}
+# Définitions {#definitions}
 
 {{def: confidential-info}}
 **« Information confidentielle »** désigne toute information non publique...
@@ -1324,14 +1318,13 @@ Validators MUST categorize issues at three levels:
 
 | Check | Level |
 |---|---|
-| Document contains exactly one level 1 heading | Error |
 | Heading levels do not skip | Error |
 | Section identifiers are unique within document | Error |
 | Section identifiers follow naming rules | Error |
 | Headings do not contain hardcoded numbering | Warning |
 | Directives are well-formed | Error |
-| Definitions section is the first level 2 heading | Error |
-| Definitions section contains no subheadings (level 3 or deeper) | Error |
+| Definitions section is the first level 1 heading | Error |
+| Definitions section contains no subheadings (level 2 or deeper) | Error |
 
 ### 15.3 Reference Validation
 
@@ -1474,24 +1467,22 @@ attachments:
     file: attachments/prior-agreements.pdf
 ---
 
-# Mutual Non-Disclosure Agreement
-
 This Mutual Non-Disclosure Agreement (this "Agreement") is entered into on
 {{date: 2026-02-01}} between {{party: acme}} and {{party: beta}}.
 
-## Definitions {#definitions}
+# Definitions {#definitions}
 
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information disclosed by
 one side to the other in connection with evaluating a potential business
 relationship.
 
-## Confidentiality Obligations {#confidentiality}
+# Confidentiality Obligations {#confidentiality}
 
 Each party shall protect the {{term: confidential-info}} using at least
 reasonable care.
 
-## Use Restrictions {#use}
+# Use Restrictions {#use}
 
 {{party: beta, label=the Receiving Party}} may use the
 {{term: confidential-info}} solely for evaluating a potential business
@@ -1501,7 +1492,7 @@ Services shall be delivered as described in {{attach: schedule-a}}.
 
 This Agreement supersedes all prior agreements listed in {{attach: exhibit-1}}.
 
-## Governing Law {#governing-law}
+# Governing Law {#governing-law}
 
 This Agreement is governed by the laws of Delaware.
 ```
@@ -1515,7 +1506,7 @@ Provider shall deliver the following {{term: services}}:
 - Technical support
 - Monthly performance reporting
 
-### Service Levels {#service-levels}
+## Service Levels {#service-levels}
 
 Provider shall maintain system uptime of {{pct: 99.9}} measured monthly.
 ```
@@ -1543,21 +1534,19 @@ sides:
 language: en
 ---
 
-# Notice of Termination
-
 This notice is issued by {{party: acme}}.
 
-## Definitions {#definitions}
+# Definitions {#definitions}
 
 {{def: termination-date}}
 **"Termination Date"** means {{date: 2026-06-01}}.
 
-## Notice {#notice}
+# Notice {#notice}
 
 {{party: acme, label=the Issuer}} hereby terminates the Services Agreement
 effective on the {{term: termination-date}}.
 
-## Delivery {#delivery}
+# Delivery {#delivery}
 
 This notice shall be delivered in accordance with the notice provisions of the
 Services Agreement.
@@ -1586,23 +1575,21 @@ sides:
 language: en
 ---
 
-# Remote Work Policy
-
 This Policy is adopted by the Board of Directors of {{party: acme}} and takes
 effect on {{date: 2026-04-01}}.
 
-## Definitions {#definitions}
+# Definitions {#definitions}
 
 {{def: remote-work}}
 **"Remote Work"** means performance of assigned duties at a location other
 than the Issuer's premises.
 
-## Eligibility {#eligibility}
+# Eligibility {#eligibility}
 
 Employees of {{party: acme}} may perform {{term: remote-work}} when approved
 by their manager and consistent with applicable law.
 
-## Equipment {#equipment}
+# Equipment {#equipment}
 
 The Issuer may issue equipment and security requirements needed to support
 {{term: remote-work}}.
@@ -1646,12 +1633,10 @@ governing_law: Delaware
 language: en
 ---
 
-# First Amendment to Master Service Agreement
-
 The parties hereby agree to amend the Master Service Agreement
 dated {{date: 2025-01-15}} (the "Agreement") as follows:
 
-## Payment Terms {#payment-terms}
+# Payment Terms {#payment-terms}
 
 Section 5.1 of the Agreement is amended to read as follows:
 
@@ -1659,14 +1644,14 @@ Client shall pay Provider within fifteen (15) days of invoice
 date. Late payments shall bear interest at {{money: 500, currency=USD}}
 per day of delay.
 
-## Data Protection {#data-protection}
+# Data Protection {#data-protection}
 
 The following new section is added after Section 8 of the Agreement:
 
 Provider shall process all {{term: confidential-info}} in
 accordance with applicable data protection laws.
 
-## Unchanged Provisions {#unchanged}
+# Unchanged Provisions {#unchanged}
 
 All other terms and conditions of the Agreement remain in full
 force and effect.

@@ -97,22 +97,20 @@ governing_law: Delaware
 language: en
 ---
 
-# Mutual Non-Disclosure Agreement
-
-## Definitions {#definitions}
+# Definitions {#definitions}
 
 {{def: confidential-info}}
 **"Confidential Information"** means any non-public information disclosed
 by one side to the other, whether orally or in writing, that is designated
 as confidential or that reasonably should be understood to be confidential.
 
-## Confidentiality Obligations {#confidentiality}
+# Confidentiality Obligations {#confidentiality}
 
 {{party: beta, label=the Receiving Party}} shall protect the
 {{term: confidential-info}} using at least the same degree of care it uses
 for its own confidential information.
 
-## Exceptions {#confidentiality-exceptions}
+# Exceptions {#confidentiality-exceptions}
 
 The obligations in {{ref: confidentiality}} do not apply to information
 that was publicly known at the time of disclosure.
@@ -132,9 +130,9 @@ The source file itself remains clean, readable, and numbering-free.
 ### Core Concepts 🧠
 
 **Headings define structure.** The Markdown heading hierarchy directly maps
-to the legal document structure. `#` is the document title. `##` is a
-top-level provision. `###`, `####` and deeper are nested provisions.
-Heading levels must not skip — no jumping from `##` to `####`.
+to the legal document structure. The document title lives in frontmatter.
+`#` is a top-level provision. `##`, `###` and deeper are nested provisions.
+Heading levels must not skip — no jumping from `#` to `###`.
 
 **Identifiers make references stable.** Add `{#payment-terms}` after any
 heading to give it a stable identifier. Cross-references use this identifier,
@@ -178,10 +176,9 @@ contains none of them.
 ### Document Structure at a Glance 🗂️
 
 ```
-# Document Title                         ← Document title (exactly one)
-## Top-level Provision {#identifier}     ← Article / Section
-### Subsection                           ← Nested provision
-#### Further detail                      ← Deeper nesting (up to 6 levels)
+# Top-level Provision {#identifier}      ← Article / Section
+## Subsection                            ← Nested provision
+### Further detail                       ← Deeper nesting (up to 5 levels)
 
 {{def: term-id}}                         ← Declare a defined term
 **"Defined Term"** means...
