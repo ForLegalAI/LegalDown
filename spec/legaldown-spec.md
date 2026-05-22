@@ -436,7 +436,7 @@ Any heading MAY include an explicit identifier:
 - MUST be unique within the document
 - MUST contain only lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens (`-`)
 - MUST start with a lowercase ASCII letter
-- MUST NOT contain spaces, Unicode letters, or special characters
+- MUST NOT contain characters outside `a-z`, `0-9`, and `-`
 
 ### 5.3 Automatic Identifier Generation
 
@@ -449,6 +449,8 @@ If no explicit identifier is provided, implementations MUST auto-generate one us
 5. Remove all characters that are not ASCII letters (`a-z`), ASCII digits (`0-9`), or hyphens
 6. Remove leading and trailing hyphens
 7. Truncate to maximum 64 characters
+8. If the result is empty, use `section` as the identifier
+9. If the result does not start with a lowercase ASCII letter (e.g., starts with a digit or hyphen), prefix with `section-`
 
 Example: "Confidential Information & Trade Secrets" → `confidential-information-trade-secrets`
 Example: "Définitions Générales" → `definitions-generales`
@@ -1174,8 +1176,8 @@ When rendering `{{party: party-name}}`, `{{party: party-name, note=text}}`, `{{p
 3. Format the display text according to the active locale or render template
 4. Ignore any `note` parameter for rendered output
 5. Replace the directive with the formatted party reference text
-6. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error
-7. If the `party-name` value is empty or malformed, insert `[INVALID PARTY: party-name]` and emit a validation error
+6. If the `party-name` value is empty or malformed, insert `[INVALID PARTY: party-name]` and emit a validation error
+7. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error
 
 When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT, note=text}}`:
 

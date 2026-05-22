@@ -136,7 +136,7 @@ Explicit identifier syntax appended to headings:
 - Lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens only
 - Must start with a lowercase ASCII letter
 - Must be unique within the document
-- Auto-generated if omitted: transliterate non-ASCII to ASCII → lowercase → spaces/underscores to hyphens → strip non-ASCII-alphanumeric → truncate to 64 chars
+- Auto-generated if omitted: transliterate non-ASCII to ASCII → lowercase → spaces/underscores to hyphens → remove characters not in `a-z`, `0-9`, `-` → trim leading/trailing hyphens → truncate to 64 chars → use `section` if empty → prefix `section-` if not starting with a lowercase letter
 
 **Identifier scope:**
 - Each section identifier must be unique within the document
@@ -215,7 +215,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{party: party-name, label=Display Text, note=Primary signing contact}}
 ```
 
-- `party-name`: lowercase ASCII identifier starting with a letter, then lowercase letters/digits/hyphens; resolves against `sides[].parties[].name`
+- `party-name`: lowercase ASCII identifier starting with a lowercase ASCII letter, then lowercase letters/digits/hyphens; resolves against `sides[].parties[].name`
 - `label`: optional inline display override
 - Without `label`, render the party `label` and fall back to `legal_name`
 - If the `party-name` does not match any party in frontmatter, render as `[UNKNOWN PARTY: party-name]`
