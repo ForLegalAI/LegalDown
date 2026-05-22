@@ -434,22 +434,26 @@ Any heading MAY include an explicit identifier:
 
 - Specified using `{#identifier}` syntax placed immediately after heading text, separated by a single space
 - MUST be unique within the document
-- MUST contain only lowercase letters, numbers, and hyphens
-- MUST start with a letter
-- MUST NOT contain spaces or special characters
+- MUST contain only lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens (`-`)
+- MUST start with a lowercase ASCII letter
+- MUST NOT contain characters outside `a-z`, `0-9`, and `-`
 
 ### 5.3 Automatic Identifier Generation
 
 If no explicit identifier is provided, implementations MUST auto-generate one using the following algorithm:
 
 1. Take heading text
-2. Convert to lowercase
-3. Replace spaces and underscores with hyphens
-4. Remove all characters that are not letters, numbers, or hyphens
-5. Remove leading and trailing hyphens
-6. Truncate to maximum 64 characters
+2. Transliterate non-ASCII characters to their closest ASCII equivalents (e.g., "é" → "e", "ü" → "u", "ř" → "r")
+3. Convert to lowercase
+4. Replace spaces and underscores with hyphens
+5. Remove all characters that are not ASCII letters (`a-z`), ASCII digits (`0-9`), or hyphens
+6. Remove leading and trailing hyphens
+7. Truncate to maximum 64 characters
+8. If the result is empty, use `section` as the identifier
+9. If the result does not start with a lowercase ASCII letter (e.g., starts with a digit or hyphen), prefix with `section-`
 
 Example: "Confidential Information & Trade Secrets" → `confidential-information-trade-secrets`
+Example: "Définitions Générales" → `definitions-generales`
 
 ### 5.4 Identifier Scope
 
@@ -461,9 +465,8 @@ Implementations MUST resolve cross-references by matching the referenced identif
 
 If the same identifier would be auto-generated for two different headings, implementations MUST:
 
-1. Emit a validation error
-2. Append a numeric suffix to the second identifier (`-2`, `-3`, etc.) to ensure uniqueness
-3. Warn the author to add explicit identifiers to resolve the conflict
+1. Emit a validation warning recommending that the author add explicit identifiers to resolve the conflict
+2. Append a numeric suffix to the second and subsequent identifiers (`-2`, `-3`, etc.) to ensure uniqueness for rendering purposes
 
 ---
 
@@ -556,9 +559,10 @@ information, and any other information designated as confidential.
 - Definition IDs follow the same rules as section identifiers
 - Definition IDs MUST be unique within the document
 - The defined term SHOULD be formatted as bold quoted text: `**"Term Name"**`
-- All definitions MUST be placed in a single Definitions section
-- The Definitions section MUST be the first level 1 (`#`) heading in the document body
+- If the document contains any `{{def:}}` declarations, all definitions MUST be placed in a single Definitions section
+- When present, the Definitions section MUST be the first level 1 (`#`) heading in the document body
 - The Definitions section MUST NOT contain any subheadings (level 2 or deeper) — all `{{def:}}` declarations appear directly under the `#` heading as consecutive paragraphs
+- Documents without definitions MAY omit the Definitions section
 
 ### 7.3 Definition Reference
 
@@ -969,8 +973,8 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{date: YYYY-MM-DD}}` | OPTIONAL | Inline date value |
 | `{{money: amount}}` | OPTIONAL | Inline monetary amount |
 | `{{money: amount, currency=CODE}}` | OPTIONAL | Inline monetary amount with currency |
-| `{{party: role}}` | OPTIONAL | Inline party reference by role |
-| `{{party: role, label=text}}` | OPTIONAL | Inline party reference with display text |
+| `{{party: party-name}}` | OPTIONAL | Inline party reference by name |
+| `{{party: party-name, label=text}}` | OPTIONAL | Inline party reference with display text |
 | `{{duration: value, unit=UNIT}}` | OPTIONAL | Inline time duration with unit |
 | `{{field: value, type=type-name}}` | OPTIONAL | Inline custom typed value with pass-through rendering |
 | `{{placeholder: placeholder-id}}` | OPTIONAL | Inline fillable blank (defaults to `type=text`) |
@@ -1045,6 +1049,8 @@ LegalDown attachment files are body-only LegalDown content fragments included by
 
 **Example attachment file (attachments/service-description.lgd):**
 
+(assumes the parent document declares `{{def: services}}` and `{{def: business-hours}}` in its Definitions section)
+
 ```markdown
 Provider shall deliver the following {{term: services}}:
 
@@ -1054,7 +1060,7 @@ Provider shall deliver the following {{term: services}}:
 
 ## Service Levels {#service-levels}
 
-Provider shall maintain system uptime of {{pct: 99.9}} measured monthly.
+Provider shall maintain system uptime of 99.9% measured monthly.
 Response time for critical issues shall not exceed {{duration: 4, unit=H}}.
 ```
 
@@ -1163,14 +1169,15 @@ When rendering `{{money: amount}}`, `{{money: amount, note=text}}`, `{{money: am
 6. If the amount is invalid, insert `[INVALID AMOUNT: amount]` and emit a validation error
 7. If the currency code is unrecognized, insert `[UNKNOWN CURRENCY: CODE]` and emit a validation warning
 
-When rendering `{{party: role}}`, `{{party: role, note=text}}`, `{{party: role, label=text}}`, or `{{party: role, label=text, note=text}}`:
+When rendering `{{party: party-name}}`, `{{party: party-name, note=text}}`, `{{party: party-name, label=text}}`, or `{{party: party-name, label=text, note=text}}`:
 
 1. If a `label` parameter is provided, use it as the display text
-2. If no `label` is provided, use the `role` value as the display text
+2. If no `label` is provided, resolve the party from frontmatter `sides[].parties[]` by matching the `party-name` against party `name` fields; use the party's `label` field as the display text, falling back to `legal_name` if `label` is absent
 3. Format the display text according to the active locale or render template
 4. Ignore any `note` parameter for rendered output
 5. Replace the directive with the formatted party reference text
-6. If the `role` value is empty or malformed, insert `[INVALID PARTY: role]` and emit a validation error
+6. If the `party-name` value is empty or malformed, insert `[INVALID PARTY: party-name]` and emit a validation error
+7. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error
 
 When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT, note=text}}`:
 
@@ -1319,11 +1326,12 @@ Validators MUST categorize issues at three levels:
 | Check | Level |
 |---|---|
 | Heading levels do not skip | Error |
-| Section identifiers are unique within document | Error |
+| Explicit section identifiers are unique within document | Error |
+| Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
 | Section identifiers follow naming rules | Error |
 | Headings do not contain hardcoded numbering | Warning |
 | Directives are well-formed | Error |
-| Definitions section is the first level 1 heading | Error |
+| Definitions section (when present) is the first level 1 heading | Error |
 | Definitions section contains no subheadings (level 2 or deeper) | Error |
 
 ### 15.3 Reference Validation
@@ -1353,7 +1361,8 @@ Validators MUST categorize issues at three levels:
 | `{{money:}}` amount is a valid numeric value | Error |
 | `{{money:}}` `currency` parameter is a recognized ISO 4217 code | Warning |
 | `{{money:}}` used without `currency` parameter and no default configured | Warning |
-| `{{party:}}` `role` value is non-empty and matches identifier format | Error |
+| `{{party:}}` `party-name` value is non-empty and matches identifier format | Error |
+| `{{party:}}` `party-name` references a party declared in frontmatter `sides[].parties[]` | Error |
 | `{{duration:}}` value is a positive numeric value | Error |
 | `{{duration:}}` `unit` parameter is one of `S`, `M`, `H`, `D`, `MO`, `Y` | Error |
 | `field_types` keys follow the identifier format `[a-z][a-z0-9-]*` | Error |
@@ -1460,8 +1469,8 @@ governing_law: Delaware
 language: en
 attachments:
   - id: schedule-a
-    title: "Schedule A: Service Description"
-    file: attachments/service-description.lgd
+    title: "Schedule A: Categories of Confidential Information"
+    file: attachments/confidential-categories.lgd
   - id: exhibit-1
     title: "Exhibit 1: Prior Agreements"
     file: attachments/prior-agreements.pdf
@@ -1488,7 +1497,7 @@ reasonable care.
 {{term: confidential-info}} solely for evaluating a potential business
 relationship with {{party: acme, label=the Disclosing Party}}.
 
-Services shall be delivered as described in {{attach: schedule-a}}.
+Categories of {{term: confidential-info}} are described in {{attach: schedule-a}}.
 
 This Agreement supersedes all prior agreements listed in {{attach: exhibit-1}}.
 
@@ -1497,18 +1506,21 @@ This Agreement supersedes all prior agreements listed in {{attach: exhibit-1}}.
 This Agreement is governed by the laws of Delaware.
 ```
 
-**attachments/service-description.lgd:**
+**attachments/confidential-categories.lgd:**
 
 ```markdown
-Provider shall deliver the following {{term: services}}:
+The following categories of information shall constitute
+{{term: confidential-info}} under this Agreement:
 
-- Platform hosting and maintenance
-- Technical support
-- Monthly performance reporting
+- Technical data and trade secrets
+- Business plans and financial information
+- Customer and supplier lists
+- Product development roadmaps
 
-## Service Levels {#service-levels}
+## Exclusions {#exclusions}
 
-Provider shall maintain system uptime of {{pct: 99.9}} measured monthly.
+{{term: confidential-info}} does not include information that is publicly
+available or independently developed by the receiving party.
 ```
 
 ### 16.2 Unilateral Act Example
