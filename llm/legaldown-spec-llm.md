@@ -133,10 +133,10 @@ Explicit identifier syntax appended to headings:
 ```
 
 **Identifier rules:**
-- Lowercase letters, numbers, and hyphens only
-- Must start with a letter
+- Lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens only
+- Must start with a lowercase ASCII letter
 - Must be unique within the document
-- Auto-generated if omitted: lowercase → spaces/underscores to hyphens → strip non-alphanumeric → truncate to 64 chars
+- Auto-generated if omitted: transliterate non-ASCII to ASCII → lowercase → spaces/underscores to hyphens → strip non-ASCII-alphanumeric → truncate to 64 chars
 
 **Identifier scope:**
 - Each section identifier must be unique within the document
@@ -167,10 +167,11 @@ Broken references render as `[BROKEN REF: identifier]`.
 
 **Rules:**
 
-- All definitions MUST be placed in a single Definitions section
-- The Definitions section MUST be the first `#` heading in the document body
+- If the document contains any `{{def:}}` declarations, all definitions MUST be placed in a single Definitions section
+- When present, the Definitions section MUST be the first `#` heading in the document body
 - The Definitions section MUST NOT contain any subheadings (level 2 or deeper)
 - All `{{def:}}` declarations appear directly under the `#` heading as consecutive paragraphs
+- Documents without definitions MAY omit the Definitions section
 
 **Reference** a defined term inline:
 
@@ -217,6 +218,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 - `party-name`: lowercase ASCII identifier starting with a letter, then lowercase letters/digits/hyphens; resolves against `sides[].parties[].name`
 - `label`: optional inline display override
 - Without `label`, render the party `label` and fall back to `legal_name`
+- If the `party-name` does not match any party in frontmatter, render as `[UNKNOWN PARTY: party-name]`
 - `note`: optional plain-text explanation for automation
 
 ### Duration
@@ -296,8 +298,9 @@ Separate files per language with identical heading structure and section identif
 
 **Errors** (must fix):
 - Skipped heading levels
-- Duplicate or malformed section identifiers
-- Definitions section is not the first `#` heading
+- Duplicate explicit section identifiers
+- Malformed section identifiers
+- Definitions section (when present) is not the first `#` heading
 - Definitions section contains subheadings
 - `{{def:}}` declarations outside the Definitions section
 - Broken `{{ref:}}` or `{{term:}}` targets
@@ -306,6 +309,7 @@ Separate files per language with identical heading structure and section identif
 - Too few sides or parties for the selected `document_type`
 - Missing `issuer` side for `unilateral_act` or `collective_act`
 - Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
+- `{{party:}}` `party-name` is empty, malformed, or does not match any party declared in frontmatter
 - `field_types` keys that are malformed or collide with built-in directive names
 - Missing or malformed `type` on `{{field:}}`
 - Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
@@ -323,6 +327,7 @@ Separate files per language with identical heading structure and section identif
 
 **Warnings** (should fix):
 - Hardcoded numbering in headings
+- Duplicate auto-generated section identifiers (implementations append `-2`, `-3` suffixes for rendering)
 - Defined terms not following `**"Term"**` format
 - Declared definitions never referenced
 - Missing `currency` on `{{money:}}`
