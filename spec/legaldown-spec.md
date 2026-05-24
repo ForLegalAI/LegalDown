@@ -31,9 +31,12 @@ LegalDown is a superset of CommonMark (standard Markdown). All valid CommonMark 
 
 - YAML frontmatter for document metadata
 - Section identifier syntax
-- Cross-reference directives
+- List item and recital item identifier syntax
+- Cross-reference directives (sections, list items, recitals)
 - Definition declaration and reference directives
 - Placeholder directives
+- Structured recitals block
+- Structured notes directive
 - Language block directives for bilingual documents
 - File inclusion directives
 - Validation requirements for legal-specific constraints
@@ -438,6 +441,47 @@ Any heading MAY include an explicit identifier:
 - MUST start with a lowercase ASCII letter
 - MUST NOT contain characters outside `a-z`, `0-9`, and `-`
 
+### 5.2.1 List Item Identifiers
+
+List items MAY also include explicit identifiers using the same `{#identifier}` syntax placed at the end of the list item text:
+
+```markdown
+Provider shall:
+
+- cure the breach within 30 days {#cure-period}
+- provide written confirmation of cure {#cure-confirmation}
+```
+
+For ordered lists:
+
+```markdown
+Termination shall proceed as follows:
+
+1. The terminating party provides written notice {#termination-notice}
+2. A cure period of thirty (30) days commences {#cure-period}
+3. If uncured, termination takes effect at period end {#termination-effect}
+```
+
+For nested lists:
+
+```markdown
+The following restrictions apply:
+
+- Restriction on use {#restriction-use}
+  - No reverse engineering {#no-reverse-engineering}
+  - No sublicensing {#no-sublicensing}
+- Restriction on disclosure {#restriction-disclosure}
+```
+
+**Rules:**
+
+- List item identifiers follow the same naming rules as section identifiers
+- List item identifiers share the same namespace as section identifiers — no collisions are permitted between heading identifiers and list item identifiers
+- List item identifiers MUST be unique within the document
+- The `{#identifier}` MUST appear at the end of the list item's first line of text, separated by a single space
+- Nested list items MAY have identifiers independently of their parent items
+- Automatic identifier generation does NOT apply to list items — list items without explicit `{#id}` have no identifier and cannot be cross-referenced
+
 ### 5.3 Automatic Identifier Generation
 
 If no explicit identifier is provided, implementations MUST auto-generate one using the following algorithm:
@@ -457,7 +501,7 @@ Example: "Définitions Générales" → `definitions-generales`
 
 ### 5.4 Identifier Scope
 
-Section identifiers are document-global. Each section MUST have a unique identifier within the document, whether the identifier is provided explicitly or auto-generated.
+All identifiers (section identifiers, list item identifiers, and recital item identifiers) share a single document-global namespace. Each identifier MUST be unique within the document, whether provided explicitly or auto-generated.
 
 Implementations MUST resolve cross-references by matching the referenced identifier directly. Implementations MUST NOT construct, require, or interpret hierarchical dot-separated paths based on heading nesting.
 
@@ -474,7 +518,13 @@ If the same identifier would be auto-generated for two different headings, imple
 
 ### 6.1 Purpose
 
-Cross-references create links between sections within a document. Because section numbers are generated at render time, cross-references use section identifiers rather than hardcoded numbers. The renderer resolves identifiers to actual section numbers in output.
+Cross-references create links between document elements within a document. Because section numbers and list enumeration labels are generated at render time, cross-references use identifiers rather than hardcoded numbers. The renderer resolves identifiers to actual numbers/labels in output.
+
+Cross-references may target:
+
+- Sections (headings with identifiers)
+- List items (with explicit `{#id}` anchors)
+- Recital items (with explicit `{#id}` anchors within `{{recitals}}` blocks)
 
 ### 6.2 Reference Syntax
 
@@ -496,10 +546,13 @@ The payment schedule in Article {{ref: payment-schedule}} applies from the Effec
 
 Renderers MUST:
 
-1. Locate the target section by identifier
-2. Determine the rendered section number based on the active numbering scheme
-3. Replace the reference with the section number (e.g., "3.2")
-4. Create a hyperlink to the target section in formats that support hyperlinking (HTML, PDF, DOCX)
+1. Locate the target element (section, list item, or recital item) by identifier
+2. Determine the rendered label:
+   - For sections: the section number based on the active numbering scheme (e.g., "3.2")
+   - For list items: the enumeration label based on nesting level and active style (e.g., "(a)", "(ii)"), optionally prefixed with the parent section number (e.g., "3.2(a)") — this behavior MUST be configurable
+   - For recital items: the recital label (e.g., "Recital A", "A") based on renderer configuration
+3. Replace the reference with the resolved label
+4. Create a hyperlink to the target element in formats that support hyperlinking (HTML, PDF, DOCX)
 5. If the target identifier does not exist, insert `[BROKEN REF: identifier]` in output and emit a validation error
 
 ### 6.4 Attachment References
@@ -692,7 +745,7 @@ Renderers SHOULD apply appropriate legal enumeration at each nesting level based
 
 ### 8.4 Block Quotes
 
-Block quotes are used for recitals, WHEREAS clauses, preambles, and quoted text:
+Block quotes are used for quoted text and excerpts:
 
 ```markdown
 > WHEREAS, Provider possesses expertise in software development services; and
@@ -701,6 +754,8 @@ Block quotes are used for recitals, WHEREAS clauses, preambles, and quoted text:
 >
 > NOW, THEREFORE, in consideration of the mutual covenants herein, the parties agree as follows:
 ```
+
+> **Note:** For new documents, the `{{recitals}}` block directive (Section 8.7) SHOULD be used instead of block quotes for recitals, WHEREAS clauses, and preambles. Block quotes SHOULD be reserved for actual quoted text.
 
 ### 8.5 Horizontal Rules
 
@@ -715,6 +770,126 @@ HTML-style comments are valid in LegalDown and MUST be stripped from all rendere
 
 # Limitation of Liability {#liability-limitations}
 ```
+
+### 8.7 Recitals
+
+Recitals (WHEREAS clauses, preambles, and introductory statements) are a core drafting construct in legal documents. LegalDown provides a dedicated block directive for recitals to distinguish them semantically from quoted text and operative provisions.
+
+**Syntax:**
+
+```markdown
+{{recitals}}
+
+A. Provider possesses expertise in software development.
+
+B. Client desires to engage Provider for technology services.
+
+C. The parties desire to set forth their agreement regarding such services.
+
+{{/recitals}}
+```
+
+**With cross-reference anchors:**
+
+```markdown
+{{recitals}}
+
+A. Provider possesses expertise in software development. {#recital-expertise}
+
+B. Client desires to engage Provider for technology services. {#recital-engagement}
+
+{{/recitals}}
+```
+
+Individual recital items may then be referenced: `as stated in {{ref: recital-expertise}}`.
+
+**WHEREAS-style recitals:**
+
+```markdown
+{{recitals}}
+
+WHEREAS, Provider possesses expertise in software development services; and
+
+WHEREAS, Client desires to engage Provider for certain technology services;
+
+NOW, THEREFORE, in consideration of the mutual covenants herein, the parties agree as follows:
+
+{{/recitals}}
+```
+
+**Rules:**
+
+- `{{recitals}}` MUST appear on its own line and marks the start of the recitals block
+- `{{/recitals}}` MUST appear on its own line and marks the end of the recitals block
+- Recitals blocks MUST appear before any level 1 heading in the document body (after frontmatter but before operative provisions)
+- Each recital item is a paragraph within the block, optionally prefixed with a letter (A., B., C.) or WHEREAS keyword for source readability
+- Recital items MAY include `{#identifier}` anchors at the end of their text for cross-referencing
+- Recital item identifiers share the document-global namespace with section and list item identifiers
+- A document MAY contain at most one `{{recitals}}` block
+- Recitals MUST NOT contain headings, definitions (`{{def:}}`), or nested recitals blocks
+- Standard inline directives (`{{ref:}}`, `{{term:}}`, `{{party:}}`, etc.) MAY appear within recital text
+
+**Rendering:**
+
+- Renderers MUST render recitals as a visually distinct block (not as blockquotes)
+- Recitals MUST NOT receive section numbers
+- The rendering style (uppercase lettering, WHEREAS format, indented format) is controlled by the render template
+- When lettered recitals are used, renderers MAY regenerate the enumeration labels (A, B, C, ...) regardless of author-provided letters
+- When `{{ref: id}}` targets a recital item, the resolved label format (e.g., "Recital A", "A", "recital (A)") is determined by renderer configuration
+
+### 8.8 Structured Notes
+
+Structured notes provide a machine-parseable alternative to HTML comments for annotations that MUST NOT appear in rendered output but SHOULD be preserved in structured document representations (AST, JSON export).
+
+**Inline syntax:**
+
+```markdown
+{{note: type | content}}
+```
+
+Where `type` is an identifier following standard identifier rules (`[a-z][a-z0-9-]*`) and `content` is plain text that MUST NOT contain `}}`.
+
+**Examples:**
+
+```markdown
+{{note: drafting | This clause requires review by tax counsel.}}
+
+{{note: rationale | Standard liability cap aligned with internal policy v2.3.}}
+
+{{note: todo | Confirm indemnification limit with client.}}
+```
+
+**Block syntax** for longer notes:
+
+```markdown
+{{note: type}}
+Multi-line content here.
+Can span multiple lines.
+Must not contain the closing tag.
+{{/note}}
+```
+
+**Example:**
+
+```markdown
+{{note: rationale}}
+This limitation of liability clause follows the structure recommended
+by the firm's risk committee in memo RC-2025-17. The cap of 2x fees
+was approved for technology services contracts under $1M.
+{{/note}}
+```
+
+**Rules:**
+
+- Notes MUST be stripped from all rendered output (same rule as HTML comments)
+- Notes MUST be preserved in structured/parsed representations with their type and content
+- The `type` value MUST follow the standard identifier format (`[a-z][a-z0-9-]*`)
+- Inline note content MUST NOT contain `}}`
+- Block note content MUST NOT contain the closing tag `{{/note}}` on its own line
+- The spec does NOT prescribe specific type values — these are conventions defined by tooling and teams
+- Suggested (non-normative) types: `drafting`, `rationale`, `review`, `todo`
+- Notes MAY appear anywhere in the document body where inline or block content is valid
+- `{{note:}}` is the RECOMMENDED approach for new documents; HTML comments remain valid for backward compatibility
 
 ---
 
@@ -966,7 +1141,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 
 | Directive | Status | Purpose |
 |---|---|---|
-| `{{ref: id}}` | REQUIRED | Cross-reference to section |
+| `{{ref: id}}` | REQUIRED | Cross-reference to section, list item, or recital item |
 | `{{def: id}}` | REQUIRED | Declare a definition |
 | `{{term: id}}` | REQUIRED | Reference a defined term |
 | `{{term: id, label=text}}` | OPTIONAL | Reference a defined term with custom display text |
@@ -981,11 +1156,15 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{placeholder: placeholder-id, type=money, currency=CODE}}` | OPTIONAL | Inline typed blank with type-specific parameters |
 | `{{include: path}}` | OPTIONAL | Include external file |
 | `{{attach: id}}` | OPTIONAL | Reference a declared attachment |
+| `{{recitals}}` ... `{{/recitals}}` | OPTIONAL | Delimit a recitals block |
+| `{{note: type \| content}}` | OPTIONAL | Inline structured note (stripped from output) |
+| `{{note: type}}` ... `{{/note}}` | OPTIONAL | Block structured note (stripped from output) |
 
 ### 11.2 Directive Rules
 
 - Directives are case-sensitive — always lowercase
-- Directives MUST NOT span multiple lines
+- Inline directives MUST NOT span multiple lines
+- Block directives (`{{recitals}}...{{/recitals}}`, `{{note: type}}...{{/note}}`) span multiple lines by design
 - Unknown directives SHOULD generate a warning and be passed through to output as-is
 - Implementations MUST NOT fail silently on unknown directives
 
@@ -1133,11 +1312,32 @@ This behavior MUST be configurable and MAY be disabled to preserve plain bullet 
 
 When rendering `{{ref: id}}`:
 
-1. Locate target section by identifier
-2. Determine the section number generated under the active numbering scheme
-3. Replace directive with the section number (e.g., "3.2")
-4. Create hyperlink to target section in formats supporting links
+1. Locate target element by identifier — search sections (headings), list items with `{#id}`, and recital items with `{#id}`
+2. Determine the rendered label:
+   - **Section target:** Use the section number generated under the active numbering scheme (e.g., "3.2")
+   - **List item target:** Use the enumeration label assigned to that list item based on its nesting level and the active style template (e.g., "(a)", "(ii)"). Renderers SHOULD support a configurable "full path" mode that prepends the parent section number (e.g., "3.2(a)")
+   - **Recital item target:** Use the recital enumeration label (e.g., "A", "Recital A"). The format is determined by renderer configuration
+3. Replace directive with the resolved label
+4. Create hyperlink to target element in formats supporting links
 5. If target not found, insert `[BROKEN REF: id]` and emit validation error
+
+### 13.3.1 Recitals Rendering
+
+When rendering a `{{recitals}}...{{/recitals}}` block:
+
+1. Identify each recital item (paragraph) within the block
+2. Assign enumeration labels (A, B, C, ... or as configured by the render template)
+3. Render the block as a visually distinct element — NOT as a blockquote
+4. Apply appropriate styling (indentation, WHEREAS format, lettered format) per the active template
+5. Recital items MUST NOT receive section numbers
+6. If a recital item has an `{#id}` anchor, register it for cross-reference resolution
+
+### 13.3.2 Notes Rendering
+
+When rendering `{{note: type | content}}` or `{{note: type}}...{{/note}}`:
+
+1. Strip the note entirely from rendered output
+2. Preserve the note type and content in structured output formats (AST, JSON) when applicable
 
 ### 13.4 Definition Resolution
 
@@ -1329,16 +1529,25 @@ Validators MUST categorize issues at three levels:
 | Explicit section identifiers are unique within document | Error |
 | Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
 | Section identifiers follow naming rules | Error |
+| List item identifiers follow naming rules | Error |
+| List item identifiers are unique within document and do not collide with section identifiers | Error |
+| Recital item identifiers follow naming rules | Error |
+| Recital item identifiers are unique within document and do not collide with section or list item identifiers | Error |
 | Headings do not contain hardcoded numbering | Warning |
 | Directives are well-formed | Error |
 | Definitions section (when present) is the first level 1 heading | Error |
 | Definitions section contains no subheadings (level 2 or deeper) | Error |
+| `{{recitals}}` block appears before any level 1 heading | Error |
+| At most one `{{recitals}}` block per document | Error |
+| `{{recitals}}` block does not contain headings or `{{def:}}` directives | Error |
+| `{{note:}}` `type` parameter follows identifier format | Error |
+| Inline `{{note:}}` content does not contain `}}` | Error |
 
 ### 15.3 Reference Validation
 
 | Check | Level |
 |---|---|
-| All `{{ref: id}}` point to existing sections | Error |
+| All `{{ref: id}}` point to existing sections, list items, or recital items | Error |
 | All `{{term: id}}` point to declared definitions | Error |
 | Circular definitions detected | Error |
 | Definitions used before declaration | Warning |

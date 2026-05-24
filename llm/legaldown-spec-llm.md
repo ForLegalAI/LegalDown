@@ -138,14 +138,34 @@ Explicit identifier syntax appended to headings:
 - Must be unique within the document
 - Auto-generated if omitted: transliterate non-ASCII to ASCII → lowercase → spaces/underscores to hyphens → remove characters not in `a-z`, `0-9`, `-` → trim leading/trailing hyphens → truncate to 64 chars → use `section` if empty → prefix `section-` if not starting with a lowercase letter
 
+### List Item Identifiers
+
+List items may also have explicit identifiers:
+
+```markdown
+- cure the breach within 30 days {#cure-period}
+- provide written confirmation {#cure-confirmation}
+```
+
+```markdown
+1. Provide written notice {#termination-notice}
+2. Cure period of thirty (30) days {#cure-period}
+```
+
+**Rules:**
+- Same naming rules as section identifiers
+- Shares the same global namespace — no collisions with section or recital identifiers
+- No automatic generation — only items with explicit `{#id}` can be cross-referenced
+- `{#id}` placed at the end of the list item's first line of text
+
 **Identifier scope:**
-- Each section identifier must be unique within the document
+- All identifiers (sections, list items, recital items) share one document-global namespace
 - Cross-references resolve the exact identifier directly
 - Dot-separated hierarchical paths are not used
 
 ## Directives
 
-All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowercase. Must not span multiple lines.
+All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowercase. Inline directives must not span multiple lines. Block directives (`{{recitals}}...{{/recitals}}`, `{{note: type}}...{{/note}}`) span multiple lines.
 
 ### Cross-References
 
@@ -153,8 +173,12 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 {{ref: identifier}}
 ```
 
-Resolves to the section number (e.g., "3.2"). Links to the target section.
-Broken references render as `[BROKEN REF: identifier]`.
+Resolves to:
+- **Section target:** the section number (e.g., "3.2")
+- **List item target:** the enumeration label (e.g., "(a)", "3.2(a)")
+- **Recital item target:** the recital label (e.g., "Recital A", "A")
+
+Links to the target element. Broken references render as `[BROKEN REF: identifier]`.
 
 ### Definitions
 
@@ -284,11 +308,55 @@ Path is relative to the including document. Circular includes are invalid.
 Standard CommonMark:
 - `**bold**` — used for defined terms as `**"Term"**`
 - `*italic*`
-- Lists (ordered and unordered) with blank lines before/after
+- Lists (ordered and unordered) with blank lines before/after; items may have `{#id}` anchors
 - Tables (standard Markdown pipe tables with header row)
-- Block quotes (used for recitals/WHEREAS clauses)
+- Block quotes (used for quoted text; prefer `{{recitals}}` block for recitals)
 - HTML comments `<!-- ... -->` — stripped from rendered output
 - Horizontal rules `---` — for major document divisions
+
+### Recitals Block
+
+```markdown
+{{recitals}}
+
+A. Provider possesses expertise in software development. {#recital-expertise}
+
+B. Client desires to engage Provider for technology services. {#recital-engagement}
+
+{{/recitals}}
+```
+
+**Rules:**
+- `{{recitals}}` and `{{/recitals}}` each on their own line
+- Must appear before any level 1 heading (after frontmatter, before operative provisions)
+- At most one `{{recitals}}` block per document
+- Individual items may have `{#id}` anchors for cross-referencing (`{{ref: recital-expertise}}` → "Recital A")
+- Must not contain headings or `{{def:}}` directives
+- Rendered as a distinct block (not as blockquotes); style controlled by render template
+- Recitals do not receive section numbers
+
+### Structured Notes
+
+```markdown
+{{note: drafting | This clause requires review by tax counsel.}}
+```
+
+Block form for multi-line content:
+
+```markdown
+{{note: rationale}}
+This limitation follows the structure recommended by the risk committee.
+The cap was approved for technology services contracts under $1M.
+{{/note}}
+```
+
+**Rules:**
+- Notes are ALWAYS stripped from rendered output (like HTML comments)
+- Notes are preserved in structured representations (AST, JSON export)
+- `type` must follow identifier format (`[a-z][a-z0-9-]*`)
+- Inline content must not contain `}}`
+- Suggested types (non-normative): `drafting`, `rationale`, `review`, `todo`
+- Preferred over HTML comments for new documents where tooling support is available
 
 ## Bilingual Documents
 
@@ -300,6 +368,10 @@ Separate files per language with identical heading structure and section identif
 - Skipped heading levels
 - Duplicate explicit section identifiers
 - Malformed section identifiers
+- Duplicate or malformed list item identifiers
+- List item identifiers collide with section or recital identifiers
+- Duplicate or malformed recital item identifiers
+- Recital item identifiers collide with section or list item identifiers
 - Definitions section (when present) is not the first `#` heading
 - Definitions section contains subheadings
 - `{{def:}}` declarations outside the Definitions section
@@ -324,6 +396,11 @@ Separate files per language with identical heading structure and section identif
 - LegalDown attachment file contains level 1 heading
 - Section identifiers in attachment files are not unique across entire combined document
 - `{{attach:}}` references undeclared attachment id
+- `{{recitals}}` block appears after a level 1 heading
+- More than one `{{recitals}}` block in document
+- `{{recitals}}` block contains headings or `{{def:}}` directives
+- `{{note:}}` `type` does not follow identifier format
+- Inline `{{note:}}` content contains `}}`
 
 **Warnings** (should fix):
 - Hardcoded numbering in headings
