@@ -149,7 +149,7 @@ List items may also have explicit identifiers:
 
 ```markdown
 1. Provide written notice {#termination-notice}
-2. Cure period of thirty (30) days {#cure-period}
+2. Cure period of thirty (30) days {#ordered-cure-period}
 ```
 
 **Rules:**

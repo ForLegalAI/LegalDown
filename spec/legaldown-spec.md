@@ -507,10 +507,13 @@ Implementations MUST resolve cross-references by matching the referenced identif
 
 ### 5.5 Duplicate Identifier Handling
 
-If the same identifier would be auto-generated for two different headings, implementations MUST:
+Since all identifiers share a single document-global namespace (Section 5.4), collisions may occur between any identifier types — including between auto-generated section identifiers and explicit list item or recital item identifiers.
 
-1. Emit a validation warning recommending that the author add explicit identifiers to resolve the conflict
-2. Append a numeric suffix to the second and subsequent identifiers (`-2`, `-3`, etc.) to ensure uniqueness for rendering purposes
+If any identifier collision is detected (whether auto-generated or explicit, and regardless of target type), implementations MUST:
+
+1. Emit a validation error identifying the conflicting identifiers and their target types
+2. For collisions involving at least one auto-generated identifier: append a numeric suffix to the auto-generated identifier (`-2`, `-3`, etc.) to ensure uniqueness for rendering purposes
+3. For collisions between two explicit identifiers: reject the document as invalid — authors MUST resolve these manually
 
 ---
 
@@ -821,7 +824,7 @@ NOW, THEREFORE, in consideration of the mutual covenants herein, the parties agr
 
 - `{{recitals}}` MUST appear on its own line and marks the start of the recitals block
 - `{{/recitals}}` MUST appear on its own line and marks the end of the recitals block
-- Recitals blocks MUST appear before any level 1 heading in the document body (after frontmatter but before operative provisions)
+- A recitals block MUST appear before any level 1 heading in the document body (after frontmatter but before operative provisions)
 - Each recital item is a paragraph within the block, optionally prefixed with a letter (A., B., C.) or WHEREAS keyword for source readability
 - Recital items MAY include `{#identifier}` anchors at the end of their text for cross-referencing
 - Recital item identifiers share the document-global namespace with section and list item identifiers
@@ -1157,7 +1160,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{include: path}}` | OPTIONAL | Include external file |
 | `{{attach: id}}` | OPTIONAL | Reference a declared attachment |
 | `{{recitals}}` ... `{{/recitals}}` | OPTIONAL | Delimit a recitals block |
-| `{{note: type \| content}}` | OPTIONAL | Inline structured note (stripped from output) |
+| <code>{{note: type &#124; content}}</code> | OPTIONAL | Inline structured note (stripped from output) |
 | `{{note: type}}` ... `{{/note}}` | OPTIONAL | Block structured note (stripped from output) |
 
 ### 11.2 Directive Rules
@@ -1315,7 +1318,7 @@ When rendering `{{ref: id}}`:
 1. Locate target element by identifier — search sections (headings), list items with `{#id}`, and recital items with `{#id}`
 2. Determine the rendered label:
    - **Section target:** Use the section number generated under the active numbering scheme (e.g., "3.2")
-   - **List item target:** Use the enumeration label assigned to that list item based on its nesting level and the active style template (e.g., "(a)", "(ii)"). Renderers SHOULD support a configurable "full path" mode that prepends the parent section number (e.g., "3.2(a)")
+   - **List item target:** Use the enumeration label assigned to that list item based on its nesting level and the active style template (e.g., "(a)", "(ii)"). Renderers MUST support a configurable "full path" mode that prepends the parent section number (e.g., "3.2(a)")
    - **Recital item target:** Use the recital enumeration label (e.g., "A", "Recital A"). The format is determined by renderer configuration
 3. Replace directive with the resolved label
 4. Create hyperlink to target element in formats supporting links
