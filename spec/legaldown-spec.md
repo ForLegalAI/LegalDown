@@ -458,7 +458,7 @@ For ordered lists:
 Termination shall proceed as follows:
 
 1. The terminating party provides written notice {#termination-notice}
-2. A cure period of thirty (30) days commences {#cure-period}
+2. A cure period of thirty (30) days commences {#termination-cure-period}
 3. If uncured, termination takes effect at period end {#termination-effect}
 ```
 
@@ -885,7 +885,7 @@ was approved for technology services contracts under $1M.
 - Notes MUST be preserved in structured/parsed representations with their type and content
 - The `type` value MUST follow the standard identifier format (`[a-z][a-z0-9-]*`)
 - Inline note content MUST NOT contain `}}`
-- Block note content MUST NOT contain the closing tag `{{/note}}` on its own line
+- Block note content MUST NOT contain a line consisting solely of `{{/note}}`
 - The spec does NOT prescribe specific type values — these are conventions defined by tooling and teams
 - Suggested (non-normative) types: `drafting`, `rationale`, `review`, `todo`
 - Notes MAY appear anywhere in the document body where inline or block content is valid
