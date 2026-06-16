@@ -1510,7 +1510,7 @@ attachments:
     file: attachments/prior-agreements.pdf
 ---
 
-This Mutual Non-Disclosure Agreement (this "Agreement") is entered into on
+This Mutual Non-Disclosure Agreement (this "Agreement" {{def: agreement}}) is entered into on
 {{date: 2026-02-01}} between {{party: acme}} and {{party: beta}}.
 
 # Definitions {#definitions}
@@ -1531,18 +1531,18 @@ relationship with {{party: acme, label=the Disclosing Party}}.
 
 Categories of {{term: confidential-info}} are described in {{attach: schedule-a}}.
 
-This Agreement supersedes all prior agreements listed in {{attach: exhibit-1}}.
+The {{term: agreement}} supersedes all prior agreements listed in {{attach: exhibit-1}}.
 
 # Governing Law {#governing-law}
 
-This Agreement is governed by the laws of Delaware.
+The {{term: agreement}} is governed by the laws of Delaware.
 ```
 
 **attachments/confidential-categories.lgd:**
 
 ```markdown
 The following categories of information shall constitute
-{{term: confidential-info}} under this Agreement:
+{{term: confidential-info}} under the {{term: agreement}}:
 
 - Technical data and trade secrets
 - Business plans and financial information
