@@ -100,8 +100,7 @@ language: en
 
 # Definitions {#definitions}
 
-{{def: confidential-info}}
-**"Confidential Information"** means any non-public information disclosed
+"Confidential Information" {{def: confidential-info}} means any non-public information disclosed
 by one side to the other, whether orally or in writing, that is designated
 as confidential or that reasonably should be understood to be confidential.
 
@@ -144,9 +143,10 @@ text. The renderer looks up the section, finds its number, and outputs
 "Section 5" (or whatever number it is). Rearrange the document and it
 just works.
 
-**Definitions are tracked.** Declare a defined term with `{{def: id}}`
-and reference it anywhere with `{{term: id}}`. An optional `label`
-parameter — `{{term: id, label=Custom Text}}` — lets you display a
+**Definitions are tracked.** Declare a defined term by writing it in quotes
+and placing `{{def: id}}` right after it — in a Definitions section or inline
+at first use — then reference it anywhere with `{{term: id}}`. An optional
+`label` parameter — `{{term: id, label=Custom Text}}` — lets you display a
 different form of the term (e.g., a grammatically inflected form).
 The renderer validates that every referenced term is actually defined,
 links it back to its definition, and formats it consistently throughout
@@ -181,8 +181,7 @@ contains none of them.
 ## Subsection                            ← Nested provision
 ### Further detail                       ← Deeper nesting (up to 5 levels)
 
-{{def: term-id}}                         ← Declare a defined term
-**"Defined Term"** means...
+"Defined Term" {{def: term-id}} means... ← Declare a defined term (term in quotes, tag after)
 
 {{term: term-id}}                        ← Use a defined term
 {{term: term-id, label=Alt Text}}        ← Use a defined term with custom display text
