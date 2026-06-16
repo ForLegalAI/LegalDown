@@ -165,11 +165,12 @@ narrowed or extended per document `language` or via template/validator configura
 ### Format-agnostic — no emphasis markers in source
 
 The term is delimited by **quotation marks only**. Authors do **not** write `**bold**` (or any
-emphasis) around defined terms; whether a defined term renders bold, underlined, small-caps, or
-quoted is a **render-time** decision driven by the style template (§13.7). This applies the
+emphasis) around defined terms; whether a defined term renders bold, underlined, or small-caps is a
+**render-time** decision driven by the style template (§13.7). This applies the
 separation-of-content-and-presentation principle (§1.2) to definitions: the source marks *what* is
-a term, the template decides *how* it looks. The quotation marks are the parser's delimiter; the
-renderer MAY keep or drop them in output per template.
+a term, the template decides *how* it looks. The quotation marks are a **source-only delimiter** —
+they are not part of the term and are **not rendered** at either the defining occurrence or any
+`{{term:}}` reference. Defined terms are marked visually through styling, never by re-adding quotes.
 
 ### No extracted "definition body" — reference the location
 
@@ -362,7 +363,8 @@ All open questions from the prior draft are now settled:
    outside a single front Definitions section — a way to keep the old discipline by choice. We are
    not building it into the spec.)
 2. **Styling** — **renderer concern only.** The spec does not prescribe how a defining occurrence or
-   a reference looks (bold, underline, quotes, small-caps). Source carries quotes only.
+   a reference looks (bold, underline, small-caps). The source uses quotation marks purely as a
+   delimiter; they are never rendered.
 3. **Auto-derived ids** — **adopted.** Id MAY be omitted and is slugged from the quoted term;
    explicit ids recommended for stability and required to disambiguate slug collisions.
 4. **Attachments introducing definitions** — **allowed.** A `{{def:}}` inside an attachment file

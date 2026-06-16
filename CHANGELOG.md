@@ -51,9 +51,11 @@ in [`definitions-review.md`](definitions-review.md).
   heading are now allowed.
 
 - **Format-agnostic source.** Defined terms no longer carry emphasis markers (`**bold**`) in source.
-  Quotation marks are the only delimiter. Whether a term renders bold, underlined, small-caps, or
-  quoted is entirely a render-time decision driven by the style template (§13.7) — applying the
-  separation-of-content-and-presentation principle (§1.2) to definitions.
+  Quotation marks are the only delimiter, and they are a **source-only delimiter that is never
+  rendered** — at neither the defining occurrence nor any `{{term:}}` reference. Whether a term
+  renders bold, underlined, or small-caps is entirely a render-time decision driven by the style
+  template (§13.7) — applying the separation-of-content-and-presentation principle (§1.2) to
+  definitions.
 
 - **Reference by location, not body.** A `{{def:}}` records only `(id, term, location)`. The format
   no longer stores or extracts a "definition text." `{{term:}}` links and generated glossaries
