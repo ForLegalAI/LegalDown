@@ -379,6 +379,9 @@ governing_law: Delaware
 language: en
 ---
 
+This Mutual Non-Disclosure Agreement (this "Agreement" {{def: agreement}}) is entered into
+between {{party: acme}} and {{party: beta}}.
+
 # Definitions {#definitions}
 
 "Confidential Information" {{def: confidential-info}} means any non-public information disclosed
@@ -394,7 +397,7 @@ for its own confidential information.
 
 # Term and Termination {#term}
 
-This Agreement commences on the {{term: effective-date}} and continues
+The {{term: agreement}} commences on the {{term: effective-date}} and continues
 until {{date: 2028-02-01}} unless earlier terminated by either party upon
 {{duration: 30, unit=D}} written notice.
 ```
