@@ -168,7 +168,7 @@ The Provider performs marketing services (the "Services" {{def: services}}).
 
 **Rules:**
 
-- `{{def:}}` MUST be immediately preceded (only whitespace allowed in between) by a quoted span; the term is the text inside the quotation marks
+- `{{def:}}` MUST be on the same line as, and immediately preceded by, a quoted span (only optional spaces/tabs — no line break — in between); the term is the text inside the quotation marks
 - Defined terms carry NO emphasis markers in source (`**bold**`); styling is applied by the renderer
 - Accepted quotation pairs (all on by default; double quotes recommended): `"…"` (U+0022), `“…”` (U+201C/D), `«…»`, `»…«`, `„…“`, `‘…’`, `‚…‘`, `‹…›`. Single-quote forms are accepted but ambiguous with apostrophes — validators warn
 - The `id` follows section-identifier rules and MUST be unique; it MAY be omitted and is then auto-derived from the term via the §5.3 slug algorithm (`"Services" {{def:}}` → `services`). Explicit ids are recommended and required to break slug collisions

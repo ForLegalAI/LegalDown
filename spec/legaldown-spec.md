@@ -561,7 +561,7 @@ The Provider shall perform the marketing services described in this Article
 **Term extraction:**
 
 - The defined term is the text inside the quotation marks of the quoted span that immediately precedes the directive
-- Only whitespace may appear between the closing quotation mark and the directive; if any other character intervenes, the directive is not attached to that span
+- The directive MUST be on the same line as the quoted span; only optional spaces or tabs (no line break) may appear between the closing quotation mark and the directive. If any other character intervenes, the directive is not attached to that span
 - A `{{def:}}` not immediately preceded by a recognized quoted span is an error
 - Defined terms MUST NOT carry emphasis markers in source (e.g., `**bold**`); how a defined term is displayed (bold, underline, small caps, quoted) is determined at render time by the style template (§13.7)
 

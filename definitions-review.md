@@ -1,8 +1,9 @@
 # Definitions — Implementation Review & Proposal
 
-**Status:** Design draft. No spec changes have been made yet. This document reviews how LegalDown
-handles defined terms today, shows where the current model is too rigid for real legal drafting,
-and specifies a simpler, more flexible replacement.
+**Status:** Design rationale (adopted). This document reviews how LegalDown handled defined terms
+prior to the definitions overhaul, explains why the old model was too rigid for real legal
+drafting, and records the replacement now incorporated into the spec. See [`CHANGELOG.md`](CHANGELOG.md)
+for the change summary and migration guide.
 
 **Scope:** Section 7 (Definitions) of [spec/legaldown-spec.md](spec/legaldown-spec.md), plus the
 related validation rules (§15.2, §15.3, §15.4), the LLM reference, and the README.
@@ -135,12 +136,12 @@ narrowed or extended per document `language` or via template/validator configura
 | Pair | Open | Close | Code points | Typical languages |
 |---|---|---|---|---|
 | Straight double | `"` | `"` | U+0022 / U+0022 | ASCII / universal |
-| Curly double | `"` | `"` | U+201C / U+201D | English (typographic) |
+| Curly double | `“` | `”` | U+201C / U+201D | English (typographic) |
 | Guillemets | `«` | `»` | U+00AB / U+00BB | French, Italian, Spanish, Portuguese, Russian |
 | Reversed guillemets | `»` | `«` | U+00BB / U+00AB | German, Danish, Croatian |
-| German double | `„` | `"` | U+201E / U+201C | German, Czech, Slovak, Polish |
-| Curly single | `'` | `'` | U+2018 / U+2019 | English (nested) |
-| German single | `‚` | `'` | U+201A / U+2018 | German (nested) |
+| German double | `„` | `“` | U+201E / U+201C | German, Czech, Slovak, Polish |
+| Curly single | `‘` | `’` | U+2018 / U+2019 | English (nested) |
+| German single | `‚` | `‘` | U+201A / U+2018 | German (nested) |
 | Single guillemets | `‹` | `›` | U+2039 / U+203A | French, Swiss (nested) |
 
 **Matching rules:**
