@@ -538,31 +538,65 @@ Defined terms are a fundamental feature of legal contracts. LegalDown provides s
 
 ### 7.2 Definition Declaration
 
-Definitions are declared using the `{{def:}}` directive placed at the start of a paragraph, immediately before the defined term:
+A definition is declared by placing the `{{def:}}` directive **immediately after the quoted term** being defined. The defined term is the text inside the quotation marks of the quoted span that the directive follows. The same syntax is used everywhere — whether the term is introduced in a dedicated Definitions section or inline at its first use.
 
 ```markdown
 # Definitions {#definitions}
 
-{{def: confidential-info}}
-**"Confidential Information"** means any non-public information disclosed by
-one party to the other, including technical data, business plans, customer
-information, and any other information designated as confidential.
+"Confidential Information" {{def: confidential-info}} means any non-public information disclosed by
+one party to the other, including technical data, business plans, customer information, and any
+other information designated as confidential.
 
-{{def: services}}
-**"Services"** means the software development services described in Section
+"Services" {{def: services}} means the software development services described in Section
 {{ref: scope-of-work}}.
 ```
 
-**Rules:**
+The directive marks the preceding quoted span as a defined term, registers its identifier, and produces no visible output of its own. It MAY also appear inline at the point a term is first used:
 
-- `{{def: id}}` MUST appear on its own line immediately preceding the definition text paragraph
-- Definition IDs follow the same rules as section identifiers
-- Definition IDs MUST be unique within the document
-- The defined term SHOULD be formatted as bold quoted text: `**"Term Name"**`
-- If the document contains any `{{def:}}` declarations, all definitions MUST be placed in a single Definitions section
-- When present, the Definitions section MUST be the first level 1 (`#`) heading in the document body
-- The Definitions section MUST NOT contain any subheadings (level 2 or deeper) — all `{{def:}}` declarations appear directly under the `#` heading as consecutive paragraphs
-- Documents without definitions MAY omit the Definitions section
+```markdown
+The Provider shall perform the marketing services described in this Article
+(the "Services" {{def: services}}).
+```
+
+**Term extraction:**
+
+- The defined term is the text inside the quotation marks of the quoted span that immediately precedes the directive
+- Only whitespace may appear between the closing quotation mark and the directive; if any other character intervenes, the directive is not attached to that span
+- A `{{def:}}` not immediately preceded by a recognized quoted span is an error
+- Defined terms MUST NOT carry emphasis markers in source (e.g., `**bold**`); how a defined term is displayed (bold, underline, small caps, quoted) is determined at render time by the style template (§13.7)
+
+**Accepted quotation marks:**
+
+A quoted span is delimited by one of the recognized opening/closing quotation-mark pairs below. By default all pairs are accepted; the active set MAY be narrowed or extended per document `language` or by renderer/validator configuration.
+
+| Pair | Opening | Closing | Code points |
+|---|---|---|---|
+| Straight double | `"` | `"` | U+0022 / U+0022 |
+| Curly double | `“` | `”` | U+201C / U+201D |
+| Guillemets | `«` | `»` | U+00AB / U+00BB |
+| Reversed guillemets | `»` | `«` | U+00BB / U+00AB |
+| Low-high double | `„` | `“` | U+201E / U+201C |
+| Curly single | `‘` | `’` | U+2018 / U+2019 |
+| Low-high single | `‚` | `‘` | U+201A / U+2018 |
+| Single guillemets | `‹` | `›` | U+2039 / U+203A |
+
+- The parser matches the closing delimiter immediately preceding the directive, then scans back to the corresponding opening delimiter to delimit the term. For symmetric pairs (where opening and closing are the same character) it pairs with the nearest prior identical mark on the same line.
+- Double-quote forms are RECOMMENDED. Single-quote forms are accepted, but because the right single quotation mark (U+2019) also serves as an apostrophe, a single-quoted term containing an apostrophe may be mis-delimited; validators SHOULD emit a warning in that case.
+
+**Identifiers:**
+
+- Definition identifiers follow the same rules as section identifiers (§5.2) and MUST be unique within the document
+- The identifier MAY be omitted; when omitted, implementations MUST auto-generate it from the defined term using the algorithm in §5.3 (e.g., `"Services" {{def:}}` → `services`)
+- Explicit identifiers are RECOMMENDED for stability, and are REQUIRED to disambiguate when two different terms would auto-generate the same identifier
+
+**Placement:**
+
+- A `{{def:}}` MAY appear anywhere in the document body — in a dedicated Definitions section, or inline at the point a term is first used
+- There is no required, single, or first-positioned Definitions section
+- Authors MAY collect stipulative definitions under a conventional "Definitions" heading; this is RECOMMENDED for readability but not required
+- Definitions MAY also be introduced inside attachment files (§12.4); such definitions register document-wide terms
+
+**Scope (for tooling):** A definition records its identifier, term text, and location. LegalDown does not store a separate "definition text." For purposes such as circular-reference detection and optional glossary previews, a definition's scope is the paragraph containing the `{{def:}}` directive. Glossaries and `{{term:}}` links resolve to the section or clause containing the definition.
 
 ### 7.3 Definition Reference
 
@@ -600,7 +634,7 @@ Renderers MUST:
 
 1. Locate the definition by identifier
 2. If a `label` parameter is provided, use the label text as the display text
-3. Otherwise, extract the defined term text from within `**"..."**`
+3. Otherwise, use the defined term text — the content of the quoted span at the definition site
 4. Replace `{{term: id}}` (or `{{term: id, label=...}}`) with the display text
 5. Create a hyperlink to the definition in formats that support hyperlinking
 6. If the definition is not found, insert `[UNDEFINED: id]` and emit a validation error
@@ -642,9 +676,11 @@ When a document contains an `amends` key in frontmatter, definition validation f
 
 All standard CommonMark inline formatting is supported:
 
-- `**bold**` or `__bold__` — Bold text (used for defined terms)
+- `**bold**` or `__bold__` — Bold text (used for emphasis)
 - `*italic*` or `_italic_` — Italic text (used for emphasis)
 - `` `code` `` — Monospace/code (used for technical specifications)
+
+> **Note:** Defined terms are not marked with emphasis in source. A defined term is written in quotation marks followed by `{{def:}}` (see §7.2); its visual styling is applied by the renderer.
 
 ### 8.2 Lists
 
@@ -967,7 +1003,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | Directive | Status | Purpose |
 |---|---|---|
 | `{{ref: id}}` | REQUIRED | Cross-reference to section |
-| `{{def: id}}` | REQUIRED | Declare a definition |
+| `{{def: id}}` | REQUIRED | Mark the preceding quoted term as a definition (`id` optional; auto-derived from the term when omitted) |
 | `{{term: id}}` | REQUIRED | Reference a defined term |
 | `{{term: id, label=text}}` | OPTIONAL | Reference a defined term with custom display text |
 | `{{date: YYYY-MM-DD}}` | OPTIONAL | Inline date value |
@@ -1049,7 +1085,7 @@ LegalDown attachment files are body-only LegalDown content fragments included by
 
 **Example attachment file (attachments/service-description.lgd):**
 
-(assumes the parent document declares `{{def: services}}` and `{{def: business-hours}}` in its Definitions section)
+(assumes the parent document declares `{{def: services}}` and `{{def: business-hours}}` in its body)
 
 ```markdown
 Provider shall deliver the following {{term: services}}:
@@ -1145,7 +1181,7 @@ When rendering `{{term: id}}` or `{{term: id, label=text}}`:
 
 1. Locate definition by identifier
 2. If a `label` parameter is provided, use the label text as the display text
-3. Otherwise, extract defined term from `**"..."**` formatting
+3. Otherwise, use the defined term — the content of the quoted span at the definition site
 4. Replace directive with the display text and hyperlink
 5. If definition not found, insert `[UNDEFINED: id]` and emit validation error
 
@@ -1272,8 +1308,7 @@ authoritative: en
 
 # Definitions {#definitions}
 
-{{def: confidential-info}}
-**"Confidential Information"** means any non-public information...
+"Confidential Information" {{def: confidential-info}} means any non-public information...
 ```
 
 **contract-fr.lgd:**
@@ -1288,8 +1323,7 @@ authoritative: en
 
 # Définitions {#definitions}
 
-{{def: confidential-info}}
-**« Information confidentielle »** désigne toute information non publique...
+« Information confidentielle » {{def: confidential-info}} désigne toute information non publique...
 ```
 
 **Rules for separate file approach:**
@@ -1331,8 +1365,6 @@ Validators MUST categorize issues at three levels:
 | Section identifiers follow naming rules | Error |
 | Headings do not contain hardcoded numbering | Warning |
 | Directives are well-formed | Error |
-| Definitions section (when present) is the first level 1 heading | Error |
-| Definitions section contains no subheadings (level 2 or deeper) | Error |
 
 ### 15.3 Reference Validation
 
@@ -1340,17 +1372,19 @@ Validators MUST categorize issues at three levels:
 |---|---|
 | All `{{ref: id}}` point to existing sections | Error |
 | All `{{term: id}}` point to declared definitions | Error |
-| Circular definitions detected | Error |
-| Definitions used before declaration | Warning |
+| Circular definitions detected (scoped to each definition's containing paragraph, see §7.2) | Error |
+| Definitions used before declaration | Info |
 | Sections with no references (possible orphaned content) | Info |
 
 ### 15.4 Definition Validation
 
 | Check | Level |
 |---|---|
-| All `{{def: id}}` declarations are unique | Error |
-| All `{{def: id}}` declarations appear in the Definitions section | Error |
-| Defined terms follow `**"Term"**` formatting | Warning |
+| All `{{def: id}}` identifiers are unique | Error |
+| `{{def:}}` is immediately preceded by a recognized quoted span | Error |
+| Two definitions auto-generate the same identifier (omitted ids) | Error |
+| Defined term wrapped in emphasis markers (`**`, `__`) in source | Warning |
+| Single-quoted term ambiguous with an apostrophe (U+2019) | Warning |
 | Declared definitions never referenced with `{{term:}}` | Warning |
 
 ### 15.5 Field Spec Validation
@@ -1481,10 +1515,8 @@ This Mutual Non-Disclosure Agreement (this "Agreement") is entered into on
 
 # Definitions {#definitions}
 
-{{def: confidential-info}}
-**"Confidential Information"** means any non-public information disclosed by
-one side to the other in connection with evaluating a potential business
-relationship.
+"Confidential Information" {{def: confidential-info}} means any non-public information disclosed by
+one side to the other in connection with evaluating a potential business relationship.
 
 # Confidentiality Obligations {#confidentiality}
 
@@ -1550,8 +1582,7 @@ This notice is issued by {{party: acme}}.
 
 # Definitions {#definitions}
 
-{{def: termination-date}}
-**"Termination Date"** means {{date: 2026-06-01}}.
+"Termination Date" {{def: termination-date}} means {{date: 2026-06-01}}.
 
 # Notice {#notice}
 
@@ -1592,8 +1623,7 @@ effect on {{date: 2026-04-01}}.
 
 # Definitions {#definitions}
 
-{{def: remote-work}}
-**"Remote Work"** means performance of assigned duties at a location other
+"Remote Work" {{def: remote-work}} means performance of assigned duties at a location other
 than the Issuer's premises.
 
 # Eligibility {#eligibility}

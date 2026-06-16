@@ -158,20 +158,23 @@ Broken references render as `[BROKEN REF: identifier]`.
 
 ### Definitions
 
-**Declare** a defined term (on its own line before the definition paragraph):
+**Declare** a defined term by writing it in quotation marks and placing `{{def: id}}` immediately after it. The defined term is the text inside the quotes. The same syntax works in a Definitions section or inline at first use:
 
 ```markdown
-{{def: term-id}}
-**"Term Name"** means ...
+"Term Name" {{def: term-id}} means ...
+
+The Provider performs marketing services (the "Services" {{def: services}}).
 ```
 
 **Rules:**
 
-- If the document contains any `{{def:}}` declarations, all definitions MUST be placed in a single Definitions section
-- When present, the Definitions section MUST be the first `#` heading in the document body
-- The Definitions section MUST NOT contain any subheadings (level 2 or deeper)
-- All `{{def:}}` declarations appear directly under the `#` heading as consecutive paragraphs
-- Documents without definitions MAY omit the Definitions section
+- `{{def:}}` MUST be immediately preceded (only whitespace allowed in between) by a quoted span; the term is the text inside the quotation marks
+- Defined terms carry NO emphasis markers in source (`**bold**`); styling is applied by the renderer
+- Accepted quotation pairs (all on by default; double quotes recommended): `"…"` (U+0022), `“…”` (U+201C/D), `«…»`, `»…«`, `„…“`, `‘…’`, `‚…‘`, `‹…›`. Single-quote forms are accepted but ambiguous with apostrophes — validators warn
+- The `id` follows section-identifier rules and MUST be unique; it MAY be omitted and is then auto-derived from the term via the §5.3 slug algorithm (`"Services" {{def:}}` → `services`). Explicit ids are recommended and required to break slug collisions
+- A `{{def:}}` MAY appear anywhere in the body — there is no required, single, or first-positioned Definitions section. A top "Definitions" heading is a recommended convention only
+- Definitions MAY be introduced inside attachment files (they register document-wide terms)
+- A definition records (id, term, location); no "definition text" is stored. `{{term:}}` links and glossaries resolve to the section/clause containing the definition
 
 **Reference** a defined term inline:
 
@@ -282,7 +285,7 @@ Path is relative to the including document. Circular includes are invalid.
 ## Text Formatting
 
 Standard CommonMark:
-- `**bold**` — used for defined terms as `**"Term"**`
+- `**bold**` — emphasis (NOT used for defined terms; terms use quotes + `{{def:}}`, styled by the renderer)
 - `*italic*`
 - Lists (ordered and unordered) with blank lines before/after
 - Tables (standard Markdown pipe tables with header row)
@@ -300,11 +303,10 @@ Separate files per language with identical heading structure and section identif
 - Skipped heading levels
 - Duplicate explicit section identifiers
 - Malformed section identifiers
-- Definitions section (when present) is not the first `#` heading
-- Definitions section contains subheadings
-- `{{def:}}` declarations outside the Definitions section
+- `{{def:}}` not immediately preceded by a recognized quoted span
+- Two definitions auto-generate the same identifier (omitted ids)
 - Broken `{{ref:}}` or `{{term:}}` targets
-- Duplicate `{{def:}}` declarations
+- Duplicate `{{def:}}` identifiers
 - Invalid `document_type`, side names, party names, or party `type` values
 - Too few sides or parties for the selected `document_type`
 - Missing `issuer` side for `unilateral_act` or `collective_act`
@@ -328,7 +330,8 @@ Separate files per language with identical heading structure and section identif
 **Warnings** (should fix):
 - Hardcoded numbering in headings
 - Duplicate auto-generated section identifiers (implementations append `-2`, `-3` suffixes for rendering)
-- Defined terms not following `**"Term"**` format
+- Defined term wrapped in emphasis markers (`**`, `__`) in source
+- Single-quoted term ambiguous with an apostrophe (U+2019)
 - Declared definitions never referenced
 - Missing `currency` on `{{money:}}`
 - Undeclared `{{field:}}` type when `field_types` frontmatter is present
@@ -338,6 +341,7 @@ Separate files per language with identical heading structure and section identif
 
 **Info** (suggestions):
 - `{{term:}}` references id not found in amendment (when original is not available or not a LegalDown file)
+- Definition used before its declaration point in the document
 
 ## Minimal Example
 
@@ -377,13 +381,10 @@ language: en
 
 # Definitions {#definitions}
 
-{{def: confidential-info}}
-**"Confidential Information"** means any non-public information disclosed
-by one side to the other, whether orally or in writing, that is designated
-as confidential.
+"Confidential Information" {{def: confidential-info}} means any non-public information disclosed
+by one side to the other, whether orally or in writing, that is designated as confidential.
 
-{{def: effective-date}}
-**"Effective Date"** means the date first written above.
+"Effective Date" {{def: effective-date}} means the date first written above.
 
 # Confidentiality Obligations {#confidentiality}
 
