@@ -61,7 +61,8 @@ reuse-first way to author templates and drafts. No new structural complexity —
 
 - [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §3.4 (identifier note), new §3.10
   (frontmatter placeholders), §10.1 (active-locale note), §10.2–§10.5 (locale wording), §10.3
-  (currency clause), §10.7 (cross-reference), §15.5 (validation row).
+  (currency clause), §10.7 (cross-reference), §13.7 (locale listed among style-template settings),
+  §15.5 (validation row).
 - [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — Sides and Parties notes, Placeholder
   section, validation summary.
 

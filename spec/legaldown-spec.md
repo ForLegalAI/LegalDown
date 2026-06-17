@@ -397,7 +397,7 @@ effective_date: "{{placeholder: effective-date, type=date}}"
 
 - A placeholder in frontmatter MUST be written as a quoted YAML string, because an unquoted `{{` begins a YAML flow mapping and is not valid YAML
 - Placeholders MAY appear in **value** fields (for example `title`, `legal_name`, `address`, `identification_number`, `effective_date`, `governing_law`)
-- Placeholders MUST NOT appear in **identifier** or **structural** fields — any side or party `name` (these must satisfy the identifier format and are resolved by `{{party:}}`), party `type`, `document_type`, or the `sides`/`parties` array structure
+- Placeholders MUST NOT appear in **identifier** or **structural** fields — any side or party `name` (these must satisfy the identifier format; a party `name` is additionally referenced by `{{party:}}`), party `type`, `document_type`, or the `sides`/`parties` array structure
 - Type-specific placeholders follow §10.7 (for example `"{{placeholder: effective-date, type=date}}"`)
 - A required field whose value is a placeholder satisfies that field's presence requirement; the document is treated as a template or draft with unfilled values
 - A placeholder id used in both frontmatter and body refers to the same logical blank (§10.7)
@@ -819,7 +819,7 @@ Standard Markdown tables do not support merged cells or complex formatting. For 
 
 Field specs are typed inline directives that represent structured values — including dates, monetary amounts, pass-through custom values, and fillable placeholders — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
 
-The **active locale** used for formatting (date order, decimal and grouping separators, etc.) is a render-time setting determined by the render template or renderer configuration (see §13.7); it is not a frontmatter field — LegalDown documents do not declare a formatting locale. Renderers MAY use the document `language` as a hint. The underlying value (ISO date, numeric amount) is stored canonically, so only its display varies by locale.
+The **active locale** used for formatting (date order, decimal and grouping separators, etc.) is a render-time setting — part of the style template or renderer configuration (style templates list the locale among their settings, §13.7) — not a frontmatter field. LegalDown documents do not declare a formatting locale. Renderers MAY use the document `language` as a hint. The underlying value (ISO date, numeric amount) is stored canonically, so only its display varies by locale.
 
 All field specs MAY include an optional `note` parameter to provide a plain-text explanation of the value for automation or machine-processing purposes. The `note` value MUST NOT affect rendered output, MUST NOT contain commas or closing braces (`}}`), and MUST be preserved in structured output formats when present.
 
@@ -1300,6 +1300,7 @@ Renderers SHOULD support external style templates specifying:
 - Table formatting
 - Paragraph spacing and indentation
 - Cover page format
+- Locale for value formatting (date order, number and decimal separators, currency display)
 
 Templates SHOULD be defined in a separate configuration file (e.g., YAML or JSON) completely independent of document content. The same LegalDown source SHOULD render correctly with any compatible template.
 
