@@ -174,7 +174,7 @@ The Provider performs marketing services (the "Services" {{def: services}}).
 - The `id` follows section-identifier rules and MUST be unique; it MAY be omitted and is then auto-derived from the term via the §5.3 slug algorithm (`"Services" {{def:}}` → `services`). Explicit ids are recommended and required to break slug collisions
 - A `{{def:}}` MAY appear anywhere in the body — there is no required, single, or first-positioned Definitions section. A top "Definitions" heading is a recommended convention only
 - Definitions MAY be introduced inside attachment files (they register document-wide terms)
-- A definition records (id, term, location); no "definition text" is stored. `{{term:}}` links and glossaries resolve to the section/clause containing the definition
+- A definition records (id, term, location); no "definition text" is stored. A `{{term:}}` link targets the definition's location (the `{{def:}}` anchor); a generated glossary entry points to the section/clause containing it
 
 **Reference** a defined term inline:
 
