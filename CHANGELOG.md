@@ -8,9 +8,66 @@ without a major version bump until v1.0.
 
 ---
 
-## [Unreleased] — 2026-06-16
+## [Unreleased]
 
-### Definitions overhaul (BREAKING)
+### Frontmatter: locale/currency cleanup and template placeholders — 2026-06-17
+
+Tightens the document-metadata model so the schema and the rendering rules agree, and adds a
+reuse-first way to author templates and drafts. No new structural complexity — these changes
+*remove* dangling references and *reuse* the existing `{{placeholder:}}` mechanism.
+
+#### Changed
+
+- **No document-level locale or default currency.** The rendering rules previously told renderers to
+  read "the document's locale" and "a default currency from the document metadata" (§10.2–§10.5),
+  but the frontmatter schema defined neither field. Formatting (date order, separators, currency
+  symbol) is **presentation**, so it is now explicitly a render-time setting — the **active locale**
+  from the render template or renderer configuration (§10.1). Currency stays per `{{money:}}`
+  directive; an omitted `currency` emits a validation warning and MAY fall back to a render-template
+  default, but there is **no document-level default currency**.
+
+- **`identification_number` is a cross-type reserved field.** Clarified (§3.4) that
+  `identification_number` is the reserved field name for a registration/national identifier on **any**
+  party — RECOMMENDED for `legal_entity`, OPTIONAL for `natural_person` (not every individual has
+  one). Prefer it over a custom field so tooling can locate the identifier consistently. Documentation
+  clarification, not a schema change.
+
+#### Added
+
+- **Placeholders in frontmatter (spec §3.10).** Template and draft documents MAY use the existing
+  `{{placeholder:}}` directive (§10.7) as a **quoted** string value in frontmatter, reusing its ids,
+  types, and rendering unchanged:
+
+  ```yaml
+  legal_name: "{{placeholder: client-legal-name}}"
+  effective_date: "{{placeholder: effective-date, type=date}}"
+  ```
+
+  - Allowed in **value** fields (`title`, `legal_name`, `address`, `identification_number`,
+    `effective_date`, `governing_law`, …); **not** in identifier or structural fields (any `name`,
+    `type`, `document_type`, `sides`/`parties` structure).
+  - Must be a quoted YAML string (an unquoted `{{` is invalid YAML).
+  - A required field holding a placeholder counts as present — the document is treated as a
+    template/draft with unfilled blanks; a placeholder id shared with the body is the same blank.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| `{{placeholder:}}` in a frontmatter identifier/structural field | — | **Added (Error)** |
+| `{{money:}}` omitted `currency` looks up a *document* default | (implied) | **Removed** — no document default; warning only |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §3.4 (identifier note), new §3.10
+  (frontmatter placeholders), §10.1 (active-locale note), §10.2–§10.5 (locale wording), §10.3
+  (currency clause), §10.7 (cross-reference), §15.5 (validation row).
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — Sides and Parties notes, Placeholder
+  section, validation summary.
+
+---
+
+### Definitions overhaul (BREAKING) — 2026-06-16
 
 This revision reworks how defined terms are declared (spec §7). The goal was to support the way
 lawyers actually define terms — including **inline, at first use** — while making the schema

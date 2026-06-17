@@ -81,6 +81,8 @@ tags: [tag1, tag2]                      # OPTIONAL
 - Party `type` is explicit: `legal_entity` or `natural_person`
 - Unknown party fields are allowed and must be ignored by implementations
 - Display fallback: side `label` → title-cased/pluralized `name`; party `label` → `legal_name`
+- `identification_number` is the reserved field for a registration/national ID — RECOMMENDED for `legal_entity`, OPTIONAL for `natural_person` (not every individual has one); prefer it over a custom field when present
+- Template/draft frontmatter MAY use `{{placeholder:}}` as a **quoted** string in value fields (e.g. `legal_name: "{{placeholder: client-name}}"`), but NOT in identifier/structural fields (any `name`, `type`, `document_type`, `sides`/`parties` structure); same id in frontmatter and body means the same blank
 
 ### Amendments
 
@@ -256,7 +258,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{placeholder: fee, type=money, currency=EUR, note=Base monthly fee}}
 ```
 
-- Pure inline directive; no frontmatter declaration needed
+- No separate declaration needed; appears in document text, and MAY also appear as a quoted string value in frontmatter value fields (not identifier/structural fields) for templates and drafts
 - `type`: optional, defaults to `text`
 - Supported types: `text` | `date` | `money`
 - Same placeholder id used multiple times means the same logical blank
@@ -315,6 +317,7 @@ Separate files per language with identical heading structure and section identif
 - `field_types` keys that are malformed or collide with built-in directive names
 - Missing or malformed `type` on `{{field:}}`
 - Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
+- `{{placeholder:}}` in a frontmatter identifier or structural field (any `name`, `type`, `document_type`, `sides`/`parties` structure)
 - Mismatched bilingual structure
 - `amends.title` is empty or missing when `amends` is present
 - `amends.file` path does not exist when specified
