@@ -169,12 +169,12 @@ The Provider performs marketing services (the "Services" {{def: services}}).
 **Rules:**
 
 - `{{def:}}` MUST be on the same line as, and immediately preceded by, a quoted span (only optional spaces/tabs — no line break — in between); the term is the text inside the quotation marks
-- Defined terms carry NO emphasis markers in source (`**bold**`); styling is applied by the renderer
+- Defined terms carry NO emphasis markers in source (`**bold**`); styling is applied by the renderer. The quotation marks are a source-only delimiter and are NOT rendered — at neither the definition nor any `{{term:}}` reference
 - Accepted quotation pairs (all on by default; double quotes recommended): `"…"` (U+0022), `“…”` (U+201C/D), `«…»`, `»…«`, `„…“`, `‘…’`, `‚…‘`, `‹…›`. Single-quote forms are accepted but ambiguous with apostrophes — validators warn
 - The `id` follows section-identifier rules and MUST be unique; it MAY be omitted and is then auto-derived from the term via the §5.3 slug algorithm (`"Services" {{def:}}` → `services`). Explicit ids are recommended and required to break slug collisions
 - A `{{def:}}` MAY appear anywhere in the body — there is no required, single, or first-positioned Definitions section. A top "Definitions" heading is a recommended convention only
 - Definitions MAY be introduced inside attachment files (they register document-wide terms)
-- A definition records (id, term, location); no "definition text" is stored. `{{term:}}` links and glossaries resolve to the section/clause containing the definition
+- A definition records (id, term, location); no "definition text" is stored. A `{{term:}}` link targets the definition's location (the `{{def:}}` anchor); a generated glossary entry points to the section/clause containing it
 
 **Reference** a defined term inline:
 
@@ -183,7 +183,7 @@ The Provider performs marketing services (the "Services" {{def: services}}).
 {{term: term-id, label=Alternative Display Text}}
 ```
 
-- `label` is optional; when present, displays that text instead of the canonical term name
+- `label` is optional; when present, displays that text instead of the defined term (used for inflected forms; authoring tools may generate the `label` automatically)
 - `label` must not contain commas or `}}`
 - Undefined references render as `[UNDEFINED: id]`
 

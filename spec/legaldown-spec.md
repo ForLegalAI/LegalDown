@@ -563,7 +563,8 @@ The Provider shall perform the marketing services described in this Article
 - The defined term is the text inside the quotation marks of the quoted span that immediately precedes the directive
 - The directive MUST be on the same line as the quoted span; only optional spaces or tabs (no line break) may appear between the closing quotation mark and the directive. If any other character intervenes, the directive is not attached to that span
 - A `{{def:}}` not immediately preceded by a recognized quoted span is an error
-- Defined terms MUST NOT carry emphasis markers in source (e.g., `**bold**`); how a defined term is displayed (bold, underline, small caps, quoted) is determined at render time by the style template (§13.7)
+- Defined terms MUST NOT carry emphasis markers in source (e.g., `**bold**`); how a defined term is displayed (bold, underline, small caps) is determined at render time by the style template (§13.7)
+- The quotation marks are a source-only delimiter: they are NOT part of the defined term and MUST NOT be rendered. At both the defining occurrence and every `{{term:}}` reference, the term is rendered as the text inside the marks, without the marks. A template marks defined terms visually through styling (e.g., bold), never by re-adding quotation marks
 
 **Accepted quotation marks:**
 
@@ -596,7 +597,7 @@ A quoted span is delimited by one of the recognized opening/closing quotation-ma
 - Authors MAY collect stipulative definitions under a conventional "Definitions" heading; this is RECOMMENDED for readability but not required
 - Definitions MAY also be introduced inside attachment files (§12.4); such definitions register document-wide terms
 
-**Scope (for tooling):** A definition records its identifier, term text, and location. LegalDown does not store a separate "definition text." For purposes such as circular-reference detection and optional glossary previews, a definition's scope is the paragraph containing the `{{def:}}` directive. Glossaries and `{{term:}}` links resolve to the section or clause containing the definition.
+**Scope (for tooling):** A definition records its identifier, term text, and location. LegalDown does not store a separate "definition text." For purposes such as circular-reference detection and optional glossary previews, a definition's scope is the paragraph containing the `{{def:}}` directive. A `{{term:}}` link targets the definition's location (the `{{def:}}` anchor); a generated glossary entry points to the section or clause containing it.
 
 ### 7.3 Definition Reference
 
@@ -607,7 +608,7 @@ Defined terms are referenced using the `{{term:}}` directive:
 {{term: definition-id, label=Custom Display Text}}
 ```
 
-The optional `label` parameter specifies text to display in place of the canonical defined term name. This is useful when the defined term must appear in a grammatically inflected form (e.g., declension, conjugation, or other morphological variation required by the document's language).
+The optional `label` parameter specifies text to display in place of the defined term. This is useful when the defined term must appear in a grammatically inflected form (e.g., declension, conjugation, or other morphological variation required by the document's language). LegalDown does not encode morphological variants in the schema; supplying the correct inflected `label` is left to authoring tools, which MAY generate it automatically.
 
 **Examples:**
 
@@ -624,7 +625,7 @@ In the last example, the defined term is "Services" but the label `Hosted Servic
 **Rules:**
 
 - The `label` parameter is OPTIONAL
-- When `label` is present, renderers MUST display the label text instead of the canonical term name
+- When `label` is present, renderers MUST display the label text instead of the defined term
 - The label value MUST NOT contain commas or closing braces (`}}`)
 - The `label` value is plain text — it MUST NOT contain Markdown formatting or nested directives
 
@@ -634,9 +635,9 @@ Renderers MUST:
 
 1. Locate the definition by identifier
 2. If a `label` parameter is provided, use the label text as the display text
-3. Otherwise, use the defined term text — the content of the quoted span at the definition site
+3. Otherwise, use the defined term text — the text inside the quotation marks at the definition site, without the delimiting marks (§7.2)
 4. Replace `{{term: id}}` (or `{{term: id, label=...}}`) with the display text
-5. Create a hyperlink to the definition in formats that support hyperlinking
+5. Create a hyperlink to the definition's location (the `{{def:}}` anchor) in formats that support hyperlinking
 6. If the definition is not found, insert `[UNDEFINED: id]` and emit a validation error
 
 ### 7.4 Optional Automatic Term Recognition
@@ -680,7 +681,7 @@ All standard CommonMark inline formatting is supported:
 - `*italic*` or `_italic_` — Italic text (used for emphasis)
 - `` `code` `` — Monospace/code (used for technical specifications)
 
-> **Note:** Defined terms are not marked with emphasis in source. A defined term is written in quotation marks followed by `{{def:}}` (see §7.2); its visual styling is applied by the renderer.
+> **Note:** Defined terms are not marked with emphasis in source. A defined term is written in quotation marks followed by `{{def:}}` (see §7.2); its visual styling is applied by the renderer, and the delimiting quotation marks themselves are not rendered.
 
 ### 8.2 Lists
 
@@ -1181,8 +1182,8 @@ When rendering `{{term: id}}` or `{{term: id, label=text}}`:
 
 1. Locate definition by identifier
 2. If a `label` parameter is provided, use the label text as the display text
-3. Otherwise, use the defined term — the content of the quoted span at the definition site
-4. Replace directive with the display text and hyperlink
+3. Otherwise, use the defined term — the text inside the quotation marks at the definition site, without the delimiting marks (§7.2)
+4. Replace directive with the display text and hyperlink it to the definition's location (the `{{def:}}` anchor)
 5. If definition not found, insert `[UNDEFINED: id]` and emit validation error
 
 ### 13.5 Field Spec Resolution
@@ -1385,7 +1386,7 @@ Validators MUST categorize issues at three levels:
 | Two definitions auto-generate the same identifier (omitted ids) | Error |
 | Defined term wrapped in emphasis markers (`**`, `__`) in source | Warning |
 | Single-quoted term ambiguous with an apostrophe (U+2019) | Warning |
-| Declared definitions never referenced with `{{term:}}` | Warning |
+| Declared definitions never referenced with `{{term:}}` (may yield false positives when §7.4 automatic term recognition is enabled) | Warning |
 
 ### 15.5 Field Spec Validation
 

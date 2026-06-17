@@ -51,19 +51,26 @@ in [`definitions-review.md`](definitions-review.md).
   heading are now allowed.
 
 - **Format-agnostic source.** Defined terms no longer carry emphasis markers (`**bold**`) in source.
-  Quotation marks are the only delimiter. Whether a term renders bold, underlined, small-caps, or
-  quoted is entirely a render-time decision driven by the style template (§13.7) — applying the
-  separation-of-content-and-presentation principle (§1.2) to definitions.
+  Quotation marks are the only delimiter, and they are a **source-only delimiter that is never
+  rendered** — at neither the defining occurrence nor any `{{term:}}` reference. Whether a term
+  renders bold, underlined, or small-caps is entirely a render-time decision driven by the style
+  template (§13.7) — applying the separation-of-content-and-presentation principle (§1.2) to
+  definitions.
 
 - **Reference by location, not body.** A `{{def:}}` records only `(id, term, location)`. The format
-  no longer stores or extracts a "definition text." `{{term:}}` links and generated glossaries
-  resolve to the **section/clause** containing the definition. For tooling purposes (circular-
-  reference detection, optional glossary previews) a definition's scope is its **containing
-  paragraph** — a deterministic unit. Sentence-level extraction is deliberately not specified
-  (unreliable in legal/multilingual text).
+  no longer stores or extracts a "definition text." A `{{term:}}` link targets the definition's
+  location (the `{{def:}}` anchor); generated glossaries point to the **section/clause** containing
+  it. For tooling purposes (circular-reference detection, optional glossary previews) a definition's
+  scope is its **containing paragraph** — a deterministic unit. Sentence-level extraction is
+  deliberately not specified (unreliable in legal/multilingual text).
 
 - **`{{term:}}` rendering** now takes the display term from the quoted span at the definition site
-  (spec §7.3 / §13.4 step 3) instead of from `**"..."**`.
+  (spec §7.3 / §13.4 step 3) instead of from `**"..."**`. The delimiting quotation marks are not
+  rendered.
+
+- **Inflected forms via `label`.** Grammatical inflection (declension, plural, etc.) is expressed
+  through the `{{term:}}` `label` override. LegalDown does not encode morphological variants in the
+  schema; authoring tools are expected to generate the appropriate `label` automatically.
 
 #### Added
 
@@ -118,7 +125,7 @@ in [`definitions-review.md`](definitions-review.md).
 | Definition used before declaration | Warning | **Info** (first-use is normal) |
 | `{{def:}}` identifiers are unique | Error | Error (unchanged) |
 | `{{term:}}` resolves to a declared definition | Error | Error (unchanged) |
-| Declared definition never referenced | Warning | Warning (unchanged) |
+| Declared definition never referenced | Warning | Warning (may false-positive when §7.4 auto term recognition is on) |
 
 ### Migration
 
