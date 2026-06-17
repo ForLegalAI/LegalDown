@@ -240,6 +240,8 @@ Each party object describes an individual or organization that appears in the do
 |---|---|---|
 | `date_of_birth` | RECOMMENDED | Date of birth in ISO 8601 format |
 
+A `natural_person` MAY also include `identification_number` (OPTIONAL) when the individual has a registration or national identification number (national ID, birth number, passport, etc.). `identification_number` is the reserved field name for this value across **all** party types — prefer it over a custom field so tooling can locate the identifier consistently. It is never required for a natural person, since not every individual has such a number.
+
 Additional custom fields MAY be included on any party object. Implementations MUST ignore unknown party fields rather than failing. This allows organizations to include jurisdiction-specific information, tax identifiers, or any other relevant party metadata.
 
 ### 3.5 Representatives
@@ -374,6 +376,32 @@ attachments:
     file: attachments/tech-specs.pdf
 ---
 ```
+
+### 3.10 Placeholders in Frontmatter
+
+Frontmatter value fields MAY use the `{{placeholder:}}` directive (§10.7) to mark unfilled values in template and draft documents. This reuses the placeholder mechanism unchanged — same identifiers, types, and rendering — rather than introducing a separate "draft" concept.
+
+```yaml
+sides:
+  - name: clients              # identifier — stays concrete
+    parties:
+      - name: client           # identifier — stays concrete
+        type: legal_entity     # structural — stays concrete
+        legal_name: "{{placeholder: client-legal-name}}"
+        identification_number: "{{placeholder: client-id}}"
+        address: "{{placeholder: client-address}}"
+effective_date: "{{placeholder: effective-date, type=date}}"
+```
+
+**Rules:**
+
+- A placeholder in frontmatter MUST be written as a quoted YAML string, because an unquoted `{{` begins a YAML flow mapping and is not valid YAML
+- Placeholders MAY appear in **value** fields (for example `title`, `legal_name`, `address`, `identification_number`, `effective_date`, `governing_law`)
+- Placeholders MUST NOT appear in **identifier** or **structural** fields — any side or party `name` (these must satisfy the identifier format; a party `name` is additionally referenced by `{{party:}}`), party `type`, `document_type`, or the `sides`/`parties` array structure
+- Type-specific placeholders follow §10.7 (for example `"{{placeholder: effective-date, type=date}}"`)
+- A required field whose value is a placeholder satisfies that field's presence requirement; the document is treated as a template or draft with unfilled values
+- A placeholder id used in both frontmatter and body refers to the same logical blank (§10.7)
+- Renderers render frontmatter placeholders as a visible blank, consistent with §13.5 (for example `[_____]`, or `[TBD: id]` when no visual blank is available)
 
 ---
 
@@ -791,6 +819,8 @@ Standard Markdown tables do not support merged cells or complex formatting. For 
 
 Field specs are typed inline directives that represent structured values — including dates, monetary amounts, pass-through custom values, and fillable placeholders — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
 
+The **active locale** used for formatting (date order, decimal and grouping separators, etc.) is a render-time setting — part of the style template or renderer configuration (style templates list the locale among their settings, §13.7) — not a frontmatter field. LegalDown documents do not declare a formatting locale. Renderers MAY use the document `language` as a hint. The underlying value (ISO date, numeric amount) is stored canonically, so only its display varies by locale.
+
 All field specs MAY include an optional `note` parameter to provide a plain-text explanation of the value for automation or machine-processing purposes. The `note` value MUST NOT affect rendered output, MUST NOT contain commas or closing braces (`}}`), and MUST be preserved in structured output formats when present.
 
 ### 10.2 Date Directive
@@ -816,7 +846,7 @@ Provider shall deliver the final report no later than {{date: 2027-03-31, note=F
 
 - The date value MUST be in ISO 8601 format (`YYYY-MM-DD`)
 - The date MUST be a valid calendar date (e.g., `2026-02-30` is invalid)
-- Renderers MUST format the date according to the document's locale or render template settings (e.g., "June 1, 2026", "1 June 2026", "2026-06-01")
+- Renderers MUST format the date according to the active locale or render template settings (e.g., "June 1, 2026", "1 June 2026", "2026-06-01")
 - The raw ISO 8601 value and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ### 10.3 Money Directive
@@ -847,8 +877,8 @@ The monthly fee is {{money: 500, currency=EUR, note=Base monthly service fee}}.
 - The amount MUST be a numeric value (integer or decimal, using period `.` as the decimal separator)
 - The amount MUST NOT include grouping separators, currency symbols, or whitespace
 - The optional `currency` parameter specifies the currency using an ISO 4217 three-letter code (e.g., `USD`, `EUR`, `CZK`, `GBP`)
-- If `currency` is omitted, the renderer SHOULD use a default currency from the document metadata or render template, or emit a validation warning
-- Renderers MUST format the amount according to the document's locale or render template settings (e.g., "$10,000.00", "USD 10,000.00", "€500.00")
+- If `currency` is omitted, the renderer MAY apply a default currency configured in the render template or renderer configuration; if none is configured, it MUST emit a validation warning. LegalDown defines no document-level default currency — currency is specified per `{{money:}}` directive
+- Renderers MUST format the amount according to the active locale or render template settings (e.g., "$10,000.00", "USD 10,000.00", "€500.00")
 - The raw numeric value, currency code, and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ### 10.4 Party Directive
@@ -880,7 +910,7 @@ Notices under this Agreement shall be delivered to {{party: beta-industries}}.
 - The directive MUST resolve against a party `name` in the frontmatter `sides[].parties[]` arrays
 - The optional `label` parameter specifies display text for rendering; if omitted, the renderer MUST use the party's `label` and fall back to `legal_name`
 - The `label` value is plain text — it MUST NOT contain commas or closing braces (`}}`)
-- Renderers MUST format the resolved party reference according to the document's locale or render template settings
+- Renderers MUST format the resolved party reference according to the active locale or render template settings
 - The raw `party-name` value, `label` (if present), and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ### 10.5 Duration Directive
@@ -910,7 +940,7 @@ The service level response time shall not exceed {{duration: 4, unit=H, note=Cri
 
 - The `value` MUST be a positive numeric value (integer or decimal, using period `.` as the decimal separator); zero and negative values are not allowed
 - The `unit` parameter is REQUIRED and MUST be one of: `S`, `M`, `H`, `D`, `MO`, `Y`
-- Renderers MUST format the duration according to the document's locale or render template settings (e.g., "12 months", "30 days", "4 hours", "1 year")
+- Renderers MUST format the duration according to the active locale or render template settings (e.g., "12 months", "30 days", "4 hours", "1 year")
 - The raw numeric value, unit code, and `note` (if present) MUST be preserved in structured output formats for machine processing
 
 ### 10.6 Custom Field Directive
@@ -958,7 +988,7 @@ Invoice {{field: INV-2026-0042, type=invoice-id}} remains unpaid.
 
 ### 10.7 Placeholder Directive
 
-The `{{placeholder:}}` directive represents a fillable inline blank. Placeholders are declared directly where they are used in document text and MUST NOT require any frontmatter declaration.
+The `{{placeholder:}}` directive represents a fillable inline blank. Placeholders are declared directly where they are used and MUST NOT require any separate frontmatter declaration. They appear in document text and MAY also appear as quoted string values in frontmatter (see §3.10).
 
 **Syntax:**
 
@@ -1270,6 +1300,7 @@ Renderers SHOULD support external style templates specifying:
 - Table formatting
 - Paragraph spacing and indentation
 - Cover page format
+- Locale for value formatting (date order, number and decimal separators, currency display)
 
 Templates SHOULD be defined in a separate configuration file (e.g., YAML or JSON) completely independent of document content. The same LegalDown source SHOULD render correctly with any compatible template.
 
@@ -1408,6 +1439,7 @@ Validators MUST categorize issues at three levels:
 | `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, or `money` | Error |
 | Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type` | Error |
 | `{{placeholder:}}` `currency` parameter for `type=money` is a recognized ISO 4217 code | Warning |
+| `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any `name`, `type`, `document_type`, `sides`/`parties` structure) | Error |
 | Field spec `note` parameter is plain text and does not contain commas or closing braces | Error |
 
 ### 15.6 Document Metadata Validation
