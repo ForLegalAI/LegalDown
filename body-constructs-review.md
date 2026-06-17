@@ -1,8 +1,9 @@
 # Contract Body — Constructs Review & Proposal
 
-**Status:** Design proposal. No spec changes have been made yet. This document proposes body-level
-constructs to remove the biggest practical blockers for legal drafting, in line with the project's
-reuse-first, standardization-minded philosophy.
+**Status:** Design rationale (adopted). The proposals below are implemented in the spec in the same
+change; this document records the reasoning. They remove the biggest practical blockers for legal
+drafting, in line with the project's reuse-first, standardization-minded philosophy. See
+[`CHANGELOG.md`](CHANGELOG.md) for the change summary.
 
 **Scope:** §4 (Document Structure), §5 (Section Identifiers), §6 (Cross-References), §8 (Text
 Formatting / lists / block quotes), §13 (Rendering / enumeration) of
@@ -17,8 +18,8 @@ Formatting / lists / block quotes), §13 (Rendering / enumeration) of
 3. **Recitals** — model recitals as *lead-in + anchorable list + tail* (reusing 1 and 2) so they can
    be lettered `(A) (B)` and referenced, instead of un-anchorable block quotes.
 4. **References in headings** — permit `{{term:}}` and `{{ref:}}` in heading text.
-5. **External references as frontmatter objects** — declare outside authorities as author-formatted
-   objects and reference them by a lightweight handle, instead of an inline citation directive.
+5. **Citation marker** — a free-form `{{cite: …}}` inline marker for outside authorities; the
+   citation form is entirely author-controlled.
 
 **Explicitly out of scope:** conditional / optional / alternative clauses (document-assembly logic).
 That is an application layer *above* LegalDown, not a markup concern, and is intentionally not
@@ -103,8 +104,8 @@ as 7.3 and the enumeration scheme yields `(b)` and `(i)`).
 standalone paragraph. Because a paragraph has no enumeration label, a reference to it renders just the
 containing section number (e.g. `7.3`) with a precise hyperlink. Useful for linking, weak for display
 (two paragraphs in 7.3 both show "7.3"). Recommended only where a hyperlink, not a distinct label, is
-the goal. List items remain the primary, fully-labeled mechanism. *(Status: deferred — the initial
-implementation covers list items only; see Open question 2.)*
+the goal. List items remain the primary, fully-labeled mechanism. *(Decided: dropped — list items
+only. Paragraph anchors are not part of this change.)*
 
 ### Validation (additions to §15.2/§15.3)
 
@@ -256,112 +257,47 @@ error). Hardcoded numbers, field-spec directives, and source emphasis in heading
 
 ---
 
-## Proposal 5 — External references as frontmatter objects
+## Proposal 5 — Citation marker (free-form)
 
 ### Problem
 
-Contracts cite outside authorities — statutes, regulations, case law, other agreements ("Art. 6
-GDPR", "§ 2079 of the Civil Code", "the Lease dated …"). An inline citation **directive** is the
-wrong tool: citation form varies wildly by jurisdiction and source, and LegalDown should not try to
-parse or format it.
+Contracts cite outside authorities — statutes, regulations, case law, other agreements. The **form**
+of a citation varies wildly by jurisdiction and source, so LegalDown must not try to structure,
+parse, or format it. All that is needed is a way to **mark** that a span is a citation, leaving its
+content entirely free-form.
 
-### Design — declare objects, reference a handle (mirrors attachments)
+### Design — a free-form inline marker
 
-Declare external references as **frontmatter objects** whose display text is fully author-controlled
-(so any citation form is allowed), and reference them inline by id with a lightweight handle — exactly
-the `attachments` + `{{attach:}}` pattern, but for outside authorities rather than attached files.
-
-**Object fields:**
-
-| Field | Status | Description |
-|---|---|---|
-| `id` | REQUIRED | Identifier; unique within the shared identifier namespace |
-| `title` | REQUIRED | Full citation text, rendered **verbatim** — author controls the form |
-| `short` | OPTIONAL | A short form for repeat citations (e.g. "GDPR", "the Lease") |
-| `url` | OPTIONAL | Link target |
-
-Additional fields permitted and ignored if unknown (forward-compatible, like party fields).
-
-**`{{cite:}}` syntax:**
+`{{cite:}}` takes a single free-form argument: everything between `{{cite:` and the closing `}}` is
+the citation, preserved and rendered **verbatim**. No parameters, no frontmatter, no id — the author
+writes the citation in whatever form they like.
 
 ```markdown
-{{cite: id}}                          → the object's title, verbatim
-{{cite: id, short}}                   → the object's short form (the `short` field)
-{{cite: id, pinpoint=text}}           → title + an author-written locator
-{{cite: id, label=text}}              → custom inline text (overrides title/short)
-{{cite: id, pinpoint=text, short}}    → short form + locator
+Processing is lawful only under {{cite: Art. 6(1)(b) of Regulation (EU) 2016/679 (GDPR)}}.
+
+Title passes on delivery per {{cite: § 2079 of Act No. 89/2012 Coll., the Civil Code}}.
+
+The principle in {{cite: Supreme Court, 25 Cdo 1234/2025}} governs.
 ```
 
-**Behavior:**
+**Rules:**
 
-- `{{cite: id}}` → renders `title` verbatim; hyperlinks to `url` if present.
-- `short` (bare flag) → renders the object's `short` field instead of `title`; error if the object
-  has no `short`.
-- `pinpoint=` → an author-written locator (article/section/paragraph) appended to the citation. Plain
-  text; appended per template (default: a space, then the pinpoint). One object can serve many
-  pinpoint cites.
-- `label=` → overrides the displayed text entirely with author text (e.g. an inflected or contextual
-  form), like `{{term: ..., label=}}`. Plain text; no commas or `}}`.
-- Unknown id → `[UNKNOWN REFERENCE: id]` + error (mirrors `{{attach:}}`).
+- The argument is free-form text, preserved verbatim (no parsing, no reformatting).
+- Because `{{cite:}}` has **no parameters, commas are allowed** inside the citation text — this is the
+  one directive that permits commas in its argument. Only the sequence `}}` may not appear (it
+  terminates the directive).
+- The argument MUST NOT be empty.
+- `{{cite:}}` has no id, no frontmatter object, and no link of its own. (An author may wrap it in a
+  normal Markdown link if a hyperlink is wanted.)
 
-`{{cite:}}` is **not a citation-formatting directive** — it never parses or reformats a citation.
-`title`, `short`, `pinpoint`, and `label` are all author-written text. That directly answers the
-"different form" concern: the form lives in the object, written by the lawyer.
+**Rendering:**
 
-**Worked example.**
+- Render the citation text verbatim.
+- Renderers MAY apply a citation style from the template (e.g. italics), and tools MAY collect cited
+  spans — neither is required.
 
-Frontmatter:
-
-```yaml
-references:
-  - id: gdpr
-    title: "Regulation (EU) 2016/679 (General Data Protection Regulation)"
-    short: "GDPR"
-    url: "https://eur-lex.europa.eu/eli/reg/2016/679/oj"
-  - id: civil-code
-    title: "Act No. 89/2012 Coll., the Civil Code"
-    short: "the Civil Code"
-  - id: novak-v-acme
-    title: "Supreme Court judgment of 14 March 2025, No. 25 Cdo 1234/2025"
-  - id: master-lease
-    title: "the Lease Agreement dated 1 March 2024 between the parties"
-    short: "the Lease"
-```
-
-Body:
-
-```markdown
-Processing is lawful only under {{cite: gdpr, pinpoint=Art. 6(1)(b)}}.
-
-Thereafter, {{cite: gdpr, short}} applies to all personal data.
-
-Title passes on delivery per {{cite: civil-code, pinpoint=§ 2079}}.
-
-The principle in {{cite: novak-v-acme}} governs.
-
-Rent is set out in {{cite: master-lease, label=the Lease}}, Schedule 2.
-```
-
-Renders (illustratively; each hyperlinked where a `url` exists):
-
-- "…lawful only under Regulation (EU) 2016/679 (General Data Protection Regulation) Art. 6(1)(b)."
-- "Thereafter, GDPR applies…"
-- "Title passes on delivery per Act No. 89/2012 Coll., the Civil Code § 2079."
-- "The principle in Supreme Court judgment of 14 March 2025, No. 25 Cdo 1234/2025 governs."
-- "Rent is set out in the Lease, Schedule 2."
-
-**Optional — generated table of authorities.** As with the definitions glossary, a renderer MAY
-generate a "References" / "Table of Authorities" list from the cited `references` objects, each linking
-to its `url`. Off by default; template-controlled.
-
-**Confirmed / open sub-decisions:**
-
-- Directive `{{cite:}}` — **confirmed**.
-- Frontmatter key — `references` proposed (vs `authorities`); confirm.
-- Short-form mechanism — proposed as both a reusable object `short` field and an inline `label=`
-  override. Confirm whether you want both, or just `label=`.
-- First-full-then-short rendering convention is left to the author (via `short` / `label`); not
-  automated.
+This is purely a **semantic marker** — "this is a citation" — with the form left entirely to the
+lawyer. It is the minimal thing that satisfies the need without imposing any citation structure.
 
 ---
 
@@ -383,10 +319,7 @@ anything conditional is out of band.
 | 1 | List containing an anchored item is rendered with enumeration active | Error/Warning |
 | 4 | `{{term:}}` / `{{ref:}}` in a heading resolves to its target | Error |
 | 4 | Heading contains hardcoded numbering, a field-spec directive, or source emphasis | Error |
-| 5 | External reference `id` unique; `title` non-empty | Error |
-| 5 | `{{cite:}}` resolves to a declared external reference | Error |
-| 5 | `{{cite: id, short}}` used but the object has no `short` field | Error |
-| 5 | `{{cite:}}` `label` / `pinpoint` are plain text (no commas or `}}`) | Error |
+| 5 | `{{cite:}}` argument is non-empty and the directive is well-formed (closing `}}`) | Error |
 
 ## Summary
 
@@ -396,7 +329,7 @@ anything conditional is out of band.
 | 2 | Lead-in + tail text | Specify rendering of CommonMark multi-block items | None — rendering rules only |
 | 3 | Recitals | Compose 1 + 2; recommended `recitals` section | None beyond 1 + 2 |
 | 4 | Term/ref in headings | Permit `{{term:}}` and `{{ref:}}` in heading text | Relaxes one §4.2 rule |
-| 5 | External references | Frontmatter objects + `{{cite: id}}` | One frontmatter array + one handle directive |
+| 5 | Citation marker | Free-form `{{cite: text}}` inline marker | One inline directive |
 
 **Headline:** Proposal 1 is the one that matters most — it unblocks references to sub-clauses, the
 biggest body-level gap. Proposals 2 and 3 fall out of it almost for free; 4 and 5 are small,
@@ -404,19 +337,13 @@ self-contained relaxations.
 
 ## Decisions and remaining questions
 
-**Decided:**
+**All decided:**
 
 1. **Enumeration-forcing (Proposal 1)** — a list with an anchored item MUST be enumerated; an anchored
    item in a non-enumerated list is an error.
+2. **Paragraph anchors (Proposal 1)** — dropped; list items only.
 3. **Recitals (Proposal 3)** — rely on the recommended `recitals` section id; no section-role marker.
-4. **Headings (Proposal 4)** — allow **`{{term:}}` and `{{ref:}}`**; no source emphasis (italics are a
+4. **Headings (Proposal 4)** — allow `{{term:}}` and `{{ref:}}`; no source emphasis (italics are a
    renderer/template choice).
-5. **External references (Proposal 5)** — the `{{cite:}}` handle is accepted; details worked out above.
-
-**Still open:**
-
-2. **Paragraph anchors (Proposal 1)** — allow `{#id}` on standalone paragraphs, or list items only? A
-   paragraph has no enumeration label, so its reference renders only the section number — useful as a
-   hyperlink, ambiguous as a displayed locator. *Recommendation: list items only for now.*
-5a. **External-reference naming** — frontmatter key `references` (vs `authorities`); and whether to
-   keep both `short` (object field) and `label=` (inline override), or just `label=`.
+5. **Citation marker (Proposal 5)** — a free-form `{{cite: …}}` inline marker; no frontmatter object,
+   no parameters, commas allowed in the argument.

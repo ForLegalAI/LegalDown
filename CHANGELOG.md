@@ -10,6 +10,80 @@ without a major version bump until v1.0.
 
 ## [Unreleased]
 
+### Contract body: sub-clause references, tail text, recitals, headings, citations — 2026-06-17
+
+Removes the biggest body-level blockers for legal drafting. The theme is **reference granularity** —
+you can now reference enumerated sub-clauses — plus a few small, self-contained relaxations. Design
+rationale and the alternatives considered are in
+[`body-constructs-review.md`](body-constructs-review.md). Conditional/optional clauses are
+deliberately **out of scope** (an application/assembly layer above the markup).
+
+#### Added
+
+- **Anchorable list items (spec §5.2, §6.3, §13.3).** A list item MAY carry an explicit `{#id}`
+  anchor, and `{{ref:}}` resolves to the item's full enumerated path — e.g. `{{ref: cov-dp}}` →
+  "7.3(b)(ii)". This makes lettered sub-clauses referenceable for the first time, without hardcoding
+  `(b)` (which would break on reorder).
+
+  ```markdown
+  Provider shall:
+
+  - comply with all applicable laws, including:
+    - data-protection law {#cov-dp}
+  ```
+
+  - List-item anchors are **explicit only** (never auto-generated) and share the one document-global
+    identifier namespace with headings and attachments.
+  - A list that contains an anchored item MUST be rendered with legal enumeration active, so the item
+    has a stable label.
+  - *(Standalone-paragraph anchors were considered and dropped — list items only.)*
+
+- **Lead-in and concluding (tail) text (spec §8.4).** Specifies how "flush language" renders — a
+  paragraph after an enumerated list (in the same list item, or after a list under a heading) is the
+  clause's concluding text: it renders flush at the clause level with no enumeration label. No new
+  syntax; this is standard CommonMark multi-block list items, now defined for legal output.
+
+- **External citation marker (spec §6.5).** `{{cite: …}}` marks a free-form external citation
+  (statute, regulation, case law, another contract). The entire argument is the citation text,
+  rendered verbatim — LegalDown never parses or reformats it. It is the only directive that **permits
+  commas** in its argument (it takes no parameters); only `}}` may not appear.
+
+  ```markdown
+  Processing is lawful only under {{cite: Art. 6(1)(b) of Regulation (EU) 2016/679 (GDPR)}}.
+  ```
+
+#### Changed
+
+- **Referenceable recitals (spec §8.5).** Recitals that must be lettered `(A) (B)` and cross-referenced
+  are now authored as a lead-in + anchorable list + tail in a section identified as `recitals` (the
+  template keys uppercase-letter enumeration off that id), composing the two features above. Block
+  quotes remain valid for narrative recitals.
+
+- **Directives allowed in headings (spec §4.2).** Heading text MAY now contain `{{term:}}` and
+  `{{ref:}}` (e.g. a heading that names a defined term). Hardcoded numbering, field-spec directives,
+  and Markdown emphasis remain disallowed — emphasis is a render-time styling choice. Auto-id
+  generation (§5.3) resolves a `{{term:}}` to its display text and omits a `{{ref:}}` (whose number is
+  volatile); a heading with `{{ref:}}` SHOULD carry an explicit `{#id}`.
+
+#### Validation changes
+
+| Rule | Level |
+|---|---|
+| Explicit identifiers (headings + list items) unique across the document | Error |
+| A list containing an anchored item is rendered with enumeration active | Error |
+| Heading contains a field-spec directive or Markdown emphasis | Error |
+| `{{ref:}}` resolves to a section **or** anchored list item | Error |
+| `{{cite:}}` argument is non-empty and well-formed | Error |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §4.2, §5.2/§5.3/§5.4, §6.1–§6.3, new §6.5, §8
+  (new §8.4 lead-in/tail; §8.5 recitals; renumbered §8.6/§8.7), §11.1/§11.2, §13.2/§13.3, §15.2/§15.3.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — Section Identifiers, Heading Hierarchy,
+  Cross-References, new External Citation, Text Formatting, validation summary.
+- [`README.md`](README.md) — cross-reference blurb and the structure-at-a-glance snippet.
+- [`body-constructs-review.md`](body-constructs-review.md) — design rationale (new).
+
 ### Frontmatter: locale/currency cleanup and template placeholders — 2026-06-17
 
 Tightens the document-metadata model so the schema and the rendering rules agree, and adds a

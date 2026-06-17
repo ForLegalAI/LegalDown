@@ -428,11 +428,13 @@ LegalDown uses Markdown heading syntax to define legal document hierarchy:
 
 ### 4.2 Heading Text
 
-Heading text MUST be plain text only. Heading text MUST NOT contain:
+Heading text MUST NOT contain:
 
 - Hardcoded numbering ("1.", "1.1", "Article I")
-- Inline directives (`{{ref:}}`, `{{term:}}` etc.)
-- Markdown formatting (`**bold**`, `*italic*`)
+- Field-spec directives (`{{date:}}`, `{{money:}}`, `{{duration:}}`, `{{field:}}`, `{{placeholder:}}`)
+- Markdown formatting (`**bold**`, `*italic*`) — any emphasis is a render-time styling choice, not source markup
+
+Heading text MAY contain `{{term:}}` and `{{ref:}}` directives — for example, a heading that names a defined term or points to another provision. It MUST otherwise be plain text.
 
 Section identifiers (anchors) in `{#id}` syntax are permitted after heading text (see Section 5).
 
@@ -466,6 +468,27 @@ Any heading MAY include an explicit identifier:
 - MUST start with a lowercase ASCII letter
 - MUST NOT contain characters outside `a-z`, `0-9`, and `-`
 
+**Anchors on list items**
+
+A **list item** MAY also carry an explicit `{#id}` anchor. This makes individual enumerated sub-provisions — `(a)`, `(b)(ii)` — referenceable, which heading anchors alone cannot do.
+
+```markdown
+Provider shall:
+
+- maintain professional liability insurance {#cov-insurance}
+- comply with all applicable laws, including:
+  - data-protection law {#cov-dp}
+  - anti-bribery law {#cov-bribery}
+```
+
+**Rules for list-item anchors:**
+
+- The `{#id}` is placed at the end of the list item's leaf text (its first paragraph), separated by a single space, and is removed from rendered output
+- List-item ids follow the same format rules as identifiers above and share the same document-global identifier namespace (Section 5.4)
+- List-item anchors are **explicit only** — they are never auto-generated
+- A list that contains an anchored item MUST be rendered with legal enumeration active (Section 13.2), so the item has a stable label; an anchored item in a non-enumerated list is an error
+- A reference to a list item resolves to the item's full enumerated path (Section 6.3)
+
 ### 5.3 Automatic Identifier Generation
 
 If no explicit identifier is provided, implementations MUST auto-generate one using the following algorithm:
@@ -483,11 +506,13 @@ If no explicit identifier is provided, implementations MUST auto-generate one us
 Example: "Confidential Information & Trade Secrets" → `confidential-information-trade-secrets`
 Example: "Définitions Générales" → `definitions-generales`
 
+**Headings containing directives.** Before applying the algorithm, replace each `{{term:}}` with its resolved display term text, and remove each `{{ref:}}` (its rendered number is volatile and would make the identifier unstable). A heading containing `{{ref:}}` SHOULD carry an explicit `{#id}`.
+
 ### 5.4 Identifier Scope
 
-Section identifiers are document-global. Each section MUST have a unique identifier within the document, whether the identifier is provided explicitly or auto-generated.
+Identifiers are document-global. Identifiers on headings, on list items, and on attachments (Section 3.9) share a single namespace, and every identifier MUST be unique across the whole document, whether provided explicitly or auto-generated.
 
-Implementations MUST resolve cross-references by matching the referenced identifier directly. Implementations MUST NOT construct, require, or interpret hierarchical dot-separated paths based on heading nesting.
+Implementations MUST resolve cross-references by matching the referenced identifier directly. Implementations MUST NOT construct, require, or interpret hierarchical dot-separated paths based on heading nesting. This concerns the identifier itself, not rendered output: a reference to a list item renders the item's full enumerated path (Section 6.3), but the identifier used to reference it remains flat.
 
 ### 5.5 Duplicate Identifier Handling
 
@@ -502,7 +527,7 @@ If the same identifier would be auto-generated for two different headings, imple
 
 ### 6.1 Purpose
 
-Cross-references create links between sections within a document. Because section numbers are generated at render time, cross-references use section identifiers rather than hardcoded numbers. The renderer resolves identifiers to actual section numbers in output.
+Cross-references create links to sections and to anchored list items within a document. Because numbering is generated at render time, cross-references use identifiers rather than hardcoded numbers. The renderer resolves identifiers to actual section numbers or enumerated paths in output.
 
 ### 6.2 Reference Syntax
 
@@ -518,17 +543,22 @@ As described in Section {{ref: definitions}}, terms have specific meanings.
 Subject to Clause {{ref: liability-cap}}, Provider shall indemnify Client.
 
 The payment schedule in Article {{ref: payment-schedule}} applies from the Effective Date.
+
+Breach of {{ref: cov-dp}} entitles the Client to terminate.
 ```
+
+A `{{ref:}}` may target either a heading or an anchored list item (Section 5.2).
 
 ### 6.3 Reference Rendering
 
 Renderers MUST:
 
-1. Locate the target section by identifier
-2. Determine the rendered section number based on the active numbering scheme
-3. Replace the reference with the section number (e.g., "3.2")
-4. Create a hyperlink to the target section in formats that support hyperlinking (HTML, PDF, DOCX)
-5. If the target identifier does not exist, insert `[BROKEN REF: identifier]` in output and emit a validation error
+1. Locate the target by identifier — a heading (section) or an anchored list item
+2. If the target is a **heading**, determine its section number under the active numbering scheme (e.g., "3.2")
+3. If the target is a **list item**, determine its full enumerated path: the containing section number, followed by the enumeration label of each list level from the top-level list down to the item, using the active enumeration scheme (Section 13.2) — e.g., "7.3(b)(ii)"
+4. Replace the reference with the resolved section number or path
+5. Create a hyperlink to the target in formats that support hyperlinking (HTML, PDF, DOCX)
+6. If the target identifier does not exist, insert `[BROKEN REF: identifier]` in output and emit a validation error
 
 ### 6.4 Attachment References
 
@@ -555,6 +585,40 @@ Technical requirements per {{attach: schedule-c}} shall apply.
 - For LegalDown attachments — links to the rendered attachment section
 - For non-LegalDown attachments — links to the external file
 - If the id is not found, insert `[UNKNOWN ATTACHMENT: id]` in output and emit a validation error
+
+### 6.5 External Citations
+
+The `{{cite:}}` directive marks a span of text as a citation to an external authority — a statute, regulation, court decision, standard, or another document. Because citation form varies widely by jurisdiction and source, LegalDown does **not** parse, structure, or reformat citations. `{{cite:}}` is only a semantic marker; the citation text is entirely author-written.
+
+**Syntax:**
+
+```markdown
+{{cite: free-form citation text}}
+```
+
+**Examples:**
+
+```markdown
+Processing is lawful only under {{cite: Art. 6(1)(b) of Regulation (EU) 2016/679 (GDPR)}}.
+
+Title passes on delivery per {{cite: § 2079 of Act No. 89/2012 Coll., the Civil Code}}.
+
+The principle in {{cite: Supreme Court, 25 Cdo 1234/2025}} governs.
+```
+
+**Rules:**
+
+- The argument is the entire text between `{{cite:` and the closing `}}`, preserved verbatim (no parsing or reformatting)
+- Optional whitespace immediately after `{{cite:` is directive syntax and is not part of the citation text
+- Because `{{cite:}}` takes no parameters, **commas are permitted** inside the citation text — `{{cite:}}` is the only directive that allows commas in its argument (see §11.2). Only the sequence `}}` MUST NOT appear in the text, since it terminates the directive
+- The argument MUST NOT be empty
+- `{{cite:}}` has no identifier, no frontmatter declaration, and no link of its own; an author MAY wrap the directive in a standard Markdown link if a hyperlink is wanted
+
+**Rendering rules:**
+
+- Render the citation text verbatim
+- Renderers MAY apply a citation style from the style template (for example, italics); tools MAY collect cited spans. Neither is required
+- If the argument is empty or the directive is malformed, insert `[INVALID CITATION]` in output and emit a validation error
 
 ---
 
@@ -739,6 +803,8 @@ Termination shall proceed as follows:
 - Nested lists are supported with consistent indentation (2 or 4 spaces)
 - Renderers MAY convert unordered lists to legal enumeration styles (a), (b), (c) at configured heading levels
 - Renderers MAY convert nested unordered lists to legal sub-enumeration (i), (ii), (iii)
+- A list item MAY carry an explicit `{#id}` anchor for cross-referencing (Section 5.2)
+- A list that contains an anchored item MUST be rendered with legal enumeration active, so the referenced item has a stable label
 
 ### 8.3 Nested Lists
 
@@ -755,9 +821,35 @@ The following restrictions apply:
 
 Renderers SHOULD apply appropriate legal enumeration at each nesting level based on the active style template.
 
-### 8.4 Block Quotes
+### 8.4 Lead-in and Concluding (Tail) Text
 
-Block quotes are used for recitals, WHEREAS clauses, preambles, and quoted text:
+A legal clause is often written as a **lead-in**, an enumerated list, and **concluding (tail) text** that grammatically governs every item:
+
+```markdown
+- Provider shall:
+
+  - notify the Client in writing;
+  - preserve all relevant records; and
+  - mitigate the loss,
+
+  in each case as soon as reasonably practicable.
+- Client shall cooperate in good faith.
+```
+
+- The **lead-in (chapeau)** is the first paragraph of a list item (or the paragraph introducing a list under a heading) that precedes the item's nested list.
+- **Concluding (tail) text** is a block that follows the nested list within the same list item, or a paragraph that follows a list under a heading.
+
+**Rendering rules:**
+
+- Tail text MUST render flush at the clause level — aligned with the lead-in, not indented to the sub-item level
+- Tail text MUST NOT receive an enumeration label (it is not a list item)
+- Lead-in and tail text, together with the enumerated items, form a single rendered clause
+
+No new syntax is introduced: this is the standard CommonMark structure of a list item containing a paragraph, a nested list, and a further paragraph. These rules define how it renders for legal output.
+
+### 8.5 Block Quotes
+
+Block quotes are used for quoted text, preambles, and narrative recitals:
 
 ```markdown
 > WHEREAS, Provider possesses expertise in software development services; and
@@ -767,11 +859,26 @@ Block quotes are used for recitals, WHEREAS clauses, preambles, and quoted text:
 > NOW, THEREFORE, in consideration of the mutual covenants herein, the parties agree as follows:
 ```
 
-### 8.5 Horizontal Rules
+**Referenceable recitals.** Block quotes cannot be lettered or anchored. When recitals must be lettered `(A) (B)` and cross-referenced, author them instead as a list in a section whose identifier is `recitals` — a lead-in (WHEREAS…), an anchorable list of background statements (Section 5.2), and a concluding tail (NOW, THEREFORE…), reusing Sections 8.4 and 5.2:
+
+```markdown
+# Background {#recitals}
+
+WHEREAS the parties agree as follows:
+
+- Provider possesses expertise in software development. {#recital-expertise}
+- Client wishes to engage Provider for the Services. {#recital-engagement}
+
+NOW, THEREFORE, in consideration of the mutual covenants below, the parties agree:
+```
+
+A style template keys recital enumeration (uppercase letters `(A) (B)`) off the `recitals` section identifier (Section 13.2); `{{ref: recital-expertise}}` then renders, e.g., "Recital (A)". Block quotes remain valid for narrative recitals that need no lettering or referencing.
+
+### 8.6 Horizontal Rules
 
 Horizontal rules (`---`) MAY be used to visually separate major document divisions such as between the main agreement and schedules.
 
-### 8.6 Comments
+### 8.7 Comments
 
 HTML-style comments are valid in LegalDown and MUST be stripped from all rendered output:
 
@@ -1033,7 +1140,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 
 | Directive | Status | Purpose |
 |---|---|---|
-| `{{ref: id}}` | REQUIRED | Cross-reference to section |
+| `{{ref: id}}` | REQUIRED | Cross-reference to a section or anchored list item |
 | `{{def: id}}` | REQUIRED | Mark the preceding quoted term as a definition (`id` optional; auto-derived from the term when omitted) |
 | `{{term: id}}` | REQUIRED | Reference a defined term |
 | `{{term: id, label=text}}` | OPTIONAL | Reference a defined term with custom display text |
@@ -1048,11 +1155,13 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{placeholder: placeholder-id, type=money, currency=CODE}}` | OPTIONAL | Inline typed blank with type-specific parameters |
 | `{{include: path}}` | OPTIONAL | Include external file |
 | `{{attach: id}}` | OPTIONAL | Reference a declared attachment |
+| `{{cite: text}}` | OPTIONAL | Mark a free-form external citation |
 
 ### 11.2 Directive Rules
 
 - Directives are case-sensitive — always lowercase
 - Directives MUST NOT span multiple lines
+- Commas separate a directive's parameters, so a parameterized value MUST NOT contain a comma — except `{{cite:}}`, which takes a single free-form argument and therefore permits commas (see §6.5)
 - Unknown directives SHOULD generate a warning and be passed through to output as-is
 - Implementations MUST NOT fail silently on unknown directives
 
@@ -1194,17 +1303,21 @@ Renderers SHOULD convert Markdown lists to legal enumeration based on nesting le
 | 2nd level | (i), (ii), (iii) | (i), (ii), (iii) | (i), (ii), (iii) |
 | 3rd level | (A), (B), (C) | (A), (B), (C) | (A), (B), (C) |
 
-This behavior MUST be configurable and MAY be disabled to preserve plain bullet points.
+This behavior MUST be configurable and MAY be disabled to preserve plain bullet points, with two exceptions:
+
+- A list that contains an anchored item (Section 5.2) MUST be enumerated even where bullets are otherwise plain, so the referenced item has a stable label.
+- A style template MAY key a distinct enumeration style off the containing section's identifier — by convention, uppercase letters `(A) (B)` for a section identified as `recitals`.
 
 ### 13.3 Reference Resolution
 
 When rendering `{{ref: id}}`:
 
-1. Locate target section by identifier
-2. Determine the section number generated under the active numbering scheme
-3. Replace directive with the section number (e.g., "3.2")
-4. Create hyperlink to target section in formats supporting links
-5. If target not found, insert `[BROKEN REF: id]` and emit validation error
+1. Locate the target by identifier — a heading (section) or an anchored list item (Section 5.2)
+2. If the target is a heading, determine its section number under the active numbering scheme (e.g., "3.2")
+3. If the target is a list item, determine its full enumerated path: the containing section number, followed by the enumeration label of each list level from the top-level list down to the item (Section 13.2) — e.g., "7.3(b)(ii)"
+4. Replace the directive with the resolved section number or path
+5. Create a hyperlink to the target in formats supporting links
+6. If the target is not found, insert `[BROKEN REF: id]` and emit a validation error
 
 ### 13.4 Definition Resolution
 
@@ -1392,18 +1505,21 @@ Validators MUST categorize issues at three levels:
 | Check | Level |
 |---|---|
 | Heading levels do not skip | Error |
-| Explicit section identifiers are unique within document | Error |
+| Explicit identifiers (headings and list items) are unique within document | Error |
 | Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
-| Section identifiers follow naming rules | Error |
+| Identifiers follow naming rules | Error |
 | Headings do not contain hardcoded numbering | Warning |
+| Heading contains a field-spec directive or Markdown emphasis | Error |
+| A list containing an anchored item is rendered with enumeration active | Error |
 | Directives are well-formed | Error |
 
 ### 15.3 Reference Validation
 
 | Check | Level |
 |---|---|
-| All `{{ref: id}}` point to existing sections | Error |
+| All `{{ref: id}}` point to an existing section or anchored list item | Error |
 | All `{{term: id}}` point to declared definitions | Error |
+| `{{cite:}}` argument is non-empty and the directive is well-formed | Error |
 | Circular definitions detected (scoped to each definition's containing paragraph, see §7.2) | Error |
 | Definitions used before declaration | Info |
 | Sections with no references (possible orphaned content) | Info |

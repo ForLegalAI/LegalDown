@@ -135,13 +135,15 @@ to the legal document structure. The document title lives in frontmatter.
 Heading levels must not skip — no jumping from `#` to `###`.
 
 **Identifiers make references stable.** Add `{#payment-terms}` after any
-heading to give it a stable identifier. Cross-references use this identifier,
-not the section number, so they never break when sections move.
+heading — or after a list item — to give it a stable identifier.
+Cross-references use this identifier, not the number, so they never break
+when provisions move.
 
 **Cross-references always resolve.** Write `{{ref: payment-terms}}` in your
-text. The renderer looks up the section, finds its number, and outputs
-"Section 5" (or whatever number it is). Rearrange the document and it
-just works.
+text. The renderer looks up the target, finds its number, and outputs
+"Section 5" (or whatever number it is). Anchor a list item and a reference
+resolves all the way down to the sub-clause — e.g. "7.3(b)(ii)". Rearrange
+the document and it just works.
 
 **Definitions are tracked.** Declare a defined term by writing it in quotes
 and placing `{{def: id}}` right after it — in a Definitions section or inline
@@ -181,11 +183,14 @@ contains none of them.
 ## Subsection                            ← Nested provision
 ### Further detail                       ← Deeper nesting (up to 5 levels)
 
+- a sub-clause {#clause-id}              ← Anchor a list item (referenceable, e.g. as 7.3(b))
+
 "Defined Term" {{def: term-id}} means... ← Declare a defined term (term in quotes, tag after)
 
 {{term: term-id}}                        ← Use a defined term
 {{term: term-id, label=Alt Text}}        ← Use a defined term with custom display text
-{{ref: identifier}}                      ← Cross-reference a section
+{{ref: identifier}}                      ← Cross-reference a section or anchored list item
+{{cite: § 2079 of the Civil Code}}       ← Free-form external citation
 {{date: 2026-06-01}}                     ← Inline date value
 {{money: 10000, currency=CZK}}          ← Inline monetary amount
 {{field: INV-2026-0042, type=invoice-id}} ← Inline custom typed value

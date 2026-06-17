@@ -123,7 +123,7 @@ When `attachments` is present in frontmatter, the document has attached files (s
 
 **Rules:**
 - Heading levels must not skip (no `#` → `###` without `##`)
-- Heading text must be plain text only — no numbering, no directives, no Markdown formatting
+- Heading text is plain text — no hardcoded numbering, no field-spec directives, no Markdown emphasis (emphasis is a renderer choice); `{{term:}}` and `{{ref:}}` ARE allowed in headings
 - All section numbering is generated at render time — never write numbers in headings
 
 ## Section Identifiers
@@ -134,16 +134,23 @@ Explicit identifier syntax appended to headings:
 # Payment Terms {#payment-terms}
 ```
 
+A **list item** may also carry a `{#id}` anchor (at the end of the item's text), making enumerated sub-clauses referenceable:
+
+```markdown
+- comply with all applicable laws {#cov-compliance}
+```
+
 **Identifier rules:**
 - Lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens only
 - Must start with a lowercase ASCII letter
-- Must be unique within the document
-- Auto-generated if omitted: transliterate non-ASCII to ASCII → lowercase → spaces/underscores to hyphens → remove characters not in `a-z`, `0-9`, `-` → trim leading/trailing hyphens → truncate to 64 chars → use `section` if empty → prefix `section-` if not starting with a lowercase letter
+- Must be unique within the document — headings, list items, and attachments share one namespace
+- Heading ids auto-generate if omitted: transliterate non-ASCII to ASCII → lowercase → spaces/underscores to hyphens → remove characters not in `a-z`, `0-9`, `-` → trim leading/trailing hyphens → truncate to 64 chars → use `section` if empty → prefix `section-` if not starting with a lowercase letter
+- List-item anchors are **explicit only** (never auto-generated); a list containing an anchored item must be rendered with enumeration active
 
 **Identifier scope:**
-- Each section identifier must be unique within the document
-- Cross-references resolve the exact identifier directly
-- Dot-separated hierarchical paths are not used
+- Each identifier must be unique across the document
+- Cross-references resolve the exact identifier directly; a reference to a list item renders its full enumerated path (e.g. `7.3(b)(ii)`)
+- Dot-separated hierarchical paths are not used as identifiers
 
 ## Directives
 
@@ -155,8 +162,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 {{ref: identifier}}
 ```
 
-Resolves to the section number (e.g., "3.2"). Links to the target section.
-Broken references render as `[BROKEN REF: identifier]`.
+Resolves to the section number (e.g., "3.2") for a heading, or the full enumerated path (e.g., "7.3(b)(ii)") for an anchored list item. Links to the target. Broken references render as `[BROKEN REF: identifier]`.
 
 ### Definitions
 
@@ -284,6 +290,16 @@ Path is relative to the including document. Circular includes are invalid.
 - Creates a hyperlink to the attachment (rendered section for LegalDown files, external file for others)
 - If the id is not found, renders as `[UNKNOWN ATTACHMENT: id]`
 
+### External Citation
+
+```markdown
+{{cite: Art. 6(1)(b) of Regulation (EU) 2016/679 (GDPR)}}
+```
+
+- Free-form marker for an external citation; the whole argument is the citation text, rendered verbatim
+- No id, no frontmatter, no parameters — **commas are allowed** (the only directive that permits them); only `}}` may not appear
+- Argument must not be empty; renderers MAY style citations, tools MAY collect them
+
 ## Text Formatting
 
 Standard CommonMark:
@@ -291,9 +307,13 @@ Standard CommonMark:
 - `*italic*`
 - Lists (ordered and unordered) with blank lines before/after
 - Tables (standard Markdown pipe tables with header row)
-- Block quotes (used for recitals/WHEREAS clauses)
+- Block quotes (used for narrative recitals/WHEREAS clauses)
 - HTML comments `<!-- ... -->` — stripped from rendered output
 - Horizontal rules `---` — for major document divisions
+
+**Lead-in / tail:** a clause may be lead-in text + an enumerated list + concluding "tail" text. Author the tail as a paragraph after the list (in the same list item, or after a list under a heading); it renders flush at the clause level with no enumeration label.
+
+**Referenceable recitals:** to letter `(A) (B)` and reference recitals, author them as an anchorable list in a section with id `recitals` (lead-in WHEREAS… + list items with `{#id}` + tail NOW, THEREFORE…), instead of block quotes.
 
 ## Bilingual Documents
 
@@ -303,11 +323,14 @@ Separate files per language with identical heading structure and section identif
 
 **Errors** (must fix):
 - Skipped heading levels
-- Duplicate explicit section identifiers
+- Duplicate explicit identifiers (headings, list items, attachments share one namespace)
 - Malformed section identifiers
+- Heading contains a field-spec directive or Markdown emphasis
+- List containing an anchored item not rendered with enumeration active
 - `{{def:}}` not immediately preceded by a recognized quoted span
 - Two definitions auto-generate the same identifier (omitted ids)
 - Broken `{{ref:}}` or `{{term:}}` targets
+- Empty or malformed `{{cite:}}` argument
 - Duplicate `{{def:}}` identifiers
 - Invalid `document_type`, side names, party names, or party `type` values
 - Too few sides or parties for the selected `document_type`
