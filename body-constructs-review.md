@@ -16,7 +16,7 @@ Formatting / lists / block quotes), §13 (Rendering / enumeration) of
    first-class part of the clause, reusing CommonMark multi-block list items.
 3. **Recitals** — model recitals as *lead-in + anchorable list + tail* (reusing 1 and 2) so they can
    be lettered `(A) (B)` and referenced, instead of un-anchorable block quotes.
-4. **Defined-term references in headings** — permit `{{term:}}` in heading text.
+4. **References in headings** — permit `{{term:}}` and `{{ref:}}` in heading text.
 5. **External references as frontmatter objects** — declare outside authorities as author-formatted
    objects and reference them by a lightweight handle, instead of an inline citation directive.
 
@@ -94,8 +94,8 @@ as 7.3 and the enumeration scheme yields `(b)` and `(i)`).
 **Enumeration interaction:**
 
 - A list that contains an anchored item **MUST be enumerated** even if the template otherwise renders
-  plain bullets — an anchor implies the item needs a stable label. (Alternatively the renderer MAY
-  emit a warning and fall back to the section number; the MUST-enumerate rule is preferred.)
+  plain bullets — an anchor implies the item needs a stable label. An anchored item in a
+  non-enumerated list is an error. *(Decided.)*
 - Ordered (`1.`) and unordered (`-`) lists both map to labels by level via §13.2, so anchoring works
   regardless of marker.
 
@@ -103,7 +103,8 @@ as 7.3 and the enumeration scheme yields `(b)` and `(i)`).
 standalone paragraph. Because a paragraph has no enumeration label, a reference to it renders just the
 containing section number (e.g. `7.3`) with a precise hyperlink. Useful for linking, weak for display
 (two paragraphs in 7.3 both show "7.3"). Recommended only where a hyperlink, not a distinct label, is
-the goal. List items remain the primary, fully-labeled mechanism.
+the goal. List items remain the primary, fully-labeled mechanism. *(Status: deferred — the initial
+implementation covers list items only; see Open question 2.)*
 
 ### Validation (additions to §15.2/§15.3)
 
@@ -112,7 +113,7 @@ the goal. List items remain the primary, fully-labeled mechanism.
 | List-item/paragraph `{#id}` is unique across the whole identifier namespace | Error |
 | List-item/paragraph `{#id}` follows the identifier format | Error |
 | `{{ref:}}` to a list-item id resolves (already covered by broken-ref) | Error |
-| A list containing an anchored item is rendered with enumeration active | Error (or Warning, per the enumeration rule above) |
+| A list containing an anchored item is rendered with enumeration active | Error |
 
 ### Edge cases
 
@@ -209,10 +210,9 @@ NOW, THEREFORE, in consideration of the mutual covenants below, the parties agre
 - `{{ref: recital-expertise}}` → "Recital (A)" / "(A)" per template.
 
 **Recital enumeration style.** Recitals conventionally use uppercase letters `(A) (B)`. This is a
-template/enumeration-scheme concern (§13.2). To let the renderer apply the recital style, the
-RECOMMENDED convention is a section with id `recitals` (or `background`); the style template MAY key
-recital enumeration off that id. (A heavier alternative — a section-level role marker — is noted as an
-open question, not proposed.)
+template/enumeration-scheme concern (§13.2). The convention is a section with id `recitals`; the style
+template keys recital enumeration (uppercase letters `(A) (B)`) off that id. *(Decided — rely on the
+`recitals` id; no section-role marker.)*
 
 **Block quotes remain valid** for narrative, non-referenced recitals. This proposal makes the
 *anchorable, lettered* form available, and recommends it where recitals must be referenced.
@@ -229,28 +229,30 @@ defined term that should link to its definition and stay consistent.
 
 ### Design
 
-Relax §4.2 to **permit `{{term:}}`** in heading text. All other restrictions stay: no hardcoded
-numbering, and (for now) no other directives or Markdown emphasis.
+Relax §4.2 to **permit `{{term:}}` and `{{ref:}}`** in heading text. The other restrictions stay:
+**no hardcoded numbering**, no field-spec directives, and **no Markdown emphasis in source** — any
+italics (e.g. for a foreign phrase such as *force majeure*) are a render-time styling choice, not
+source markup, consistent with §1.2.
 
 ```markdown
 ## Scope of the {{term: services}} {#scope-of-services}
+## Indemnities under {{ref: liability-cap}} {#indemnities}
 ```
 
-**Auto-id interaction (§5.3).** When a heading has no explicit `{#id}`, the auto-id algorithm MUST
-first replace any `{{term:}}` with its **resolved display term text**, then slug the result — e.g.
-*"Scope of the {{term: services}}"* → "Scope of the Services" → `scope-of-the-services`. Explicit ids
-are RECOMMENDED for headings that contain a term, to avoid the resolution dependency.
+**Auto-id interaction (§5.3).** When a heading has no explicit `{#id}`:
 
-**Rendering.** The term renders as its display text and hyperlinks to the definition, but inherits the
-**heading's** styling (the template decides; the term's usual defined-term styling does not override
+- A `{{term:}}` is replaced by its **resolved display term text** before slugging — e.g. *"Scope of
+  the {{term: services}}"* → "Scope of the Services" → `scope-of-the-services`.
+- A `{{ref:}}` is **omitted** from the slug, because it resolves to a section number that changes on
+  reorder and would make the id unstable. A heading containing `{{ref:}}` therefore SHOULD carry an
+  explicit `{#id}`.
+
+**Rendering.** The term/reference renders as its display text/number and hyperlinks to its target, but
+inherits the **heading's** styling (the template decides; defined-term styling does not override
 heading style).
 
-**Validation.** A `{{term:}}` in a heading resolves like any other (undefined → error). Hardcoded
-numbers and other directives in headings remain errors.
-
-**Open sub-question:** whether to also allow `{{ref:}}` in headings (a section number inside a title
-is unusual and risks circularity) and/or `*italic*` for foreign phrases (*force majeure*). Not
-proposed now; `{{term:}}` only, per the request.
+**Validation.** `{{term:}}` / `{{ref:}}` in a heading resolve like anywhere else (undefined target →
+error). Hardcoded numbers, field-spec directives, and source emphasis in headings remain errors.
 
 ---
 
@@ -269,46 +271,97 @@ Declare external references as **frontmatter objects** whose display text is ful
 (so any citation form is allowed), and reference them inline by id with a lightweight handle — exactly
 the `attachments` + `{{attach:}}` pattern, but for outside authorities rather than attached files.
 
-```yaml
-references:
-  - id: gdpr-6
-    title: "Article 6(1)(b) of Regulation (EU) 2016/679 (GDPR)"
-    url: "https://eur-lex.europa.eu/eli/reg/2016/679/oj"
-  - id: civil-code-2079
-    title: "Section 2079 of Act No. 89/2012 Coll., the Civil Code"
-```
-
-```markdown
-Processing is lawful under {{cite: gdpr-6}}.
-The purchase contract is governed by {{cite: civil-code-2079}}.
-```
-
 **Object fields:**
 
 | Field | Status | Description |
 |---|---|---|
 | `id` | REQUIRED | Identifier; unique within the shared identifier namespace |
-| `title` | REQUIRED | Citation text, rendered **verbatim** — author controls the form |
+| `title` | REQUIRED | Full citation text, rendered **verbatim** — author controls the form |
+| `short` | OPTIONAL | A short form for repeat citations (e.g. "GDPR", "the Lease") |
 | `url` | OPTIONAL | Link target |
 
 Additional fields permitted and ignored if unknown (forward-compatible, like party fields).
 
-**`{{cite: id}}` behavior:**
+**`{{cite:}}` syntax:**
 
-- Resolves to the object's `title`, rendered verbatim (no formatting imposed).
-- Hyperlinks to `url` when present.
+```markdown
+{{cite: id}}                          → the object's title, verbatim
+{{cite: id, short}}                   → the object's short form (the `short` field)
+{{cite: id, pinpoint=text}}           → title + an author-written locator
+{{cite: id, label=text}}              → custom inline text (overrides title/short)
+{{cite: id, pinpoint=text, short}}    → short form + locator
+```
+
+**Behavior:**
+
+- `{{cite: id}}` → renders `title` verbatim; hyperlinks to `url` if present.
+- `short` (bare flag) → renders the object's `short` field instead of `title`; error if the object
+  has no `short`.
+- `pinpoint=` → an author-written locator (article/section/paragraph) appended to the citation. Plain
+  text; appended per template (default: a space, then the pinpoint). One object can serve many
+  pinpoint cites.
+- `label=` → overrides the displayed text entirely with author text (e.g. an inflected or contextual
+  form), like `{{term: ..., label=}}`. Plain text; no commas or `}}`.
 - Unknown id → `[UNKNOWN REFERENCE: id]` + error (mirrors `{{attach:}}`).
 
-This is **not a citation-formatting directive** — it neither parses nor reformats the citation; it is
-only a referenceable, reusable handle to author-written text. That directly answers the "different
-form" concern: the form lives in the object, written by the lawyer.
+`{{cite:}}` is **not a citation-formatting directive** — it never parses or reformats a citation.
+`title`, `short`, `pinpoint`, and `label` are all author-written text. That directly answers the
+"different form" concern: the form lives in the object, written by the lawyer.
 
-**Open questions:**
-- Directive name: `{{cite:}}` vs `{{ref:}}`-with-namespace vs folding into a generalized references
-  concept. (`{{ref:}}` is reserved for internal sections; a distinct handle is clearer.)
-- Whether a bare handle directive is acceptable given the "no citation directive" preference — it is a
-  reference handle, not a formatter, but worth confirming.
-- Frontmatter key name: `references` vs `authorities` vs `external_references`.
+**Worked example.**
+
+Frontmatter:
+
+```yaml
+references:
+  - id: gdpr
+    title: "Regulation (EU) 2016/679 (General Data Protection Regulation)"
+    short: "GDPR"
+    url: "https://eur-lex.europa.eu/eli/reg/2016/679/oj"
+  - id: civil-code
+    title: "Act No. 89/2012 Coll., the Civil Code"
+    short: "the Civil Code"
+  - id: novak-v-acme
+    title: "Supreme Court judgment of 14 March 2025, No. 25 Cdo 1234/2025"
+  - id: master-lease
+    title: "the Lease Agreement dated 1 March 2024 between the parties"
+    short: "the Lease"
+```
+
+Body:
+
+```markdown
+Processing is lawful only under {{cite: gdpr, pinpoint=Art. 6(1)(b)}}.
+
+Thereafter, {{cite: gdpr, short}} applies to all personal data.
+
+Title passes on delivery per {{cite: civil-code, pinpoint=§ 2079}}.
+
+The principle in {{cite: novak-v-acme}} governs.
+
+Rent is set out in {{cite: master-lease, label=the Lease}}, Schedule 2.
+```
+
+Renders (illustratively; each hyperlinked where a `url` exists):
+
+- "…lawful only under Regulation (EU) 2016/679 (General Data Protection Regulation) Art. 6(1)(b)."
+- "Thereafter, GDPR applies…"
+- "Title passes on delivery per Act No. 89/2012 Coll., the Civil Code § 2079."
+- "The principle in Supreme Court judgment of 14 March 2025, No. 25 Cdo 1234/2025 governs."
+- "Rent is set out in the Lease, Schedule 2."
+
+**Optional — generated table of authorities.** As with the definitions glossary, a renderer MAY
+generate a "References" / "Table of Authorities" list from the cited `references` objects, each linking
+to its `url`. Off by default; template-controlled.
+
+**Confirmed / open sub-decisions:**
+
+- Directive `{{cite:}}` — **confirmed**.
+- Frontmatter key — `references` proposed (vs `authorities`); confirm.
+- Short-form mechanism — proposed as both a reusable object `short` field and an inline `label=`
+  override. Confirm whether you want both, or just `label=`.
+- First-full-then-short rendering convention is left to the author (via `short` / `label`); not
+  automated.
 
 ---
 
@@ -328,10 +381,12 @@ anything conditional is out of band.
 | 1 | List-item/paragraph `{#id}` unique across the identifier namespace | Error |
 | 1 | List-item/paragraph `{#id}` follows identifier format | Error |
 | 1 | List containing an anchored item is rendered with enumeration active | Error/Warning |
-| 4 | `{{term:}}` in a heading resolves to a declared definition | Error |
-| 4 | Heading contains hardcoded numbering or a non-`{{term:}}` directive | Error |
+| 4 | `{{term:}}` / `{{ref:}}` in a heading resolves to its target | Error |
+| 4 | Heading contains hardcoded numbering, a field-spec directive, or source emphasis | Error |
 | 5 | External reference `id` unique; `title` non-empty | Error |
 | 5 | `{{cite:}}` resolves to a declared external reference | Error |
+| 5 | `{{cite: id, short}}` used but the object has no `short` field | Error |
+| 5 | `{{cite:}}` `label` / `pinpoint` are plain text (no commas or `}}`) | Error |
 
 ## Summary
 
@@ -340,20 +395,28 @@ anything conditional is out of band.
 | 1 | Anchorable list items | `{#id}` on list items; `{{ref:}}` → `7.3(b)(ii)` | Reuses `{#id}`/`{{ref:}}`; path resolution |
 | 2 | Lead-in + tail text | Specify rendering of CommonMark multi-block items | None — rendering rules only |
 | 3 | Recitals | Compose 1 + 2; recommended `recitals` section | None beyond 1 + 2 |
-| 4 | Term in headings | Permit `{{term:}}` in heading text | Relaxes one §4.2 rule |
+| 4 | Term/ref in headings | Permit `{{term:}}` and `{{ref:}}` in heading text | Relaxes one §4.2 rule |
 | 5 | External references | Frontmatter objects + `{{cite: id}}` | One frontmatter array + one handle directive |
 
 **Headline:** Proposal 1 is the one that matters most — it unblocks references to sub-clauses, the
 biggest body-level gap. Proposals 2 and 3 fall out of it almost for free; 4 and 5 are small,
 self-contained relaxations.
 
-## Open questions for decision
+## Decisions and remaining questions
 
-1. **Enumeration-forcing (Proposal 1):** MUST a list with an anchored item be enumerated (Error if
-   not), or fall back to the section number with a Warning?
-2. **Paragraph anchors (Proposal 1):** include now, or list items only?
-3. **Recital style signal (Proposal 3):** rely on a recommended `recitals` section id, or add a
-   light section-role marker later?
-4. **Headings (Proposal 4):** `{{term:}}` only, or also `{{ref:}}` and/or `*italic*`?
-5. **External references (Proposal 5):** confirm the handle directive is acceptable; pick the
-   directive name and the frontmatter key.
+**Decided:**
+
+1. **Enumeration-forcing (Proposal 1)** — a list with an anchored item MUST be enumerated; an anchored
+   item in a non-enumerated list is an error.
+3. **Recitals (Proposal 3)** — rely on the recommended `recitals` section id; no section-role marker.
+4. **Headings (Proposal 4)** — allow **`{{term:}}` and `{{ref:}}`**; no source emphasis (italics are a
+   renderer/template choice).
+5. **External references (Proposal 5)** — the `{{cite:}}` handle is accepted; details worked out above.
+
+**Still open:**
+
+2. **Paragraph anchors (Proposal 1)** — allow `{#id}` on standalone paragraphs, or list items only? A
+   paragraph has no enumeration label, so its reference renders only the section number — useful as a
+   hyperlink, ambiguous as a displayed locator. *Recommendation: list items only for now.*
+5a. **External-reference naming** — frontmatter key `references` (vs `authorities`); and whether to
+   keep both `short` (object field) and `label=` (inline override), or just `label=`.
