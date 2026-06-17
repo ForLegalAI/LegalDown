@@ -637,7 +637,7 @@ Renderers MUST:
 2. If a `label` parameter is provided, use the label text as the display text
 3. Otherwise, use the defined term text — the text inside the quotation marks at the definition site, without the delimiting marks (§7.2)
 4. Replace `{{term: id}}` (or `{{term: id, label=...}}`) with the display text
-5. Create a hyperlink to the definition in formats that support hyperlinking
+5. Create a hyperlink to the definition's location (the `{{def:}}` anchor) in formats that support hyperlinking
 6. If the definition is not found, insert `[UNDEFINED: id]` and emit a validation error
 
 ### 7.4 Optional Automatic Term Recognition
@@ -1183,7 +1183,7 @@ When rendering `{{term: id}}` or `{{term: id, label=text}}`:
 1. Locate definition by identifier
 2. If a `label` parameter is provided, use the label text as the display text
 3. Otherwise, use the defined term — the text inside the quotation marks at the definition site, without the delimiting marks (§7.2)
-4. Replace directive with the display text and hyperlink
+4. Replace directive with the display text and hyperlink it to the definition's location (the `{{def:}}` anchor)
 5. If definition not found, insert `[UNDEFINED: id]` and emit validation error
 
 ### 13.5 Field Spec Resolution

@@ -58,8 +58,9 @@ in [`definitions-review.md`](definitions-review.md).
   definitions.
 
 - **Reference by location, not body.** A `{{def:}}` records only `(id, term, location)`. The format
-  no longer stores or extracts a "definition text." `{{term:}}` links and generated glossaries
-  resolve to the **section/clause** containing the definition. For tooling purposes (circular-
+  no longer stores or extracts a "definition text." A `{{term:}}` link targets the definition's
+  location (the `{{def:}}` anchor); generated glossaries point to the **section/clause** containing
+  it. For tooling purposes (circular-
   reference detection, optional glossary previews) a definition's scope is its **containing
   paragraph** — a deterministic unit. Sentence-level extraction is deliberately not specified
   (unreliable in legal/multilingual text).

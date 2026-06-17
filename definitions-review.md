@@ -175,8 +175,9 @@ they are not part of the term and are **not rendered** at either the defining oc
 ### No extracted "definition body" — reference the location
 
 A `{{def:}}` records only **(id, term, location)**. The format does **not** store or require a
-"definition text." The authoritative answer to "where is this defined?" is the **section/clause**
-containing the directive — that is what `{{term:}}` back-links and generated glossaries point to.
+"definition text." A `{{term:}}` link targets the `{{def:}}` anchor itself; generated glossaries
+point to the **section/clause** containing the directive (the human answer to "where is this
+defined?").
 
 For machine purposes (circular-reference detection, optional glossary previews) a definition's
 **scope is its containing paragraph** — a deterministic, blank-line-delimited unit. Renderers MAY
