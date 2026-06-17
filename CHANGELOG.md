@@ -10,6 +10,80 @@ without a major version bump until v1.0.
 
 ## [Unreleased]
 
+### Execution, bilingual files, party fields & amendments — 2026-06-17
+
+Addresses the next batch of practical gaps: how translation files work, signature/execution blocks,
+inline rendering of party fields, and a note on amendment references. Rationale in
+[`signatures-bilingual-review.md`](signatures-bilingual-review.md).
+
+#### Removed
+
+- **Unspecified `{{lang:}}` language block.** §1.3 and the README referenced inline language-block
+  directives that were never specified. Removed — **separate files are the only bilingual mechanism**
+  (§14).
+
+#### Added
+
+- **Translation-file model (spec §14).** A bilingual document is a **translation set** — one file per
+  language, linked by `translations`/`authoritative`, kept structurally identical. The spec now lists
+  exactly what MUST match across the set (heading hierarchy, section ids, list-item anchor ids,
+  definition ids, attachment ids/order, placeholder ids, party `name`s and `sides` structure,
+  `document_type`/`type`, `field_types` keys), what MAY be localized, and what SHOULD match
+  (`legal_name`). Renderers MAY produce side-by-side output; `validate --sync` checks the invariants
+  (§15.7).
+
+- **Signature / execution blocks (spec §3.11).** An optional `signature` object on a party —
+  `mode: each | joint | any` (covering joint representation / *Gesamtvertretung*), plus `witness` and
+  `notarized` flags — and a document-level `place_of_signing`. Signature blocks remain generated from
+  frontmatter; the spec now defines the data and minimal rendering requirements (layout stays
+  template-driven). All optional, so existing documents are unaffected.
+
+  ```yaml
+  parties:
+    - name: acme
+      legal_name: Acme Corporation
+      representatives: [{name: John Smith, title: CEO}, {name: Jane Roe, title: CFO}]
+      signature: { mode: joint }
+  place_of_signing: Prague
+  ```
+
+- **Inline party fields (spec §10.4).** `{{party: name, field=…}}` renders a declared party field
+  (e.g. `address`, `identification_number`) verbatim — for notices clauses and identification blocks,
+  keeping a single source of truth. `field` and `label` are mutually exclusive.
+
+  ```markdown
+  Notices to {{party: acme}} shall be delivered to {{party: acme, field=address}}.
+  ```
+
+#### Changed
+
+- **Amendment references (spec §3.8).** Added a note: references from an amendment to the original's
+  provisions are necessarily by the original's own numbering/quoted text (since `{{ref:}}` is
+  internal-only); authors SHOULD quote or describe the provision rather than rely on a number alone.
+  Acknowledgment only — no new mechanism.
+
+#### Validation changes
+
+| Rule | Level |
+|---|---|
+| Translation-set structural invariants match across the set | Error |
+| `authoritative` / party `legal_name` differ across the set | Warning |
+| `signature.mode` ∈ {each, joint, any}; `witness`/`notarized` booleans; `place_of_signing` string | Error |
+| `signature.mode` joint/any with < 2 representatives | Warning |
+| `{{party:}}` `field` and `label` not both present | Error |
+| `{{party:}}` `field` names a present field | Warning |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §1.3, §2.2, §3.2, §3.4, new §3.11, §3.8, §7.5,
+  §10.4, §11.1, §13.5, §14 (rewritten), §15.5/§15.6/§15.7.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — Sides/Parties, Party, Amendments,
+  Bilingual sections.
+- [`README.md`](README.md) — structure-at-a-glance (drop `{{lang:}}`, add party-field).
+- [`signatures-bilingual-review.md`](signatures-bilingual-review.md) — design rationale (new).
+
+---
+
 ### Frontmatter: locale/currency cleanup and template placeholders — 2026-06-17
 
 Tightens the document-metadata model so the schema and the rendering rules agree, and adds a

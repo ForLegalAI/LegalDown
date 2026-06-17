@@ -1,7 +1,7 @@
 # Signatures, Bilingual Files, Party Fields & Amendments — Review & Proposal
 
-**Status:** Design proposal. No spec changes yet. Worked-out designs for the next batch of issues, for
-review before implementation.
+**Status:** Design rationale (adopted). The designs below are implemented in the spec in the same
+change; this document records the reasoning. See [`CHANGELOG.md`](CHANGELOG.md) for the summary.
 
 **Scope:** §1.3, §2.2, §3.4, §3.6, §3.8, §7.5, §10.4, §14 of
 [spec/legaldown-spec.md](spec/legaldown-spec.md).

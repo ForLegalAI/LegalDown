@@ -34,7 +34,6 @@ LegalDown is a superset of CommonMark (standard Markdown). All valid CommonMark 
 - Cross-reference directives
 - Definition declaration and reference directives
 - Placeholder directives
-- Language block directives for bilingual documents
 - File inclusion directives
 - Validation requirements for legal-specific constraints
 
@@ -72,7 +71,7 @@ A LegalDown document consists of two parts in order:
 1. **Frontmatter** (OPTIONAL) — YAML metadata block
 2. **Body** (REQUIRED) — Document content in LegalDown markup
 
-> **Note:** Signature blocks are NOT defined in LegalDown markup. Renderers SHOULD generate signature blocks automatically from frontmatter. For contracts, from all sides. For unilateral acts, from the issuer side. For collective acts, from the issuer side and `adopted_by`.
+> **Note:** Signature blocks are NOT authored in LegalDown body markup. Renderers generate them from frontmatter: for contracts, from all sides; for unilateral acts, from the issuer side; for collective acts, from the issuer side and `adopted_by`. Per-party signing requirements (joint/several signing, witness, notarization) and the place of signing are configured in frontmatter — see §3.11.
 
 ---
 
@@ -147,6 +146,7 @@ tags:
 | `field_types` | OPTIONAL | Map of custom field type declarations for `{{field:}}` (type name → description) |
 | `sides` | RECOMMENDED | Array of sides, each containing a non-empty `parties` array (see Section 3.3) |
 | `governing_law` | OPTIONAL | Applicable law |
+| `place_of_signing` | OPTIONAL | Place where the document is signed; rendered in the signature block (see §3.11) |
 | `language` | RECOMMENDED | Primary language (ISO 639-1) |
 | `translations` | OPTIONAL | Map of translation files (see Section 14) |
 | `authoritative` | OPTIONAL | Authoritative language for disputes (ISO 639-1) |
@@ -242,6 +242,8 @@ Each party object describes an individual or organization that appears in the do
 
 A `natural_person` MAY also include `identification_number` (OPTIONAL) when the individual has a registration or national identification number (national ID, birth number, passport, etc.). `identification_number` is the reserved field name for this value across **all** party types — prefer it over a custom field so tooling can locate the identifier consistently. It is never required for a natural person, since not every individual has such a number.
 
+Any party MAY include an optional `signature` object that configures how the party signs (joint/several signing, witness, notarization); see §3.11.
+
 Additional custom fields MAY be included on any party object. Implementations MUST ignore unknown party fields rather than failing. This allows organizations to include jurisdiction-specific information, tax identifiers, or any other relevant party metadata.
 
 ### 3.5 Representatives
@@ -292,6 +294,8 @@ The `amends` object has the following fields:
 - The original file MAY be a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
 - The amendment document itself follows the same structure rules as any other LegalDown document — all existing features (headings, section identifiers, cross-references, definitions, field specs, etc.) work unchanged
 - An amendment MAY declare its own definitions using `{{def:}}` for new terms introduced by the amendment
+
+> **Referencing the original document.** References from an amendment to provisions of the original are necessarily expressed in the original's own terms (its numbering or quoted text), because `{{ref:}}` resolves only within the current document and cross-document references (`amends`, `supersedes`) are free text. To stay robust against renumbering of the original, authors SHOULD identify an amended provision by quoting its text or by a stable description, not by number alone. Stable cross-document targeting is a tooling/versioning concern, outside this specification.
 
 **Example:**
 
@@ -402,6 +406,62 @@ effective_date: "{{placeholder: effective-date, type=date}}"
 - A required field whose value is a placeholder satisfies that field's presence requirement; the document is treated as a template or draft with unfilled values
 - A placeholder id used in both frontmatter and body refers to the same logical blank (§10.7)
 - Renderers render frontmatter placeholders as a visible blank, consistent with §13.5 (for example `[_____]`, or `[TBD: id]` when no visual blank is available)
+
+### 3.11 Signature Configuration
+
+Signature blocks are generated from frontmatter (§2.2); they are never authored in the body. By default, the renderer produces a signature block for each signing party showing the party's `legal_name` and a signature line for each representative (or, for a `natural_person`, a personal signature line), plus a date line. The optional `signature` object on a party, and the optional document-level `place_of_signing` field, refine this.
+
+**Party `signature` object (all fields OPTIONAL):**
+
+| Field | Values | Default | Meaning |
+|---|---|---|---|
+| `mode` | `each` \| `joint` \| `any` | `each` | How the party's representatives sign |
+| `witness` | boolean | `false` | Add a witness line for this party's signature |
+| `notarized` | boolean | `false` | Add a notarization block for this party's signature |
+
+- `mode: each` — each listed representative signs on their own line (the common case)
+- `mode: joint` — all listed representatives MUST sign together (e.g. joint representation / *Gesamtvertretung*); the block groups them as a single joint requirement
+- `mode: any` — any one of the listed representatives MAY sign; the block shows alternative signature lines
+- A `natural_person` signs personally and has no representatives; `witness` and `notarized` still apply
+
+**Rendering requirements.** A generated signature block MUST include, per signing party:
+
+1. The party `legal_name`
+2. For each required signatory (per `mode`): the representative `name` and `title`, a signature line, and a date line; for a natural person, the person and a signature + date line
+3. A witness line when `witness: true`; a notarization block when `notarized: true`
+4. The `place_of_signing` when set
+
+Signature blocks render in `sides`/`parties` declaration order. Layout, fonts, and spacing are template-driven. The signing **date** is not a frontmatter field — the block includes a blank date line filled at execution (a template MAY pre-fill it from `effective_date`). Electronic-signature workflows MAY suppress or replace the generated block with platform fields.
+
+**Example:**
+
+```yaml
+sides:
+  - name: providers
+    label: Providers
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+          - name: Jane Roe
+            title: Chief Financial Officer
+        signature:
+          mode: joint
+  - name: clients
+    label: Clients
+    parties:
+      - name: john-novak
+        type: natural_person
+        legal_name: John Novak
+        signature:
+          witness: true
+place_of_signing: Prague
+```
+
+In this example Acme is signed jointly by both representatives, and John Novak signs personally with a witness line.
 
 ---
 
@@ -678,7 +738,7 @@ Implementations MAY support automatic recognition of defined terms without expli
 
 ### 7.5 Definition Resolution in Amendments
 
-When a document contains an `amends` key in frontmatter, definition validation follows special resolution rules based on whether the original document is available and in LegalDown format:
+When a document contains an `amends` key in frontmatter, definition validation follows special resolution rules based on whether the original document is available and in LegalDown format. (For referencing provisions of the original document, see the note in §3.8.)
 
 **When `amends.file` points to a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`):**
 
@@ -883,13 +943,14 @@ The monthly fee is {{money: 500, currency=EUR, note=Base monthly service fee}}.
 
 ### 10.4 Party Directive
 
-The `{{party:}}` directive represents a reference to a party declared in frontmatter. It identifies a party by its `name` identifier and allows an optional inline display override for grammatical or stylistic inflection.
+The `{{party:}}` directive represents a reference to a party declared in frontmatter. It identifies a party by its `name` identifier and allows an optional inline display override (for grammatical or stylistic inflection) or selection of a declared party field.
 
 **Syntax:**
 
 ```markdown
 {{party: party-name}}
 {{party: party-name, label=text}}
+{{party: party-name, field=field-name}}
 {{party: party-name, note=text}}
 {{party: party-name, label=text, note=text}}
 ```
@@ -902,6 +963,8 @@ The Company acts through {{party: acme-corporation, label=the Company}} under th
 Notices under this Agreement shall be delivered to {{party: beta-industries}}.
 
 {{party: board-of-directors, label=the Board, note=Collective body adopting the policy}} may amend this Policy from time to time.
+
+Notices to {{party: acme-corporation}} shall be delivered to {{party: acme-corporation, field=address}}.
 ```
 
 **Rules:**
@@ -910,6 +973,9 @@ Notices under this Agreement shall be delivered to {{party: beta-industries}}.
 - The directive MUST resolve against a party `name` in the frontmatter `sides[].parties[]` arrays
 - The optional `label` parameter specifies display text for rendering; if omitted, the renderer MUST use the party's `label` and fall back to `legal_name`
 - The `label` value is plain text — it MUST NOT contain commas or closing braces (`}}`)
+- The optional `field` parameter selects a declared field of the party (for example `address`, `identification_number`, `legal_name`, `date_of_birth`, or any custom field) and renders its value verbatim
+- `field` and `label` MUST NOT both be present on the same directive
+- If the named `field` is absent on the party, insert `[UNKNOWN PARTY FIELD: party-name.field]` and emit a validation warning
 - Renderers MUST format the resolved party reference according to the active locale or render template settings
 - The raw `party-name` value, `label` (if present), and `note` (if present) MUST be preserved in structured output formats for machine processing
 
@@ -1042,6 +1108,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{money: amount, currency=CODE}}` | OPTIONAL | Inline monetary amount with currency |
 | `{{party: party-name}}` | OPTIONAL | Inline party reference by name |
 | `{{party: party-name, label=text}}` | OPTIONAL | Inline party reference with display text |
+| `{{party: party-name, field=field-name}}` | OPTIONAL | Render a declared field of the party |
 | `{{duration: value, unit=UNIT}}` | OPTIONAL | Inline time duration with unit |
 | `{{field: value, type=type-name}}` | OPTIONAL | Inline custom typed value with pass-through rendering |
 | `{{placeholder: placeholder-id}}` | OPTIONAL | Inline fillable blank (defaults to `type=text`) |
@@ -1236,15 +1303,16 @@ When rendering `{{money: amount}}`, `{{money: amount, note=text}}`, `{{money: am
 6. If the amount is invalid, insert `[INVALID AMOUNT: amount]` and emit a validation error
 7. If the currency code is unrecognized, insert `[UNKNOWN CURRENCY: CODE]` and emit a validation warning
 
-When rendering `{{party: party-name}}`, `{{party: party-name, note=text}}`, `{{party: party-name, label=text}}`, or `{{party: party-name, label=text, note=text}}`:
+When rendering any `{{party: ...}}` directive:
 
-1. If a `label` parameter is provided, use it as the display text
-2. If no `label` is provided, resolve the party from frontmatter `sides[].parties[]` by matching the `party-name` against party `name` fields; use the party's `label` field as the display text, falling back to `legal_name` if `label` is absent
-3. Format the display text according to the active locale or render template
-4. Ignore any `note` parameter for rendered output
-5. Replace the directive with the formatted party reference text
-6. If the `party-name` value is empty or malformed, insert `[INVALID PARTY: party-name]` and emit a validation error
-7. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error
+1. If a `field` parameter is provided, resolve the party and render the value of that declared field verbatim; if the field is absent on the party, insert `[UNKNOWN PARTY FIELD: party-name.field]` and emit a validation warning. (`field` and `label` MUST NOT both be present.)
+2. Otherwise, if a `label` parameter is provided, use it as the display text
+3. If neither is provided, resolve the party from frontmatter `sides[].parties[]` by matching the `party-name` against party `name` fields; use the party's `label` field as the display text, falling back to `legal_name` if `label` is absent
+4. Format the display text according to the active locale or render template
+5. Ignore any `note` parameter for rendered output
+6. Replace the directive with the formatted party reference text
+7. If the `party-name` value is empty or malformed, insert `[INVALID PARTY: party-name]` and emit a validation error
+8. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error
 
 When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT, note=text}}`:
 
@@ -1322,11 +1390,19 @@ Attachments are rendered after the main document body, in the order declared in 
 
 ### 14.1 Overview
 
-LegalDown supports bilingual and multilingual contracts via **separate files** — one document per language, with metadata linking them
+LegalDown supports bilingual and multilingual documents via **separate files** — one standalone document per language, linked by metadata and kept structurally identical. This is the only bilingual mechanism; there is no inline language-switching directive.
 
-### 14.2 Separate File 
+A **translation set** is two or more files representing the same document, one per language. Because all numbering and cross-references are generated from structure, keeping the files structurally identical means every section number and every `{{ref:}}` resolves to the same target in each language.
 
-Maintain separate LegalDown documents per language with identical heading structure and section identifiers:
+### 14.2 Linking and Structure
+
+**Linking metadata (frontmatter):**
+
+- `language` — this file's language (ISO 639-1)
+- `translations` — map of each *other* language to its file path (e.g., `fr: contract-fr.lgd`); every file lists its siblings
+- `authoritative` — the language that governs in a dispute (ISO 639-1), identical across the set; OPTIONAL
+
+Files SHOULD follow the naming convention `<basename>-<lang>.lgd` (e.g., `msa-en.lgd`, `msa-cs.lgd`).
 
 **contract-en.lgd:**
 ```yaml
@@ -1358,22 +1434,53 @@ authoritative: en
 « Information confidentielle » {{def: confidential-info}} désigne toute information non publique...
 ```
 
-**Rules for separate file approach:**
+**MUST be identical across every file in a translation set:**
 
-- Linked translation files MUST have identical heading hierarchy
-- Linked translation files MUST use identical section identifiers
-- Validators MUST check structural consistency between linked files
-- Cross-references resolve to section numbers (same in both versions)
+- Heading hierarchy (count, nesting, and order)
+- Section identifiers (`{#id}`)
+- List-item anchor identifiers
+- Definition identifiers (`{{def:}}`)
+- Attachment identifiers and their order
+- Placeholder identifiers
+- Party `name` identifiers and the `sides`/`parties` structure
+- `document_type` and each party `type`
+- `field_types` keys
 
-### 14.3 Bilingual Validation
+**MAY differ (localized):**
 
-The `legaldown validate --sync` command MUST check:
+- `title`, `subtitle`, heading text, and body prose
+- Defined **term text** (the quoted term — "Confidential Information" vs « Information confidentielle »)
+- `{{cite:}}` text and `governing_law` display text
+- Party `label` and `address`
+- Prose surrounding a `{{placeholder:}}` (the placeholder id stays the same)
 
-- Both files have identical heading hierarchy
-- All section identifiers match between files
-- All `{{def:}}` declarations exist in both files
-- Both files declare the same languages in metadata
-- Warns on structural differences
+**SHOULD be identical:**
+
+- Party `legal_name` — an entity's official registered name generally does not translate (SHOULD, not MUST, to allow transliteration where a jurisdiction requires it)
+
+Three or more languages are supported: the `translations` map lists more siblings, and all files in the set obey the same invariants.
+
+### 14.3 Rendering
+
+- Each file renders as a standalone document in its own language.
+- Because structures match, a renderer MAY additionally produce an aligned **side-by-side / dual-column** bilingual output by pairing content on shared section and list-item identifiers. This is OPTIONAL.
+- When `authoritative` is set, a renderer MAY annotate output to indicate the governing language.
+
+### 14.4 Bilingual Validation
+
+The `legaldown validate --sync` command MUST compare every file in a translation set (see also §15.7):
+
+- All `translations` files exist at the declared paths
+- Heading hierarchy matches across the set
+- Section identifiers match across the set
+- List-item anchor identifiers match across the set
+- Definition identifiers match across the set
+- Attachment identifiers and order match across the set
+- Placeholder identifiers match across the set
+- Party `name` identifiers and `sides`/`parties` structure match across the set
+- `document_type` and party `type` values match across the set
+- `authoritative` value identical across the set (Warning if not)
+- Party `legal_name` identical across the set (Warning if not)
 
 ---
 
@@ -1429,6 +1536,8 @@ Validators MUST categorize issues at three levels:
 | `{{money:}}` used without `currency` parameter and no default configured | Warning |
 | `{{party:}}` `party-name` value is non-empty and matches identifier format | Error |
 | `{{party:}}` `party-name` references a party declared in frontmatter `sides[].parties[]` | Error |
+| `{{party:}}` `field` and `label` are not both present | Error |
+| `{{party:}}` `field` names a field present on the party | Warning |
 | `{{duration:}}` value is a positive numeric value | Error |
 | `{{duration:}}` `unit` parameter is one of `S`, `M`, `H`, `D`, `MO`, `Y` | Error |
 | `field_types` keys follow the identifier format `[a-z][a-z0-9-]*` | Error |
@@ -1460,14 +1569,30 @@ Violations of the following additional checks MUST be reported as **Error**:
 - All side and party `name` values follow the identifier format `[a-z][a-z0-9-]*` (a lowercase ASCII letter followed by zero or more lowercase ASCII letters, digits, or hyphens)
 - Every party `type` is `legal_entity` or `natural_person`
 
+The following signature-configuration checks apply (§3.11):
+
+| Check | Level |
+|---|---|
+| `signature.mode` is one of `each`, `joint`, `any` | Error |
+| `signature.witness` and `signature.notarized` are booleans | Error |
+| `place_of_signing` is a string | Error |
+| `signature.mode` is `joint` or `any` on a party with fewer than two representatives | Warning |
+
 ### 15.7 Bilingual Validation (when translations metadata present)
 
 | Check | Level |
 |---|---|
 | Translation files exist at declared paths | Error |
-| Heading hierarchy matches between translations | Error |
-| Section identifiers match between translations | Error |
-| Definition IDs match between translations | Error |
+| Heading hierarchy matches across the translation set | Error |
+| Section identifiers match across the set | Error |
+| List-item anchor identifiers match across the set | Error |
+| Definition identifiers match across the set | Error |
+| Attachment identifiers and order match across the set | Error |
+| Placeholder identifiers match across the set | Error |
+| Party `name` identifiers and `sides`/`parties` structure match across the set | Error |
+| `document_type` and party `type` values match across the set | Error |
+| `authoritative` value identical across the set | Warning |
+| Party `legal_name` identical across the set | Warning |
 
 ### 15.8 Amendment Validation (when amends metadata present)
 

@@ -192,8 +192,8 @@ contains none of them.
 {{placeholder: governing-law}}          ← Inline fillable blank (`type=text` by default)
 {{placeholder: fee, type=money, currency=EUR}} ← Typed inline blank
 {{party: acme}}                          ← Inline party reference
+{{party: acme, field=address}}           ← Render a declared party field
 {{include: schedules/pricing.lgd}}       ← Include an external file
-{{lang: fr}} ... {{/lang}}              ← Bilingual language block
 ```
 
 ---

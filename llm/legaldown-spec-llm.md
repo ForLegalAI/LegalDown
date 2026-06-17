@@ -83,6 +83,7 @@ tags: [tag1, tag2]                      # OPTIONAL
 - Display fallback: side `label` → title-cased/pluralized `name`; party `label` → `legal_name`
 - `identification_number` is the reserved field for a registration/national ID — RECOMMENDED for `legal_entity`, OPTIONAL for `natural_person` (not every individual has one); prefer it over a custom field when present
 - Template/draft frontmatter MAY use `{{placeholder:}}` as a **quoted** string in value fields (e.g. `legal_name: "{{placeholder: client-name}}"`), but NOT in identifier/structural fields (any `name`, `type`, `document_type`, `sides`/`parties` structure); same id in frontmatter and body means the same blank
+- A party MAY include an optional `signature` object (`mode: each|joint|any`, `witness`, `notarized`) configuring how it signs; doc-level `place_of_signing` sets the place. Signature blocks are generated from frontmatter, never authored in the body
 
 ### Amendments
 
@@ -92,6 +93,7 @@ When `amends` is present in frontmatter, the document is an amendment to an exis
 - `amends.file` (optional): relative path to the original document (`.lgd`, `.legaldown`, `.pdf`, `.docx`, etc.)
 - The amendment follows the same structure rules as any other LegalDown document
 - An amendment MAY declare its own `{{def:}}` definitions for new terms
+- References to provisions of the original are by the original's own numbering/quoted text (`{{ref:}}` is internal-only); prefer quoting or describing the provision over a bare number
 
 **Definition resolution in amendments:**
 
@@ -216,6 +218,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 ```markdown
 {{party: party-name}}
 {{party: party-name, label=Display Text}}
+{{party: party-name, field=address}}
 {{party: party-name, note=Primary signing contact}}
 {{party: party-name, label=Display Text, note=Primary signing contact}}
 ```
@@ -223,6 +226,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 - `party-name`: lowercase ASCII identifier starting with a lowercase ASCII letter, then lowercase letters/digits/hyphens; resolves against `sides[].parties[].name`
 - `label`: optional inline display override
 - Without `label`, render the party `label` and fall back to `legal_name`
+- `field`: optional; renders a declared party field verbatim (`address`, `identification_number`, `legal_name`, `date_of_birth`, or a custom field). Mutually exclusive with `label`; absent field → `[UNKNOWN PARTY FIELD: name.field]` (warning)
 - If the `party-name` does not match any party in frontmatter, render as `[UNKNOWN PARTY: party-name]`
 - `note`: optional plain-text explanation for automation
 
@@ -297,7 +301,13 @@ Standard CommonMark:
 
 ## Bilingual Documents
 
-Separate files per language with identical heading structure and section identifiers. Linked via `translations` and `authoritative` in frontmatter.
+Separate files per language — a **translation set** — linked via `translations` and `authoritative` in frontmatter. There is no inline language-switching directive.
+
+**Must be identical across the set:** heading hierarchy; section identifiers; list-item anchor ids; definition ids; attachment ids and order; placeholder ids; party `name`s and `sides`/`parties` structure; `document_type` and party `type`; `field_types` keys.
+
+**May differ (localized):** titles, heading text, body prose, defined term text, `{{cite:}}` text, party `label`/`address`, `governing_law`. Party `legal_name` SHOULD be identical.
+
+`validate --sync` checks these invariants across the set; renderers MAY produce an aligned side-by-side bilingual output.
 
 ## Validation Summary
 
