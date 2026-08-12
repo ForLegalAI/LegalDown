@@ -196,6 +196,7 @@ contains none of them.
 {{placeholder: governing-law}}          ← Inline fillable blank (`type=text` by default)
 {{placeholder: fee, type=money, currency=EUR}} ← Typed inline blank
 {{party: acme}}                          ← Inline party reference
+{{side: clients}}                        ← Inline side (collective) reference
 {{include: schedules/pricing.lgd}}       ← Include an external file
 ```
 

@@ -10,6 +10,78 @@ without a major version bump until v1.0.
 
 ## [Unreleased]
 
+### Practical improvements (P-tier) — 2026-08-12
+
+Closes the remaining practical items from the release-readiness review (P1–P5, P7–P12). One
+breaking change is called out below; everything else is additive or a severity/documentation
+refinement. With this round, every review item except the deferred ecosystem work (G12) is
+resolved.
+
+> **Breaking change.** Duration unit `M` is removed: `MIN` now denotes minutes and `W` (weeks) is
+> added, so the unit set is `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y`. A bare `M` is rejected with a
+> diagnostic suggesting `MIN` or `MO` — eliminating the minutes-vs-ISO-8601-months footgun instead
+> of documenting it. Migration: replace `unit=M` with `unit=MIN`.
+
+#### Added
+
+- **`{{side:}}` directive (new spec §10.8; P1).** Collective counterpart of `{{party:}}`: resolves
+  against `sides[].name`, displays the side `label` with the §3.6 fallback, `label`/`note`
+  parameters per §11.3, failure markers `[INVALID SIDE: …]` / `[UNKNOWN SIDE: …]`. Rendering steps
+  in §13.5; validation rows in §15.5; Core level (§11.1).
+- **`{{attach:}}` `label=` override (§6.4; P2).** Mid-sentence attachment references can display
+  "Schedule B" instead of the full verbatim title, mirroring `{{term:}}`/`{{party:}}`.
+- **Weeks (§10.5; P3).** `W` joins the duration units ("two weeks' notice" no longer becomes 14
+  days).
+- **File-reference path safety (new spec §2.3; P9).** All referenced paths — includes, attachments,
+  `amends.file`, `translations`, images — MUST be relative and MUST resolve within a configured
+  **document root** (implementations must enforce the boundary; typically the repository root).
+  Absolute or root-escaping paths are Errors (§15.2). Existence checks stay Full-level.
+- **Inherited CommonMark features (new spec §8.7; P10).** Raw HTML other than comments: ignored
+  for output + Warning (the §9.2 extended-table exception may stand). Links: rendered as
+  hyperlinks; print templates may show the URL visibly. Images: allowed, path per §2.3, alt-text
+  fallback, existence checked at Full (§16.4).
+- **Roadmap and Known Limitations (new spec §18, non-normative).** Deliberate deferrals now have a
+  home: qualified cross-document amendment refs, `{{meta:}}` insertion (P12), structured
+  `adopted_by`/organ type, template-generated attachment labels, a structured signature model,
+  template-supplied reference label words (P11), and a JSON export companion.
+
+#### Changed
+
+- **Amendment guidance (§3.8; P4).** References to the original's provisions are literal text
+  citing the original's *executed rendering*; parties SHOULD pin the numbering scheme used at
+  execution (repository or template configuration). The qualified `{{ref: id, doc=amends}}` form is
+  deferred to §18.
+- **Money (§10.3; P7).** Amounts MUST be non-negative (reductions belong in prose); renderers
+  preserve the written decimal precision and MAY pad to the currency's minor units when the
+  template says so.
+- **Quoted-span determinism (§7.2; P8).** The invariant behind the term-matching rule is now
+  stated: no character in the active quotation set may close two different pairs, and configured
+  sets MUST preserve that property; failed backward scans should hint at mismatched marks.
+- **Reference label words (§6.2 note; P11).** The "Section"/"Article" word before a `{{ref:}}` is
+  author text while the number is scheme-generated — the tension is documented with authoring
+  guidance.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Circular definitions (paragraph-scoped) | Error | **Warning** (P5) — mutual `{{term:}}` mentions between definition paragraphs are routine legitimate drafting |
+| `{{side:}}` name malformed or unknown | — | **Added (Error ×2, §15.5)** |
+| `{{money:}}` amount negative | (undefined) | **Error** — amount must be non-negative |
+| `{{duration:}}` unit `M` | Error listed `M` as valid (minutes) | **Rejected** with `MIN`/`MO` hint; `MIN` and `W` valid |
+| File-reference path absolute or escaping the document root | — | **Added (Error ×2, §15.2)** |
+| Raw HTML other than comments | (undefined) | **Added (Warning, §15.2)** — ignored for output |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — new §2.3, §8.7, §10.8, §18; §3.8, §6.2,
+  §6.4, §7.2, §10.3, §10.5, §11.1, §13.5, §15.2, §15.3, §15.5, §5.6, §16.4.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — Side section, attach/duration/money
+  notes, file-reference and CommonMark rules, validation summary.
+- [`README.md`](README.md) — structure-at-a-glance gains `{{side:}}`.
+
+---
+
 ### Translations are secondary documents — 2026-08-12
 
 The bilingual rules required identical section and definition identifiers across linked files but
