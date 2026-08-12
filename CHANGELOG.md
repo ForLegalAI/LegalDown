@@ -325,9 +325,10 @@ defines the full namespace model.
   A definition id MAY equal a section id — explicitly benign (the "Services" section + "Services"
   term case), not a collision. Renderers MUST disambiguate emitted anchors in single-anchor-space
   outputs (e.g., `def-services` vs `services`); the scheme is implementation-defined.
-- **`{{ref:}}` is type-specific (spec §6.2 rule).** Although sections and attachments share the
-  anchor namespace, `{{ref:}}` resolves only section identifiers; targeting an attachment id is a
-  broken reference and validators SHOULD suggest `{{attach:}}` in the diagnostic.
+- **`{{ref:}}` is type-specific (spec §6.2 rule).** Although sections, item/paragraph anchors, and
+  attachments share the anchor namespace, `{{ref:}}` resolves only section identifiers and
+  item/paragraph anchors; targeting an attachment id is a broken reference and validators SHOULD
+  suggest `{{attach:}}` in the diagnostic.
 
 #### Changed
 
