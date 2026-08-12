@@ -1,10 +1,17 @@
 # LegalDown v0.1 — Release Readiness & Consistency Review
 
 **Status:** Living review, updated after implementation rounds 1 and 2 (both 2026-08-12; originally
-issued against commit `d05a8b8`). **Round 1** resolved all release-blocking and major gaps (G1–G11,
-merged in PR #24). **Round 2** (branch `consistency-cleanup`) cleared the consistency cleanup tier:
-I1–I2, I4, I6–I12, E1–E13, P6, and P13. What remains open: two decision items (I3, I5), the
-practical-improvement tier (P1–P5, P7–P12), and the deferred ecosystem work (G12).
+issued against commit `d05a8b8`).
+
+- **Round 1** — all release-blocking and major gaps (G1–G11) — **merged to `main`** in
+  [PR #24](https://github.com/ForLegalAI/LegalDown/pull/24), including 12 additional fixes from its
+  two review passes.
+- **Round 2** — the consistency-cleanup tier (I1–I2, I4, I6–I12, E1–E13, P6, P13) — open as
+  [PR #25](https://github.com/ForLegalAI/LegalDown/pull/25).
+
+**Progress: 36 of 50 tracked items resolved** (11 G + 10 I + 2 P + 13 E), 13 open, 1 deferred.
+Open: two decision items (I3, I5) and the practical-improvement tier (P1–P5, P7–P12); deferred:
+the ecosystem work (G12).
 
 **Scope:** [`spec/legaldown-spec.md`](spec/legaldown-spec.md), [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md),
 [`README.md`](README.md), [`CHANGELOG.md`](CHANGELOG.md), [`LICENSE`](LICENSE). Detailed change
@@ -55,7 +62,7 @@ records for every resolved item are in [`CHANGELOG.md`](CHANGELOG.md) under *Unr
 
 Short implementation notes; full details per item in [`CHANGELOG.md`](CHANGELOG.md).
 
-### Round 1 (PR #24) — the normative gaps
+### Round 1 ([PR #24](https://github.com/ForLegalAI/LegalDown/pull/24), merged) — the normative gaps
 
 - **G1 Conformance levels (new §16):** Core / Rendering / Full, cumulative; levels bind
   implementations only and are a floor, not a ceiling; §16.5 forbids silent degradation
@@ -84,7 +91,7 @@ Short implementation notes; full details per item in [`CHANGELOG.md`](CHANGELOG.
 - Plus 12 post-review fixes from PR #24's two review passes (grammar determinism, level scoping,
   anchor-namespace consistency).
 
-### Round 2 (`consistency-cleanup`) — the contradiction sweep
+### Round 2 ([PR #25](https://github.com/ForLegalAI/LegalDown/pull/25)) — the contradiction sweep
 
 - **I1:** `{{lang:}}` ghost feature deleted from §1.3 and the README — bilingual is separate-files
   only, as §14 designed.
