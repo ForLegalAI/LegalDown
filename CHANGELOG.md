@@ -66,7 +66,7 @@ block would implicitly fail. Severities are now explicit.
 | Rule | Before | After |
 |---|---|---|
 | Document-type minimums (sides/parties/`issuer`) | Severity unstated | **Error when `sides` present** |
-| `sides` absent entirely | (implicitly failing the minimums) | **Single Warning** — constraints not verifiable |
+| `sides` absent while frontmatter is present | (implicitly failing the minimums) | **Single Warning** — constraints not verifiable |
 
 #### Files touched
 
@@ -119,8 +119,8 @@ two behavior changes are called out below.
   valid and map to levels 1–2 (ATX recommended).
 - **§5.5** — an auto-generated identifier colliding with an *explicit* anchor is now covered: the
   explicit id wins, the auto id gets the numeric suffix plus Warning.
-- **§3.6** — side-name display fallback no longer pluralizes (English-only behavior); title-case
-  only, `label` recommended.
+- **§3.6** — side-name display fallback no longer pluralizes (English-only behavior); the fallback
+  is deterministic (hyphens → spaces, each word capitalized), `label` recommended.
 - **`supersedes`** (§3.2) — may now be a `{title, file}` object like `amends`, or remain a string.
 - **§5.2** — the anchor separator is "one or more spaces or tabs" (was "a single space").
 - **§10.4 example** no longer declares a `board-of-directors` party (an organ fits neither party
