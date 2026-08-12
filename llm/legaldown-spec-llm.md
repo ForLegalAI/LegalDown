@@ -21,6 +21,7 @@ YAML block at the top of the file:
 
 ```yaml
 ---
+legaldown: "0.1"                        # OPTIONAL: spec version targeted (quote it)
 title: Document Title                    # REQUIRED
 subtitle: Optional Subtitle             # OPTIONAL
 version: 1.0                            # OPTIONAL
@@ -71,6 +72,8 @@ tags: [tag1, tag2]                      # OPTIONAL
 ---
 ```
 
+Frontmatter is optional as a block but recommended: without it the document is valid but untitled (validators warn). REQUIRED/RECOMMENDED/OPTIONAL statuses apply when frontmatter is present; frontmatter must parse as valid YAML (Error otherwise), `title` must be non-empty, date fields must be valid ISO 8601, and language codes valid ISO 639-1. A `{{placeholder:}}` value satisfies a required field's presence and is exempt from that field's format checks (the placeholder's own checks apply instead).
+
 ### Sides and Parties
 
 - `sides` is an array of side objects
@@ -82,7 +85,7 @@ tags: [tag1, tag2]                      # OPTIONAL
 - Unknown party fields are allowed and must be ignored by implementations
 - Display fallback: side `label` → title-cased/pluralized `name`; party `label` → `legal_name`
 - `identification_number` is the reserved field for a registration/national ID — RECOMMENDED for `legal_entity`, OPTIONAL for `natural_person` (not every individual has one); prefer it over a custom field when present
-- Template/draft frontmatter MAY use `{{placeholder:}}` as a **quoted** string in value fields (e.g. `legal_name: "{{placeholder: client-name}}"`), but NOT in identifier/structural fields (any `name`, `type`, `document_type`, `sides`/`parties` structure); same id in frontmatter and body means the same blank
+- Template/draft frontmatter MAY use `{{placeholder:}}` as a **quoted** string in value fields (e.g. `legal_name: "{{placeholder: client-name}}"`), but NOT in identifier/structural fields (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure); same id in frontmatter and body means the same blank
 
 ### Amendments
 
@@ -138,16 +141,36 @@ Explicit identifier syntax appended to headings:
 - Lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens only
 - Must start with a lowercase ASCII letter
 - Must be unique within the document
-- Auto-generated if omitted: transliterate non-ASCII to ASCII → lowercase → spaces/underscores to hyphens → remove characters not in `a-z`, `0-9`, `-` → trim leading/trailing hyphens → truncate to 64 chars → use `section` if empty → prefix `section-` if not starting with a lowercase letter
+- Auto-generated if omitted, via a **fully deterministic** algorithm (identical output across implementations): Unicode NFKD + strip combining marks (`é`→`e`, `ř`→`r`) → apply the fixed transliteration table (`ß`→`ss`, `æ`→`ae`, `œ`→`oe`, `ø`→`o`, `đ`/`ð`→`d`, `þ`→`th`, `ł`→`l`, `ħ`→`h`, `ı`→`i` — exhaustive, no other mappings) → remove remaining non-ASCII (Cyrillic/Greek/CJK are removed, **not** romanized) → lowercase → spaces/tabs/underscores to hyphens → remove other characters → collapse hyphen runs → trim hyphens → truncate to 64 chars → trim trailing hyphen → use `section` if empty → prefix `section-` if not starting with a lowercase letter (prefix exempt from the 64-char cap — no re-truncation)
+- If the removal step dropped letters or digits (non-transliterable script), validators warn and recommend an explicit identifier; removed punctuation and symbols (em dashes, curly apostrophes) do not warn. The same applies to auto-derived definition ids
+- Duplicate-collision suffixes (`-2`, `-3`) are appended after the algorithm, in document order, exempt from the 64-char cap
 
 **Identifier scope:**
 - Each section identifier must be unique within the document
 - Cross-references resolve the exact identifier directly
 - Dot-separated hierarchical paths are not used
 
+**Item and paragraph anchors:** `{#id}` may also be placed at the very end of a list item's first paragraph (any list depth, but not in lists inside block quotes/tables) or at the very end of a top-level paragraph directly inside a section (not before the first heading). Explicit only — never auto-generated. Same format/uniqueness rules; they join the anchor namespace and are targeted with plain `{{ref:}}`. Rendered designation = containing section number + item enumeration path or paragraph number (`3.1(a)`, `3.1(b)(ii)`, `5.2`); if the template doesn't enumerate that list or number paragraphs, the ref falls back to the section number alone (Warning). Templates may render first-level items or top-level paragraphs as section-qualified decimals (5.1, 5.2) for continental numbered-paragraph drafting. A `{#id}`-like marker anywhere else is literal text (Warning — likely misplaced).
+
+**Identifier namespaces:** all identifiers share one format but live in separate namespaces — each directive resolves only against its own:
+- **Anchor:** section identifiers + item/paragraph anchors + attachment ids share one namespace (collisions are Errors); `{{ref:}}` resolves section identifiers and item/paragraph anchors, `{{attach:}}` only attachment ids — a `{{ref:}}` targeting an attachment id is an Error (use `{{attach:}}`)
+- **Definitions:** `{{def:}}` ids are unique among definitions only; a definition id may equal a section id (e.g., both `services`) — not a collision
+- **Placeholders:** own namespace; repeated ids = the same logical blank; may coincide with any other identifier
+- Side names, party names, and `field_types` keys are frontmatter namespaces with their own uniqueness rules
+- Renderers disambiguate output anchors themselves (e.g., `def-services` vs `services`)
+
 ## Directives
 
 All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowercase. Must not span multiple lines.
+
+**Shared syntax rules (all directives):**
+
+- Form: `{{name: positional, param=value, ...}}` — at most one positional value, always first; named parameters are order-insensitive; the same parameter must not appear twice (Error); a parameter unknown to the directive is ignored with a Warning
+- No whitespace between `{{` and the name or between the name and `:`; whitespace after `:`, around commas, and before `}}` is syntax, not value content
+- **Quoting:** any value may be wrapped in straight double quotes (`"`, U+0022) to include commas or `}}`: `label="Smith, Jones & Co."`, `{{field: "Smith, Jones & Co. v. Doe", type=case-name}}`. Inside quotes, `\"` = literal quote, `\\` = literal backslash. Unquoted values must not contain `,`, `}}`, or line breaks (leading/trailing whitespace trimmed); quoted and unquoted spellings parse to the same value. Straight quotes only — typographic quotes (`“ ” „ « »`) do not delimit values (validators warn when an unquoted value starts with one)
+- Directives are recognized in body text (paragraphs, lists, table cells, block quotes) and in frontmatter only as quoted placeholder strings; they are **not** recognized inside code spans, code blocks, or HTML comments
+- Literal `{{` in text: escape the first brace — `\{{ref: x}}` renders as literal `{{ref: x}}` (CommonMark backslash escape)
+- A `{{` followed by a name and `:` that cannot be completed as a directive on the same line is malformed (Error); a stray `{{` not followed by `name:` is literal text (Warning)
 
 ### Cross-References
 
@@ -156,7 +179,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 ```
 
 Resolves to the section number (e.g., "3.2"). Links to the target section.
-Broken references render as `[BROKEN REF: identifier]`.
+Broken references render as `[BROKEN REF: identifier]`. Only section identifiers are valid targets — referencing an attachment id with `{{ref:}}` is an Error (use `{{attach:}}`).
 
 ### Definitions
 
@@ -173,7 +196,7 @@ The Provider performs marketing services (the "Services" {{def: services}}).
 - `{{def:}}` MUST be on the same line as, and immediately preceded by, a quoted span (only optional spaces/tabs — no line break — in between); the term is the text inside the quotation marks
 - Defined terms carry NO emphasis markers in source (`**bold**`); styling is applied by the renderer. The quotation marks are a source-only delimiter and are NOT rendered — at neither the definition nor any `{{term:}}` reference
 - Accepted quotation pairs (all on by default; double quotes recommended): `"…"` (U+0022), `“…”` (U+201C/D), `«…»`, `»…«`, `„…“`, `‘…’`, `‚…‘`, `‹…›`. Single-quote forms are accepted but ambiguous with apostrophes — validators warn
-- The `id` follows section-identifier rules and MUST be unique; it MAY be omitted and is then auto-derived from the term via the §5.3 slug algorithm (`"Services" {{def:}}` → `services`). Explicit ids are recommended and required to break slug collisions
+- The `id` follows section-identifier format rules and MUST be unique **among definitions** (definitions are their own namespace — a def id may equal a section id without conflict); it MAY be omitted and is then auto-derived from the term via the §5.3 slug algorithm (`"Services" {{def:}}` → `services`). Explicit ids are recommended and required to break slug collisions
 - A `{{def:}}` MAY appear anywhere in the body — there is no required, single, or first-positioned Definitions section. A top "Definitions" heading is a recommended convention only
 - Definitions MAY be introduced inside attachment files (they register document-wide terms)
 - A definition records (id, term, location); no "definition text" is stored. A `{{term:}}` link targets the definition's location (the `{{def:}}` anchor); a generated glossary entry points to the section/clause containing it
@@ -186,7 +209,7 @@ The Provider performs marketing services (the "Services" {{def: services}}).
 ```
 
 - `label` is optional; when present, displays that text instead of the defined term (used for inflected forms; authoring tools may generate the `label` automatically)
-- `label` must not contain commas or `}}`
+- Unquoted `label` values must not contain commas or `}}`; use the quoted form to include them (`label="Services, as amended"`)
 - Undefined references render as `[UNDEFINED: id]`
 
 ### Date
@@ -244,7 +267,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{field: 25 Cdo 1234/2025, type=case-number, note=Relevant precedent}}
 ```
 
-- `value`: required raw value; preserved exactly and rendered as-is
+- `value`: required raw value; preserved exactly (after unquoting) and rendered as-is; quote it (`"..."`) when it contains a comma or `}}`
 - `type` (required): lowercase ASCII identifier starting with a letter, then lowercase letters/digits/hyphens
 - If frontmatter `field_types` exists, undeclared custom field types should trigger a warning
 - If `field_types` is absent entirely, any well-formed custom field type is accepted without warning
@@ -272,7 +295,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{include: schedules/pricing.lgd}}
 ```
 
-Path is relative to the including document. Circular includes are invalid.
+Path is relative to the including document. The target is a **body-only LegalDown fragment** — the same file model as attachment files: must be `.lgd`/`.legaldown`/`.legal.md`, no frontmatter, no level 1 heading (write the surrounding heading in the including document). Content splices verbatim at the directive position with no heading re-basing — the combined document must not skip heading levels. A `{{def:}}` in a fragment registers a document-wide term; section ids must be unique across the combined document. Fragments may nest further `{{include:}}`s; circular chains are invalid.
 
 ### Attachment Reference
 
@@ -303,12 +326,15 @@ Separate files per language with identical heading structure and section identif
 
 **Errors** (must fix):
 - Skipped heading levels
-- Duplicate explicit section identifiers
+- Duplicate explicit anchors (section identifiers, item/paragraph anchors — one shared namespace)
 - Malformed section identifiers
+- Malformed directive after a `{{name:` opener (grammar violation, including an unterminated quoted value)
+- Duplicate named parameter in a directive
 - `{{def:}}` not immediately preceded by a recognized quoted span
 - Two definitions auto-generate the same identifier (omitted ids)
 - Broken `{{ref:}}` or `{{term:}}` targets
-- Duplicate `{{def:}}` identifiers
+- `{{ref:}}` targeting an attachment id (attachments are referenced with `{{attach:}}`)
+- Duplicate `{{def:}}` identifiers (within the definitions namespace)
 - Invalid `document_type`, side names, party names, or party `type` values
 - Too few sides or parties for the selected `document_type`
 - Missing `issuer` side for `unilateral_act` or `collective_act`
@@ -317,13 +343,20 @@ Separate files per language with identical heading structure and section identif
 - `field_types` keys that are malformed or collide with built-in directive names
 - Missing or malformed `type` on `{{field:}}`
 - Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
-- `{{placeholder:}}` in a frontmatter identifier or structural field (any `name`, `type`, `document_type`, `sides`/`parties` structure)
+- `{{placeholder:}}` in a frontmatter identifier or structural field (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure)
+- Frontmatter present but not valid YAML
+- Missing or empty `title` when frontmatter is present
+- Invalid `effective_date`, `adoption_date`, or `date_of_birth` (not a valid ISO 8601 date; placeholders exempt)
+- Empty attachment `title` or representative `name`
+- Include target missing, not a LegalDown file, or part of a circular include chain
+- Included fragment contains frontmatter or a level 1 heading
+- Section identifiers in included fragments not unique across the combined document, or the combined document skips heading levels
 - Mismatched bilingual structure
 - `amends.title` is empty or missing when `amends` is present
 - `amends.file` path does not exist when specified
 - `{{term:}}` references id not found in amendment or imported original (when original is a LegalDown file)
 - Attachment `id` is not unique across document
-- Attachment `id` collides with a section identifier
+- Attachment `id` collides with a section identifier or item/paragraph anchor
 - Attachment `file` path does not exist
 - LegalDown attachment file contains frontmatter
 - LegalDown attachment file contains level 1 heading
@@ -332,13 +365,22 @@ Separate files per language with identical heading structure and section identif
 
 **Warnings** (should fix):
 - Hardcoded numbering in headings
+- Named parameter not defined for the directive (ignored for rendering)
+- Stray `{{` in body text that does not begin a well-formed directive
+- Unquoted directive value beginning with a typographic quotation mark (auto-curled quote)
+- `{#id}`-like marker outside an anchor position (likely misplaced anchor)
+- `{{ref:}}` to an item/paragraph anchor the active template does not enumerate (falls back to section number)
 - Duplicate auto-generated section identifiers (implementations append `-2`, `-3` suffixes for rendering)
+- Auto-generated section or definition identifier lost non-transliterable letters or digits (removed punctuation does not warn; explicit id recommended)
 - Defined term wrapped in emphasis markers (`**`, `__`) in source
 - Single-quoted term ambiguous with an apostrophe (U+2019)
 - Declared definitions never referenced
 - Missing `currency` on `{{money:}}`
 - Undeclared `{{field:}}` type when `field_types` frontmatter is present
 - Attachment declared but never referenced via `{{attach:}}`
+- Document has no frontmatter
+- Invalid ISO 639-1 code in `language`, `authoritative`, or `translations` keys; `authoritative` not among the document's languages
+- Declared `legaldown` spec version newer than the implementation supports (implementations must not fail on an unknown version)
 - Unknown currency on `{{placeholder: ..., type=money}}`
 - Amendment declares `{{def:}}` with same id as definition in original LegalDown source
 
