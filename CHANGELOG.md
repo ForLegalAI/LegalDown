@@ -10,6 +10,152 @@ without a major version bump until v1.0.
 
 ## [Unreleased]
 
+### Translations are secondary documents — 2026-08-12
+
+The bilingual rules required identical section and definition identifiers across linked files but
+never said how to achieve that — and auto-generated identifiers, slugged from language-specific
+text, guarantee a mismatch. Resolution: make the authoring model explicit rather than nudging with
+warnings.
+
+#### Changed
+
+- **Primary/secondary model (spec §14.1, §14.2).** A translation is a **secondary document**
+  derived from a **primary**: structure and identifiers originate in the primary — including ids
+  auto-generated there (§5.3 is deterministic, so tooling can compute them) — and are mirrored into
+  each translation **explicitly**; only the text is translated. Updating a translation means
+  mirroring the primary's change under the same identifier and translating the text. There is no
+  reason for auto-generation in a translation file, and relying on it is now prohibited.
+- **`authoritative` identifies the primary (§3.2, §14.2).** The primary is the linked file whose
+  `language` equals the declared `authoritative` language; declaring `authoritative` is RECOMMENDED
+  whenever `translations` is present. Without it, validators check the group symmetrically and
+  SHOULD warn about auto-generated ids in any linked file.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Heading or `{{def:}}` without an explicit identifier in a translation file | — | **Added (Error, §15.7)** |
+| Auto-generated identifiers in linked files when `authoritative` is absent | — | **Added (Warning, §15.7)** |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §3.2 (`authoritative` row), §14.1, §14.2
+  (primary/translations rules), §15.7.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — bilingual section, frontmatter
+  comment, validation summary.
+
+---
+
+### Document-type constraint severities — 2026-08-12
+
+§15.6's document-type table (minimum sides/parties, required `issuer` side) carried no severities,
+and taken as Errors it would contradict `sides` being RECOMMENDED — a contract without a `sides`
+block would implicitly fail. Severities are now explicit.
+
+#### Changed
+
+- **§15.6 severity model.** An invalid `document_type` value is always an Error. When `sides` is
+  **present**, violations of the minimum-sides, `issuer`-side, and minimum-parties rows are
+  **Errors**. When frontmatter is present but `sides` is **absent entirely**, those rows cannot be
+  verified: validators MUST NOT report them as violated and MUST emit a single **Warning** that the
+  `document_type` constraints cannot be verified without `sides` — keeping `sides` genuinely
+  RECOMMENDED. A document with no frontmatter draws only the no-frontmatter Warning.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Document-type minimums (sides/parties/`issuer`) | Severity unstated | **Error when `sides` present** |
+| `sides` absent while frontmatter is present | (implicitly failing the minimums) | **Single Warning** — constraints not verifiable |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §15.6.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — validation summary.
+
+---
+
+### Consistency cleanup pass — 2026-08-12
+
+Clears the remaining internal contradictions and editorial defects from the release-readiness
+review (`spec-review.md` items I1–I2, I4, I6–I12, E2–E13, P6, and P13's example). No new features;
+two behavior changes are called out below.
+
+#### Behavior changes
+
+- **Unknown directives are now an Error (§11.5, §15.2).** Previously a typo'd directive
+  (`{{trem: services}}`) drew only a Warning and printed **verbatim into rendered output** — unlike
+  every other failure, which renders a loud bracketed marker. Unknown directives now render as
+  `[UNKNOWN DIRECTIVE: name]` with an Error; verbatim pass-through survives only as an explicit,
+  non-default permissive mode (forward compatibility).
+- **`text` joins the reserved `field_types` names (§3.2, §15.5).** It is a built-in placeholder
+  type; a custom field type named `text` was confusable with it. Minor breaking change for any
+  document that declared a `text` field type.
+
+#### Changed
+
+- **Ghost feature removed:** §1.3 no longer lists "language block directives", and the README no
+  longer shows `{{lang: fr}} ... {{/lang}}` — bilingual support is separate-files only (§14), as
+  designed.
+- **§13.1** — numbering scheme is specifiable in the style template or renderer configuration; the
+  dangling "document metadata" clause is struck (same class as the 2026-06-17 locale cleanup).
+- **§14 rewritten tool-neutrally:** §14.3 no longer mandates a `legaldown validate --sync` CLI and
+  no longer says "warns" where §15.7 says Error; the missing language-set consistency check is now
+  a §15.7 row. §14.1/§14.2 editorial fixes ("Separate File Approach").
+- **§13.2 enumeration table collapsed** to a single default sequence (its three style columns were
+  identical); templates may define their own per-level sequences. **Ordered lists** are now
+  specified: renderers renumber them at render time (source numbers are never authoritative) and
+  may apply the enumeration scheme; §8.2 aligned with §13.2 (SHOULD for unordered, MAY for
+  ordered).
+- **Attachment "numbering position" wording** (§3.9, §12.4, §13.8) now speaks of *order* only —
+  there is no generated attachment numbering to keep correct.
+- **`{{ref:}}` edge cases defined (§13.3, §6.3):** under the "None" scheme, refs render the
+  target's heading text (plus the enumeration path for item/paragraph anchors); refs crossing
+  attachment numbering restarts are qualified with the target's scope — the attachment title
+  ("Schedule A: Service Description, Section 2"), or the document title for main-body targets.
+- **Preamble blessed (new §4.4):** content before the first heading is a valid, unnumbered
+  preamble; all directives allowed; no anchors; placed before the first numbered provision.
+- **Heading model completed (§4.1):** maximum depth is 5 (`######` = Error); setext headings are
+  valid and map to levels 1–2 (ATX recommended).
+- **§5.5** — an auto-generated identifier colliding with an *explicit* anchor is now covered: the
+  explicit id wins, the auto id gets the numeric suffix plus Warning.
+- **§3.6** — side-name display fallback no longer pluralizes (English-only behavior); the fallback
+  is deterministic (hyphens → spaces, each word capitalized), `label` recommended.
+- **`supersedes`** (§3.2) — may now be a `{title, file}` object like `amends`, or remain a string.
+- **§5.2** — the anchor separator is "one or more spaces or tabs" (was "a single space").
+- **§10.4 example** no longer declares a `board-of-directors` party (an organ fits neither party
+  `type`); §17.4's amendment example now uses `(the "Agreement" {{def: agreement}})` and
+  `{{term: agreement}}` throughout, showcasing inline definitions.
+- **Spec header** carries a revision date pointing at this changelog (§ front page).
+- **LICENSE** attribution URLs corrected to `https://github.com/ForLegalAI/LegalDown`; `.gitignore`
+  added; README mentions `.legal.md` and drops the ghost `{{lang:}}` line.
+
+#### Removed
+
+- §15.3's "Sections with no references (possible orphaned content)" Info row — it flagged most
+  sections of any normal contract (unreferenced *attachments* remain covered by §15.10).
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Unknown directive name | Warning + verbatim pass-through | **Error**, renders `[UNKNOWN DIRECTIVE: name]` (§15.2) |
+| Heading depth exceeds level 5 | (undefined) | **Added (Error, §15.2)** |
+| Linked bilingual files declare the same language set | §14.3 only, severity unclear | **Added (Error, §15.7)** |
+| `field_types` key named `text` | Allowed | **Error** (reserved, §15.5) |
+| Auto-generated id collides with an explicit anchor | (undefined) | Suffix + **Warning** (§5.5) |
+| Sections with no references | Info | **Removed** |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — header, §1.3, §3.2, §3.6, §3.9, §4.1, new
+  §4.4, §5.2, §5.5, §8.2, §10.4, §11.5, §13.1–§13.3, §13.8, §14, §15.2, §15.3, §15.5, §15.7, §17.4.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — heading rules, preamble, reserved
+  types, display fallback, cross-references, directives, bilingual, validation summary.
+- [`README.md`](README.md), [`LICENSE`](LICENSE), new [`.gitignore`](.gitignore).
+
+---
+
 ### Spec version declaration in frontmatter — 2026-08-12
 
 A document had no way to state which LegalDown version it targets (`version` is the *document's*

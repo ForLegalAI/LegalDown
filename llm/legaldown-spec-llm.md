@@ -54,10 +54,10 @@ governing_law: Jurisdiction             # OPTIONAL
 language: en                            # RECOMMENDED, ISO 639-1
 translations:                           # OPTIONAL
   fr: document-fr.lgd
-authoritative: en                       # OPTIONAL, ISO 639-1
+authoritative: en                       # OPTIONAL, ISO 639-1; marks the primary of a translation group (recommended with translations)
 adopted_by: Board of Directors          # OPTIONAL
 adoption_date: 2026-03-15               # OPTIONAL, ISO 8601
-supersedes: Prior policy v1             # OPTIONAL
+supersedes: Prior policy v1             # OPTIONAL: string or {title, file} object
 amends:                                  # OPTIONAL: amendment metadata
   title: Original Document Title         # REQUIRED when amends is present
   file: ../original/document.lgd         # OPTIONAL: relative path to original
@@ -78,12 +78,12 @@ Frontmatter is optional as a block but recommended: without it the document is v
 
 - `sides` is an array of side objects
 - `field_types`, when present, is a map of `type-name: description` entries for custom `{{field:}}` directives
-- Custom field type names use the same lowercase identifier format as side and party names and must not be `date`, `money`, `duration`, or `party`
+- Custom field type names use the same lowercase identifier format as side and party names and must not be `date`, `money`, `duration`, `party`, or `text` (reserved value-type names)
 - Each side has a unique ASCII `name` (lowercase letter, then lowercase letters/digits/hyphens), optional `label`, and non-empty `parties` array
 - Each party has a unique document-wide ASCII `name` (lowercase letter, then lowercase letters/digits/hyphens), optional `label`, `type`, and `legal_name`
 - Party `type` is explicit: `legal_entity` or `natural_person`
 - Unknown party fields are allowed and must be ignored by implementations
-- Display fallback: side `label` → title-cased/pluralized `name`; party `label` → `legal_name`
+- Display fallback: side `label` → `name` with hyphens replaced by spaces and each word capitalized (`disclosing-parties` → "Disclosing Parties"; no pluralization — provide a `label`); party `label` → `legal_name`
 - `identification_number` is the reserved field for a registration/national ID — RECOMMENDED for `legal_entity`, OPTIONAL for `natural_person` (not every individual has one); prefer it over a custom field when present
 - Template/draft frontmatter MAY use `{{placeholder:}}` as a **quoted** string in value fields (e.g. `legal_name: "{{placeholder: client-name}}"`), but NOT in identifier/structural fields (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure); same id in frontmatter and body means the same blank
 
@@ -126,8 +126,10 @@ When `attachments` is present in frontmatter, the document has attached files (s
 
 **Rules:**
 - Heading levels must not skip (no `#` → `###` without `##`)
+- Maximum depth is 5 (`#####`); `######` is an Error. Setext headings (`===`/`---` underlines) are valid and map to levels 1–2; ATX `#` style recommended
 - Heading text must be plain text only — no numbering, no directives, no Markdown formatting
 - All section numbering is generated at render time — never write numbers in headings
+- Content before the first heading is a valid, unnumbered **preamble** — all directives allowed there (including `{{def:}}`), but no anchors and not referenceable
 
 ## Section Identifiers
 
@@ -171,6 +173,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 - Directives are recognized in body text (paragraphs, lists, table cells, block quotes) and in frontmatter only as quoted placeholder strings; they are **not** recognized inside code spans, code blocks, or HTML comments
 - Literal `{{` in text: escape the first brace — `\{{ref: x}}` renders as literal `{{ref: x}}` (CommonMark backslash escape)
 - A `{{` followed by a name and `:` that cannot be completed as a directive on the same line is malformed (Error); a stray `{{` not followed by `name:` is literal text (Warning)
+- An unknown directive name is an Error and renders as `[UNKNOWN DIRECTIVE: name]` — it is never printed verbatim into output (pass-through exists only as an explicit non-default permissive mode). If the document declares a `legaldown` version newer than the implementation supports, validators downgrade the Error to a Warning (the directive may come from the newer version)
 
 ### Cross-References
 
@@ -179,7 +182,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 ```
 
 Resolves to the section number (e.g., "3.2"). Links to the target section.
-Broken references render as `[BROKEN REF: identifier]`. Only section identifiers are valid targets — referencing an attachment id with `{{ref:}}` is an Error (use `{{attach:}}`).
+Broken references render as `[BROKEN REF: identifier]`. Only section identifiers and item/paragraph anchors are valid targets — referencing an attachment id with `{{ref:}}` is an Error (use `{{attach:}}`). Under a template with no section numbering ("None" scheme), refs render the target's heading text (for item/paragraph anchors: heading text + enumeration path, "Termination (a)"); refs crossing attachment numbering restarts are qualified with the **target's** scope — the attachment title ("Schedule A: …, Section 2"), or the document title when the target is in the main body ("Master Service Agreement, Section 5").
 
 ### Definitions
 
@@ -320,12 +323,17 @@ Standard CommonMark:
 
 ## Bilingual Documents
 
-Separate files per language with identical heading structure and section identifiers. Linked via `translations` and `authoritative` in frontmatter.
+Separate files per language with identical heading structure and section identifiers. Linked via `translations` and `authoritative` in frontmatter. Linked files must declare the same set of languages (each file's `language` + `translations` keys); structural or language-set mismatches are Errors.
+
+A translation is a **secondary** document: the **primary** is the linked file whose `language` equals `authoritative` (declaring it is recommended). Identifiers originate in the primary and are mirrored **explicitly** into translations — every heading and `{{def:}}` in a translation file must carry an explicit id (its counterpart's id from the primary); auto-generation is never relied on in translation files. Updating a translation = mirror the primary's change under the same id + translate the text. Without `authoritative`, validators check symmetrically and warn on auto-generated ids in linked files.
 
 ## Validation Summary
 
 **Errors** (must fix):
 - Skipped heading levels
+- Heading depth beyond level 5
+- Unknown directive name (renders as `[UNKNOWN DIRECTIVE: name]`)
+- Circular definitions (scoped to each definition's containing paragraph)
 - Duplicate explicit anchors (section identifiers, item/paragraph anchors — one shared namespace)
 - Malformed section identifiers
 - Malformed directive after a `{{name:` opener (grammar violation, including an unterminated quoted value)
@@ -336,11 +344,12 @@ Separate files per language with identical heading structure and section identif
 - `{{ref:}}` targeting an attachment id (attachments are referenced with `{{attach:}}`)
 - Duplicate `{{def:}}` identifiers (within the definitions namespace)
 - Invalid `document_type`, side names, party names, or party `type` values
-- Too few sides or parties for the selected `document_type`
-- Missing `issuer` side for `unilateral_act` or `collective_act`
+- Too few sides or parties for the selected `document_type` (checked only when `sides` is present)
+- Missing `issuer` side for `unilateral_act` or `collective_act` (checked only when `sides` is present)
+- Heading or `{{def:}}` without an explicit identifier in a translation file (non-authoritative linked file)
 - Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
 - `{{party:}}` `party-name` is empty, malformed, or does not match any party declared in frontmatter
-- `field_types` keys that are malformed or collide with built-in directive names
+- `field_types` keys that are malformed or collide with the reserved value-type names (`date`, `money`, `duration`, `party`, `text`)
 - Missing or malformed `type` on `{{field:}}`
 - Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
 - `{{placeholder:}}` in a frontmatter identifier or structural field (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure)
@@ -351,7 +360,7 @@ Separate files per language with identical heading structure and section identif
 - Include target missing, not a LegalDown file, or part of a circular include chain
 - Included fragment contains frontmatter or a level 1 heading
 - Section identifiers in included fragments not unique across the combined document, or the combined document skips heading levels
-- Mismatched bilingual structure
+- Mismatched bilingual structure (heading hierarchy, section ids, definition ids, or declared language sets)
 - `amends.title` is empty or missing when `amends` is present
 - `amends.file` path does not exist when specified
 - `{{term:}}` references id not found in amendment or imported original (when original is a LegalDown file)
@@ -379,7 +388,9 @@ Separate files per language with identical heading structure and section identif
 - Undeclared `{{field:}}` type when `field_types` frontmatter is present
 - Attachment declared but never referenced via `{{attach:}}`
 - Document has no frontmatter
+- `sides` absent while frontmatter is present — `document_type` structural constraints cannot be verified (single warning; the per-rule Errors apply only when `sides` is present; a document with no frontmatter draws only the no-frontmatter warning)
 - Invalid ISO 639-1 code in `language`, `authoritative`, or `translations` keys; `authoritative` not among the document's languages
+- Auto-generated identifiers in bilingual linked files when `authoritative` is absent (primary cannot be determined)
 - Declared `legaldown` spec version newer than the implementation supports (implementations must not fail on an unknown version)
 - Unknown currency on `{{placeholder: ..., type=money}}`
 - Amendment declares `{{def:}}` with same id as definition in original LegalDown source

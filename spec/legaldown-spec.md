@@ -1,6 +1,8 @@
 # LegalDown Specification
 ## Version 0.1 DRAFT
 
+**Revision:** 2026-08-12 — change history in [CHANGELOG.md](../CHANGELOG.md)
+
 ---
 
 ## 1. Introduction
@@ -34,7 +36,6 @@ LegalDown is a superset of CommonMark (standard Markdown). All valid CommonMark 
 - Cross-reference directives
 - Definition declaration and reference directives
 - Placeholder directives
-- Language block directives for bilingual documents
 - File inclusion directives
 - Validation requirements for legal-specific constraints
 
@@ -153,21 +154,23 @@ Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status c
 | `governing_law` | OPTIONAL | Applicable law |
 | `language` | RECOMMENDED | Primary language (ISO 639-1) |
 | `translations` | OPTIONAL | Map of translation files (see Section 14) |
-| `authoritative` | OPTIONAL | Authoritative language for disputes (ISO 639-1) |
+| `authoritative` | OPTIONAL | Authoritative language for disputes (ISO 639-1); also identifies the primary document of a translation group (§14.2). RECOMMENDED when `translations` is present |
 | `adopted_by` | OPTIONAL | Body or authority that adopted the document |
 | `adoption_date` | OPTIONAL | Adoption date (ISO 8601) |
-| `supersedes` | OPTIONAL | Prior document or version superseded by this document |
+| `supersedes` | OPTIONAL | Prior document or version superseded by this document — a plain string, or an object with the same fields as `amends` (§3.8) |
 | `amends` | OPTIONAL | Object identifying the original document this document amends (see Section 3.8) |
 | `attachments` | OPTIONAL | Array of attachment objects declaring documents attached to this document (see Section 3.9) |
 | `tags` | OPTIONAL | Classification tags array |
 
-If `legaldown` is present, it declares the specification version the document was authored against. The value SHOULD be written as a quoted string (unquoted, YAML would parse `0.1` as a number). Implementations SHOULD emit a Warning when the declared version is newer than the version they implement, and MUST NOT fail solely because the declared version is unknown. When the field is absent, implementations process the document under the version they implement.
+If `legaldown` is present, it declares the specification version the document was authored against. The value SHOULD be written as a quoted string (unquoted, YAML would parse `0.1` as a number). Implementations SHOULD emit a Warning when the declared version is newer than the version they implement, and MUST NOT fail solely because the declared version is unknown. When the field is absent, implementations process the document under the version they implement. A newer declared version also softens unknown-directive handling — see §11.5.
+
+If `supersedes` is present, it MAY be either a plain string describing the superseded document, or an object with the same fields as `amends` (`title` REQUIRED, `file` OPTIONAL — §3.8).
 
 If `field_types` is present, it MUST be a YAML map where each entry is `type-name: description`.
 
 - Each `type-name` MUST follow the identifier format `[a-z][a-z0-9-]*`
 - Each description MUST be plain text describing the custom value type
-- `type-name` values MUST NOT collide with built-in directive names `date`, `money`, `duration`, or `party`
+- `type-name` values MUST NOT collide with the reserved value-type names `date`, `money`, `duration`, `party`, or `text` (the built-in field specs and placeholder types, reserved so a custom type can never be confused with them)
 - If `field_types` is absent entirely, implementations MUST still accept all `{{field:}}` type names that follow the identifier format
 
 ### 3.3 Sides and Parties
@@ -271,7 +274,7 @@ representatives:
 
 ### 3.6 Rendering Rules
 
-- Side `label` is used for display; if absent, renderers SHOULD title-case and pluralize `name` as a fallback
+- Side `label` is used for display; if absent, renderers SHOULD derive a fallback from the `name` by replacing hyphens with spaces and capitalizing each word (`disclosing-parties` → "Disclosing Parties") — no pluralization or other language-dependent transformation is applied, so providing a `label` is RECOMMENDED
 - Party `label` is used for display; if absent, renderers MUST fall back to `legal_name`
 - Where an implementation generates signature blocks (§2.2), party `legal_name` MUST appear on them
 - `{{party: <party-name>}}` resolves against party `name` and renders `label`, falling back to `legal_name`
@@ -360,7 +363,7 @@ Each attachment object has the following fields:
 
 **Two modes based on file type:**
 
-| File type | Rendered inline | Content validated | Keeps numbering position |
+| File type | Rendered inline | Content validated | Keeps order position |
 |---|---|---|---|
 | `.lgd` / `.legaldown` / `.legal.md` | Yes | Yes | Yes |
 | Any other (`.pdf`, `.docx`, etc.) | No | No | Yes |
@@ -429,6 +432,8 @@ LegalDown uses Markdown heading syntax to define legal document hierarchy:
 
 - Level 1 (`#`) represents top-level provisions (articles, sections)
 - Heading levels MUST NOT skip levels — jumping from `#` to `###` without an intervening `##` is invalid
+- The maximum heading depth is 5 (`#####`); level 6 headings (`######`) are invalid
+- Setext headings (text underlined with `===` or `---`) are valid CommonMark and are treated as level 1 and level 2 headings respectively — they participate in hierarchy, numbering, and identifier generation exactly like ATX headings; ATX (`#`) style is RECOMMENDED
 - Heading text MUST NOT contain hardcoded section numbers — numbering is generated at render time
 - Headings SHOULD be concise and descriptive
 
@@ -445,6 +450,15 @@ Section identifiers (anchors) in `{#id}` syntax are permitted after heading text
 ### 4.3 Body Text
 
 Between headings, the document body consists of standard Markdown paragraphs, lists, tables, and block elements. LegalDown-specific directives (`{{ref:}}`, `{{term:}}`, `{{def:}}` etc.) may appear within body text.
+
+### 4.4 Preamble Content
+
+Body content MAY appear before the first heading. Such content is the document's **preamble** — typically an introductory paragraph identifying the parties and the act (see the §17 examples).
+
+- The preamble is valid and unnumbered — section numbering (§13.1) begins at the first heading
+- All body-level directives are valid in the preamble, including `{{def:}}` declarations and field specs
+- Preamble paragraphs cannot carry paragraph anchors (§5.7) and cannot be targeted by `{{ref:}}`
+- Renderers place the preamble after the title block and before the first numbered provision
 
 ---
 
@@ -466,7 +480,7 @@ Any heading MAY include an explicit identifier:
 
 **Rules for identifiers:**
 
-- Specified using `{#identifier}` syntax placed immediately after heading text, separated by a single space
+- Specified using `{#identifier}` syntax placed immediately after heading text, separated by one or more spaces or tabs
 - MUST be unique within the document
 - MUST contain only lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens (`-`)
 - MUST start with a lowercase ASCII letter
@@ -529,6 +543,8 @@ If the same identifier would be auto-generated for two different headings, imple
 2. Append a numeric suffix to the second and subsequent identifiers (`-2`, `-3`, etc.) to ensure uniqueness for rendering purposes
 
 Suffixes are assigned in document order, are appended after the §5.3 algorithm completes, and are exempt from the 64-character maximum.
+
+The same handling applies when an auto-generated identifier would collide with an **explicit** anchor elsewhere in the document (a section identifier, item/paragraph anchor, or attachment id): the explicit identifier always wins, the auto-generated one receives the numeric suffix, and the warning is emitted.
 
 ### 5.6 Identifier Namespaces
 
@@ -615,6 +631,8 @@ Renderers MUST:
 5. If the target identifier does not exist, insert `[BROKEN REF: identifier]` in output and emit a validation error
 
 When the target is an **item or paragraph anchor** (§5.7), the rendered designation is the containing section's number followed by the item's enumeration path or the paragraph's number under the active template (e.g., "3.1(a)", "3.1(b)(ii)", "5.2" — §13.2). If the active template does not enumerate the containing list or does not number paragraphs, the renderer MUST fall back to the containing section's number alone and emit a validation Warning.
+
+Rendering under the "None" numbering scheme and across attachment numbering restarts is defined in §13.3.
 
 ### 6.4 Attachment References
 
@@ -823,8 +841,7 @@ Termination shall proceed as follows:
 
 - Lists MUST have a blank line before and after
 - Nested lists are supported with consistent indentation (2 or 4 spaces)
-- Renderers MAY convert unordered lists to legal enumeration styles (a), (b), (c) at configured heading levels
-- Renderers MAY convert nested unordered lists to legal sub-enumeration (i), (ii), (iii)
+- Renderers SHOULD convert unordered lists to legal enumeration — (a), (b), (c); (i), (ii), (iii) — and MAY apply the same enumeration to ordered lists, per §13.2; ordered-list numbers in source are never authoritative (items are renumbered at render time)
 
 ### 8.3 Nested Lists
 
@@ -987,7 +1004,7 @@ The Company acts through {{party: acme-corporation, label=the Company}} under th
 
 Notices under this Agreement shall be delivered to {{party: beta-industries}}.
 
-{{party: board-of-directors, label=the Board, note=Collective body adopting the policy}} may amend this Policy from time to time.
+{{party: acme-corporation, label=the Company, note=Adopting entity}} may amend this Policy from time to time.
 ```
 
 **Rules:**
@@ -1211,7 +1228,9 @@ In those contexts, directive-like text is literal text.
 
 - Directives are case-sensitive — always lowercase
 - Directives MUST NOT span multiple lines
-- Unknown directives (well-formed per §11.2, but with a name this specification does not define) SHOULD generate a warning and be passed through to output as-is
+- An unknown directive (well-formed per §11.2, but with a name this specification does not define) is a validation **Error**. Renderers MUST replace it with `[UNKNOWN DIRECTIVE: name]` — consistent with the other bracketed failure markers — and MUST NOT print the directive source verbatim into rendered output (a typo like `{{trem: services}}` must never leak into an executed document)
+- Implementations MAY offer an explicit, non-default permissive mode that instead emits a Warning and passes unknown directives through as-is (forward compatibility with future directive names)
+- When the document declares a `legaldown` version newer than the implementation supports (§3.2), validators SHOULD report unknown directives as Warnings rather than Errors — they may be constructs introduced by the newer version, and §3.2 promises processing does not fail solely on an unknown version; the `[UNKNOWN DIRECTIVE: name]` rendering marker still applies
 - Implementations MUST NOT fail silently on unknown directives
 
 ---
@@ -1297,7 +1316,7 @@ Response time for critical issues shall not exceed {{duration: 4, unit=H}}.
 
 - Declared in frontmatter identically to LegalDown attachments
 - Referenceable via `{{attach: id}}`
-- Occupy their position in attachment order so that subsequent attachments number correctly
+- Occupy their declared position in the attachment order
 - Validators check that the file exists but perform no content validation
 - Renderers MAY insert a placeholder page showing the title, or omit from rendered output depending on style template configuration
 
@@ -1344,19 +1363,21 @@ First Provision
        Further Detail
 ```
 
-Numbering scheme MUST be configurable per render job and SHOULD be specifiable in document metadata or renderer configuration file. Default scheme is decimal.
+Numbering scheme MUST be configurable per render job and SHOULD be specifiable in the style template or renderer configuration file (§13.7). Default scheme is decimal.
 
 ### 13.2 List Enumeration
 
-Renderers SHOULD convert Markdown lists to legal enumeration based on nesting level and active template:
+Renderers SHOULD convert Markdown lists to legal enumeration based on nesting level and the active template. The default enumeration sequence, shared by all built-in numbering schemes (§13.1), is:
 
-| List Level | Decimal Style | Outline Style | Mixed Style |
-|---|---|---|---|
-| 1st level | (a), (b), (c) | (a), (b), (c) | (a), (b), (c) |
-| 2nd level | (i), (ii), (iii) | (i), (ii), (iii) | (i), (ii), (iii) |
-| 3rd level | (A), (B), (C) | (A), (B), (C) | (A), (B), (C) |
+| List Level | Default enumeration |
+|---|---|
+| 1st level | (a), (b), (c) |
+| 2nd level | (i), (ii), (iii) |
+| 3rd level | (A), (B), (C) |
 
-This behavior MUST be configurable and MAY be disabled to preserve plain bullet points.
+Style templates MAY define different sequences per level (§13.7). This behavior MUST be configurable and MAY be disabled to preserve plain bullet points.
+
+**Ordered lists.** Renderers MUST renumber ordered list items sequentially at render time — the numbers written in source are not authoritative, consistent with §1.2 — and MAY apply the active enumeration scheme to ordered lists the same way as to unordered lists.
 
 **Section-qualified decimal items.** As an alternative to letter and roman markers, a template MAY render first-level list items as section-qualified decimal numbers (5.1, 5.2, …) — the continental drafting convention for numbered, untitled provisions.
 
@@ -1373,6 +1394,10 @@ When rendering `{{ref: id}}`:
 5. If target not found, insert `[BROKEN REF: id]` and emit validation error
 
 For targets that are item or paragraph anchors (§5.7), render the containing section's number plus the item enumeration path or paragraph number under the active template (e.g., "3.1(a)", "5.2"); when the template does not enumerate the containing list or number paragraphs, fall back to the containing section's number and emit a validation Warning (§6.3).
+
+**Numbering scheme "None":** under the None scheme (§13.1) there is no section number; `{{ref:}}` MUST instead render the target's heading text, hyperlinked as usual. When the target is an item or paragraph anchor (§5.7), render the containing section's heading text followed by the item enumeration path or paragraph number — e.g., "Termination (a)"; if the template does not enumerate the containing list or number paragraphs, fall back to the heading text alone with the §6.3 Warning.
+
+**References across attachment boundaries:** when the reference and its target lie in different numbering scopes (main body vs. an attachment, or two different attachments) and the active template restarts numbering per attachment (§13.8), the renderer MUST qualify the designation with the **target's** scope: the attachment `title` when the target lies in an attachment (e.g., "Schedule A: Service Description, Section 2"), or the document `title` when the target lies in the main body (e.g., "Master Service Agreement, Section 5"). Under continuous numbering, or within the same scope, the plain designation is used.
 
 ### 13.4 Definition Resolution
 
@@ -1484,7 +1509,7 @@ Attachments are rendered after the main document body, in the order declared in 
 - A separator (e.g., horizontal rule, page break) SHOULD be inserted before each attachment
 - Section numbering within LegalDown attachments follows the active numbering scheme — either continuing from the main body or restarting per attachment, configurable in the style template
 - Non-LegalDown attachments MAY render as a placeholder page (showing the title) or be omitted from rendered output, depending on style template configuration
-- Non-LegalDown attachments occupy their declared position so that numbering of subsequent attachments remains correct
+- Non-LegalDown attachments keep their declared position in the attachment order even when omitted from rendered output
 
 ---
 
@@ -1492,9 +1517,11 @@ Attachments are rendered after the main document body, in the order declared in 
 
 ### 14.1 Overview
 
-LegalDown supports bilingual and multilingual contracts via **separate files** — one document per language, with metadata linking them
+LegalDown supports bilingual and multilingual contracts via **separate files** — one document per language, with metadata linking them.
 
-### 14.2 Separate File 
+A translation is a **secondary document** derived from a **primary document**: structure and identifiers originate in the primary and are mirrored into each translation; only the text is translated (§14.2).
+
+### 14.2 Separate File Approach
 
 Maintain separate LegalDown documents per language with identical heading structure and section identifiers:
 
@@ -1528,22 +1555,30 @@ authoritative: en
 « Information confidentielle » {{def: confidential-info}} désigne toute information non publique...
 ```
 
-**Rules for separate file approach:**
+**Rules for the separate file approach:**
 
 - Linked translation files MUST have identical heading hierarchy
 - Linked translation files MUST use identical section identifiers
 - Validators MUST check structural consistency between linked files
 - Cross-references resolve to section numbers (same in both versions)
 
+**Primary and translations:**
+
+- The **primary** document is the linked file whose `language` equals the declared `authoritative` language. Declaring `authoritative` is RECOMMENDED whenever `translations` is present
+- Identifiers originate in the primary — including any auto-generated there (§5.3 is deterministic, so tooling can compute them) — and are mirrored into each translation **explicitly**. Updating a translation means mirroring the primary's structural change under the same identifier and translating the text
+- In a translation file, every heading and every `{{def:}}` MUST therefore carry an explicit identifier (its counterpart's identifier from the primary). Auto-generation MUST NOT be relied upon in translation files — translated text would produce different identifiers and break the matching rules above
+- When `authoritative` is absent, implementations cannot distinguish the primary from its translations; validators check the linked files symmetrically and SHOULD warn about auto-generated identifiers in any linked file
+
 ### 14.3 Bilingual Validation
 
-The `legaldown validate --sync` command MUST check:
+Bilingual synchronization validation — a Full-level capability (§16.4) — MUST check:
 
-- Both files have identical heading hierarchy
-- All section identifiers match between files
-- All `{{def:}}` declarations exist in both files
-- Both files declare the same languages in metadata
-- Warns on structural differences
+- Linked files have identical heading hierarchy
+- All section identifiers match between the linked files
+- All `{{def:}}` identifiers exist in both files
+- The linked files declare the same set of languages (each file's `language` plus its `translations` keys)
+
+Violations are Errors; the per-rule severities are defined in §15.7.
 
 ---
 
@@ -1562,6 +1597,7 @@ Validators MUST categorize issues at three levels:
 | Check | Level |
 |---|---|
 | Heading levels do not skip | Error |
+| Heading depth does not exceed level 5 | Error |
 | Explicit anchors (section identifiers, item and paragraph anchors) are unique within the anchor namespace | Error |
 | `{#id}`-like marker outside an anchor position (likely misplaced anchor, §5.7) | Warning |
 | Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
@@ -1570,6 +1606,7 @@ Validators MUST categorize issues at three levels:
 | Headings do not contain hardcoded numbering | Warning |
 | Directives are well-formed per the §11.2 grammar (including quoted-value termination and escapes, §11.3) | Error |
 | Directive contains the same named parameter more than once | Error |
+| Directive name is defined by this specification (unknown names render as `[UNKNOWN DIRECTIVE: name]`; Warning instead under §11.5's permissive mode or a newer declared `legaldown` version) | Error |
 | Named parameter not defined for the directive (ignored for rendering) | Warning |
 | Unescaped `{{` in body text that does not begin a well-formed directive | Warning |
 | Unquoted directive value begins with a typographic quotation mark (possible auto-curled quote) | Warning |
@@ -1584,7 +1621,6 @@ Validators MUST categorize issues at three levels:
 | All `{{term: id}}` point to declared definitions | Error |
 | Circular definitions detected (scoped to each definition's containing paragraph, see §7.2) | Error |
 | Definitions used before declaration | Info |
-| Sections with no references (possible orphaned content) | Info |
 
 ### 15.4 Definition Validation
 
@@ -1611,7 +1647,7 @@ Validators MUST categorize issues at three levels:
 | `{{duration:}}` value is a positive numeric value | Error |
 | `{{duration:}}` `unit` parameter is one of `S`, `M`, `H`, `D`, `MO`, `Y` | Error |
 | `field_types` keys follow the identifier format `[a-z][a-z0-9-]*` | Error |
-| `field_types` keys do not collide with built-in directive names `date`, `money`, `duration`, `party` | Error |
+| `field_types` keys do not collide with the reserved value-type names `date`, `money`, `duration`, `party`, `text` | Error |
 | `{{field:}}` `type` parameter is present and matches identifier format | Error |
 | `{{field:}}` uses a type declared in `field_types` when `field_types` is present | Warning |
 | `{{placeholder:}}` `placeholder-id` value is non-empty and matches identifier format | Error |
@@ -1631,6 +1667,8 @@ If `document_type` is omitted, validators MUST treat it as `contract` when apply
 | Side named `issuer` required | No | Yes | Yes |
 | Minimum total parties | ≥ 2 | ≥ 1 | ≥ 1 |
 | `document_type` is valid value | Error if not | Error if not | Error if not |
+
+**Severities for the table above:** an invalid `document_type` value is always an **Error**. When `sides` is present, violations of the minimum-sides, `issuer`-side, and minimum-parties rows are **Errors**. When frontmatter is present but `sides` is absent entirely, those structural rows cannot be verified: validators MUST NOT report them as violated and MUST instead emit a single **Warning** stating that the `document_type` constraints cannot be verified without `sides` — keeping `sides` genuinely RECOMMENDED (§3.2) rather than effectively required. A document with no frontmatter at all draws only the no-frontmatter Warning (see the general metadata checks below), not this one.
 
 Violations of the following additional checks MUST be reported as **Error**:
 
@@ -1663,6 +1701,9 @@ Where §3.10 permits a placeholder in a value field, a placeholder value satisfi
 | Heading hierarchy matches between translations | Error |
 | Section identifiers match between translations | Error |
 | Definition IDs match between translations | Error |
+| Linked files declare the same set of languages (`language` + `translations` keys) | Error |
+| Every heading and `{{def:}}` in a translation file (a linked file whose `language` differs from `authoritative`) carries an explicit identifier | Error |
+| Auto-generated identifiers used in linked files when `authoritative` is absent (primary cannot be determined) | Warning |
 
 ### 15.8 Amendment Validation (when amends metadata present)
 
@@ -1736,7 +1777,8 @@ Scope: everything that can be determined from the document file alone. A Core im
 - Document structure (§4) and identifiers (§5), including automatic identifier generation (§5.3) and item/paragraph anchors (§5.7)
 - Recognition and validation of all directives in §11.1: cross-references (§6), definitions and term references (§7), field specs (§10), and attachment references (§6.4)
 - Standard text formatting (§8) and tables (§9)
-- Validation (§15): §15.1–§15.6 and §15.9 in full — excluding the template-dependent §15.3 row on refs to non-enumerated item/paragraph anchors, which is evaluated from the Rendering level (§16.3) — plus the rows of §15.8, §15.10, and §15.11 that need only the document itself:
+- Validation (§15): §15.1–§15.6 and §15.9 in full — excluding the template-dependent §15.3 row on refs to non-enumerated item/paragraph anchors, which is evaluated from the Rendering level (§16.3) — plus the rows of §15.7, §15.8, §15.10, and §15.11 that need only the document itself:
+  - §15.7 — the single-file translation rows: every heading and `{{def:}}` carries an explicit identifier when the document itself is a translation (its `language` differs from its declared `authoritative`), and the auto-generated-identifier Warning when the document declares `translations` without `authoritative`
   - §15.8 — `amends.title` is non-empty; unresolved `{{term:}}` references are handled per §7.5's "original not available" rules (a Core implementation never loads the original, so that branch always applies)
   - §15.10 — attachment `id` uniqueness, attachment `id` collisions with other anchors (§5.6), attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
   - §15.11 — the `{{include:}}` target path has a LegalDown file extension
@@ -1762,7 +1804,7 @@ Everything in Rendering, plus all processing that reads files beyond the documen
 - File inclusion (§12.1–§12.3) and the remaining §15.11 checks (target exists, circular chains, fragment content rules, combined-document validation)
 - Attachment file processing: content rules (§12.4), attachment rendering (§13.8), and the remaining §15.10 checks (attachment file exists, contains no frontmatter and no level 1 heading, identifier uniqueness across the combined document)
 - Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §15.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
-- Bilingual documents: Section 14 and all §15.7 checks
+- Bilingual documents: Section 14 and the remaining §15.7 checks (cross-file structure, identifier, and language-set matching)
 - Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `translations`)
 
 ### 16.5 Constructs Beyond the Claimed Level
@@ -1985,11 +2027,11 @@ language: en
 ---
 
 The parties hereby agree to amend the Master Service Agreement
-dated {{date: 2025-01-15}} (the "Agreement") as follows:
+dated {{date: 2025-01-15}} (the "Agreement" {{def: agreement}}) as follows:
 
 # Payment Terms {#payment-terms}
 
-Section 5.1 of the Agreement is amended to read as follows:
+Section 5.1 of the {{term: agreement}} is amended to read as follows:
 
 Client shall pay Provider within fifteen (15) days of invoice
 date. Late payments shall bear interest at {{money: 500, currency=USD}}
@@ -1997,13 +2039,13 @@ per day of delay.
 
 # Data Protection {#data-protection}
 
-The following new section is added after Section 8 of the Agreement:
+The following new section is added after Section 8 of the {{term: agreement}}:
 
 Provider shall process all {{term: confidential-info}} in
 accordance with applicable data protection laws.
 
 # Unchanged Provisions {#unchanged}
 
-All other terms and conditions of the Agreement remain in full
+All other terms and conditions of the {{term: agreement}} remain in full
 force and effect.
 ```

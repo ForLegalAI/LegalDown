@@ -45,10 +45,10 @@ appropriate attribution includes:
 - The name "LegalDown"
 - The copyright holder: ForLegalAI s.r.o.
 - The creator: Daniel Vejsada
-- A link to this repository: https://github.com/legaldown/spec
+- A link to this repository: https://github.com/ForLegalAI/LegalDown
 
 Example attribution:
 
   "Based on the LegalDown specification, created by Daniel Vejsada
-   and copyright ForLegalAI s.r.o. (https://github.com/legaldown/spec),
+   and copyright ForLegalAI s.r.o. (https://github.com/ForLegalAI/LegalDown),
    licensed under CC BY 4.0."
