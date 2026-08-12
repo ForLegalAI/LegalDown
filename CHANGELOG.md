@@ -56,9 +56,10 @@ block would implicitly fail. Severities are now explicit.
 
 - **§15.6 severity model.** An invalid `document_type` value is always an Error. When `sides` is
   **present**, violations of the minimum-sides, `issuer`-side, and minimum-parties rows are
-  **Errors**. When `sides` is **absent entirely**, those rows cannot be verified: validators MUST
-  NOT report them as violated and MUST emit a single **Warning** that the `document_type`
-  constraints cannot be verified without `sides` — keeping `sides` genuinely RECOMMENDED.
+  **Errors**. When frontmatter is present but `sides` is **absent entirely**, those rows cannot be
+  verified: validators MUST NOT report them as violated and MUST emit a single **Warning** that the
+  `document_type` constraints cannot be verified without `sides` — keeping `sides` genuinely
+  RECOMMENDED. A document with no frontmatter draws only the no-frontmatter Warning.
 
 #### Validation changes
 
@@ -104,12 +105,14 @@ two behavior changes are called out below.
 - **§13.2 enumeration table collapsed** to a single default sequence (its three style columns were
   identical); templates may define their own per-level sequences. **Ordered lists** are now
   specified: renderers renumber them at render time (source numbers are never authoritative) and
-  may apply the enumeration scheme; §8.2 aligned from MAY to SHOULD.
+  may apply the enumeration scheme; §8.2 aligned with §13.2 (SHOULD for unordered, MAY for
+  ordered).
 - **Attachment "numbering position" wording** (§3.9, §12.4, §13.8) now speaks of *order* only —
   there is no generated attachment numbering to keep correct.
 - **`{{ref:}}` edge cases defined (§13.3, §6.3):** under the "None" scheme, refs render the
-  target's heading text; refs crossing attachment numbering restarts are qualified with the
-  attachment title ("Schedule A: Service Description, Section 2").
+  target's heading text (plus the enumeration path for item/paragraph anchors); refs crossing
+  attachment numbering restarts are qualified with the target's scope — the attachment title
+  ("Schedule A: Service Description, Section 2"), or the document title for main-body targets.
 - **Preamble blessed (new §4.4):** content before the first heading is a valid, unnumbered
   preamble; all directives allowed; no anchors; placed before the first numbered provision.
 - **Heading model completed (§4.1):** maximum depth is 5 (`######` = Error); setext headings are

@@ -162,7 +162,7 @@ Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status c
 | `attachments` | OPTIONAL | Array of attachment objects declaring documents attached to this document (see Section 3.9) |
 | `tags` | OPTIONAL | Classification tags array |
 
-If `legaldown` is present, it declares the specification version the document was authored against. The value SHOULD be written as a quoted string (unquoted, YAML would parse `0.1` as a number). Implementations SHOULD emit a Warning when the declared version is newer than the version they implement, and MUST NOT fail solely because the declared version is unknown. When the field is absent, implementations process the document under the version they implement.
+If `legaldown` is present, it declares the specification version the document was authored against. The value SHOULD be written as a quoted string (unquoted, YAML would parse `0.1` as a number). Implementations SHOULD emit a Warning when the declared version is newer than the version they implement, and MUST NOT fail solely because the declared version is unknown. When the field is absent, implementations process the document under the version they implement. A newer declared version also softens unknown-directive handling — see §11.5.
 
 If `supersedes` is present, it MAY be either a plain string describing the superseded document, or an object with the same fields as `amends` (`title` REQUIRED, `file` OPTIONAL — §3.8).
 
@@ -274,7 +274,7 @@ representatives:
 
 ### 3.6 Rendering Rules
 
-- Side `label` is used for display; if absent, renderers SHOULD title-case the `name` as a fallback — no pluralization or other language-dependent transformation is applied, so providing a `label` is RECOMMENDED
+- Side `label` is used for display; if absent, renderers SHOULD derive a fallback from the `name` by replacing hyphens with spaces and capitalizing each word (`disclosing-parties` → "Disclosing Parties") — no pluralization or other language-dependent transformation is applied, so providing a `label` is RECOMMENDED
 - Party `label` is used for display; if absent, renderers MUST fall back to `legal_name`
 - Where an implementation generates signature blocks (§2.2), party `legal_name` MUST appear on them
 - `{{party: <party-name>}}` resolves against party `name` and renders `label`, falling back to `legal_name`
@@ -841,7 +841,7 @@ Termination shall proceed as follows:
 
 - Lists MUST have a blank line before and after
 - Nested lists are supported with consistent indentation (2 or 4 spaces)
-- Renderers SHOULD convert lists (ordered and unordered) to legal enumeration — (a), (b), (c); (i), (ii), (iii) — per §13.2; ordered-list numbers in source are never authoritative
+- Renderers SHOULD convert unordered lists to legal enumeration — (a), (b), (c); (i), (ii), (iii) — and MAY apply the same enumeration to ordered lists, per §13.2; ordered-list numbers in source are never authoritative (items are renumbered at render time)
 
 ### 8.3 Nested Lists
 
@@ -1230,6 +1230,7 @@ In those contexts, directive-like text is literal text.
 - Directives MUST NOT span multiple lines
 - An unknown directive (well-formed per §11.2, but with a name this specification does not define) is a validation **Error**. Renderers MUST replace it with `[UNKNOWN DIRECTIVE: name]` — consistent with the other bracketed failure markers — and MUST NOT print the directive source verbatim into rendered output (a typo like `{{trem: services}}` must never leak into an executed document)
 - Implementations MAY offer an explicit, non-default permissive mode that instead emits a Warning and passes unknown directives through as-is (forward compatibility with future directive names)
+- When the document declares a `legaldown` version newer than the implementation supports (§3.2), validators SHOULD report unknown directives as Warnings rather than Errors — they may be constructs introduced by the newer version, and §3.2 promises processing does not fail solely on an unknown version; the `[UNKNOWN DIRECTIVE: name]` rendering marker still applies
 - Implementations MUST NOT fail silently on unknown directives
 
 ---
@@ -1394,9 +1395,9 @@ When rendering `{{ref: id}}`:
 
 For targets that are item or paragraph anchors (§5.7), render the containing section's number plus the item enumeration path or paragraph number under the active template (e.g., "3.1(a)", "5.2"); when the template does not enumerate the containing list or number paragraphs, fall back to the containing section's number and emit a validation Warning (§6.3).
 
-**Numbering scheme "None":** under the None scheme (§13.1) there is no section number; `{{ref:}}` MUST instead render the target's heading text, hyperlinked as usual.
+**Numbering scheme "None":** under the None scheme (§13.1) there is no section number; `{{ref:}}` MUST instead render the target's heading text, hyperlinked as usual. When the target is an item or paragraph anchor (§5.7), render the containing section's heading text followed by the item enumeration path or paragraph number — e.g., "Termination (a)"; if the template does not enumerate the containing list or number paragraphs, fall back to the heading text alone with the §6.3 Warning.
 
-**References across attachment boundaries:** when the reference and its target lie in different numbering scopes (main body vs. an attachment, or two different attachments) and the active template restarts numbering per attachment (§13.8), the renderer MUST qualify the designation with the attachment `title` — e.g., "Schedule A: Service Description, Section 2". Under continuous numbering, or within the same scope, the plain designation is used.
+**References across attachment boundaries:** when the reference and its target lie in different numbering scopes (main body vs. an attachment, or two different attachments) and the active template restarts numbering per attachment (§13.8), the renderer MUST qualify the designation with the **target's** scope: the attachment `title` when the target lies in an attachment (e.g., "Schedule A: Service Description, Section 2"), or the document `title` when the target lies in the main body (e.g., "Master Service Agreement, Section 5"). Under continuous numbering, or within the same scope, the plain designation is used.
 
 ### 13.4 Definition Resolution
 
@@ -1605,7 +1606,7 @@ Validators MUST categorize issues at three levels:
 | Headings do not contain hardcoded numbering | Warning |
 | Directives are well-formed per the §11.2 grammar (including quoted-value termination and escapes, §11.3) | Error |
 | Directive contains the same named parameter more than once | Error |
-| Directive name is defined by this specification (unknown names render as `[UNKNOWN DIRECTIVE: name]`, §11.5) | Error |
+| Directive name is defined by this specification (unknown names render as `[UNKNOWN DIRECTIVE: name]`; Warning instead under §11.5's permissive mode or a newer declared `legaldown` version) | Error |
 | Named parameter not defined for the directive (ignored for rendering) | Warning |
 | Unescaped `{{` in body text that does not begin a well-formed directive | Warning |
 | Unquoted directive value begins with a typographic quotation mark (possible auto-curled quote) | Warning |
@@ -1667,7 +1668,7 @@ If `document_type` is omitted, validators MUST treat it as `contract` when apply
 | Minimum total parties | ≥ 2 | ≥ 1 | ≥ 1 |
 | `document_type` is valid value | Error if not | Error if not | Error if not |
 
-**Severities for the table above:** an invalid `document_type` value is always an **Error**. When `sides` is present, violations of the minimum-sides, `issuer`-side, and minimum-parties rows are **Errors**. When `sides` is absent entirely, those structural rows cannot be verified: validators MUST NOT report them as violated and MUST instead emit a single **Warning** stating that the `document_type` constraints cannot be verified without `sides` — keeping `sides` genuinely RECOMMENDED (§3.2) rather than effectively required.
+**Severities for the table above:** an invalid `document_type` value is always an **Error**. When `sides` is present, violations of the minimum-sides, `issuer`-side, and minimum-parties rows are **Errors**. When frontmatter is present but `sides` is absent entirely, those structural rows cannot be verified: validators MUST NOT report them as violated and MUST instead emit a single **Warning** stating that the `document_type` constraints cannot be verified without `sides` — keeping `sides` genuinely RECOMMENDED (§3.2) rather than effectively required. A document with no frontmatter at all draws only the no-frontmatter Warning (see the general metadata checks below), not this one.
 
 Violations of the following additional checks MUST be reported as **Error**:
 
@@ -1776,7 +1777,8 @@ Scope: everything that can be determined from the document file alone. A Core im
 - Document structure (§4) and identifiers (§5), including automatic identifier generation (§5.3) and item/paragraph anchors (§5.7)
 - Recognition and validation of all directives in §11.1: cross-references (§6), definitions and term references (§7), field specs (§10), and attachment references (§6.4)
 - Standard text formatting (§8) and tables (§9)
-- Validation (§15): §15.1–§15.6 and §15.9 in full — excluding the template-dependent §15.3 row on refs to non-enumerated item/paragraph anchors, which is evaluated from the Rendering level (§16.3) — plus the rows of §15.8, §15.10, and §15.11 that need only the document itself:
+- Validation (§15): §15.1–§15.6 and §15.9 in full — excluding the template-dependent §15.3 row on refs to non-enumerated item/paragraph anchors, which is evaluated from the Rendering level (§16.3) — plus the rows of §15.7, §15.8, §15.10, and §15.11 that need only the document itself:
+  - §15.7 — the single-file translation rows: every heading and `{{def:}}` carries an explicit identifier when the document itself is a translation (its `language` differs from its declared `authoritative`), and the auto-generated-identifier Warning when the document declares `translations` without `authoritative`
   - §15.8 — `amends.title` is non-empty; unresolved `{{term:}}` references are handled per §7.5's "original not available" rules (a Core implementation never loads the original, so that branch always applies)
   - §15.10 — attachment `id` uniqueness, attachment `id` collisions with other anchors (§5.6), attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
   - §15.11 — the `{{include:}}` target path has a LegalDown file extension
@@ -1802,7 +1804,7 @@ Everything in Rendering, plus all processing that reads files beyond the documen
 - File inclusion (§12.1–§12.3) and the remaining §15.11 checks (target exists, circular chains, fragment content rules, combined-document validation)
 - Attachment file processing: content rules (§12.4), attachment rendering (§13.8), and the remaining §15.10 checks (attachment file exists, contains no frontmatter and no level 1 heading, identifier uniqueness across the combined document)
 - Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §15.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
-- Bilingual documents: Section 14 and all §15.7 checks
+- Bilingual documents: Section 14 and the remaining §15.7 checks (cross-file structure, identifier, and language-set matching)
 - Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `translations`)
 
 ### 16.5 Constructs Beyond the Claimed Level

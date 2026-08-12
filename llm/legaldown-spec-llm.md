@@ -83,7 +83,7 @@ Frontmatter is optional as a block but recommended: without it the document is v
 - Each party has a unique document-wide ASCII `name` (lowercase letter, then lowercase letters/digits/hyphens), optional `label`, `type`, and `legal_name`
 - Party `type` is explicit: `legal_entity` or `natural_person`
 - Unknown party fields are allowed and must be ignored by implementations
-- Display fallback: side `label` → title-cased `name` (no pluralization — provide a `label`); party `label` → `legal_name`
+- Display fallback: side `label` → `name` with hyphens replaced by spaces and each word capitalized (`disclosing-parties` → "Disclosing Parties"; no pluralization — provide a `label`); party `label` → `legal_name`
 - `identification_number` is the reserved field for a registration/national ID — RECOMMENDED for `legal_entity`, OPTIONAL for `natural_person` (not every individual has one); prefer it over a custom field when present
 - Template/draft frontmatter MAY use `{{placeholder:}}` as a **quoted** string in value fields (e.g. `legal_name: "{{placeholder: client-name}}"`), but NOT in identifier/structural fields (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure); same id in frontmatter and body means the same blank
 
@@ -173,7 +173,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 - Directives are recognized in body text (paragraphs, lists, table cells, block quotes) and in frontmatter only as quoted placeholder strings; they are **not** recognized inside code spans, code blocks, or HTML comments
 - Literal `{{` in text: escape the first brace — `\{{ref: x}}` renders as literal `{{ref: x}}` (CommonMark backslash escape)
 - A `{{` followed by a name and `:` that cannot be completed as a directive on the same line is malformed (Error); a stray `{{` not followed by `name:` is literal text (Warning)
-- An unknown directive name is an Error and renders as `[UNKNOWN DIRECTIVE: name]` — it is never printed verbatim into output (pass-through exists only as an explicit non-default permissive mode)
+- An unknown directive name is an Error and renders as `[UNKNOWN DIRECTIVE: name]` — it is never printed verbatim into output (pass-through exists only as an explicit non-default permissive mode). If the document declares a `legaldown` version newer than the implementation supports, validators downgrade the Error to a Warning (the directive may come from the newer version)
 
 ### Cross-References
 
@@ -182,7 +182,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 ```
 
 Resolves to the section number (e.g., "3.2"). Links to the target section.
-Broken references render as `[BROKEN REF: identifier]`. Only section identifiers and item/paragraph anchors are valid targets — referencing an attachment id with `{{ref:}}` is an Error (use `{{attach:}}`). Under a template with no section numbering ("None" scheme), refs render the target's heading text; refs crossing attachment numbering restarts are qualified with the attachment title ("Schedule A: …, Section 2").
+Broken references render as `[BROKEN REF: identifier]`. Only section identifiers and item/paragraph anchors are valid targets — referencing an attachment id with `{{ref:}}` is an Error (use `{{attach:}}`). Under a template with no section numbering ("None" scheme), refs render the target's heading text (for item/paragraph anchors: heading text + enumeration path, "Termination (a)"); refs crossing attachment numbering restarts are qualified with the **target's** scope — the attachment title ("Schedule A: …, Section 2"), or the document title when the target is in the main body ("Master Service Agreement, Section 5").
 
 ### Definitions
 
@@ -388,7 +388,7 @@ A translation is a **secondary** document: the **primary** is the linked file wh
 - Undeclared `{{field:}}` type when `field_types` frontmatter is present
 - Attachment declared but never referenced via `{{attach:}}`
 - Document has no frontmatter
-- `sides` absent entirely — `document_type` structural constraints cannot be verified (single warning; the per-rule Errors apply only when `sides` is present)
+- `sides` absent while frontmatter is present — `document_type` structural constraints cannot be verified (single warning; the per-rule Errors apply only when `sides` is present; a document with no frontmatter draws only the no-frontmatter warning)
 - Invalid ISO 639-1 code in `language`, `authoritative`, or `translations` keys; `authoritative` not among the document's languages
 - Auto-generated identifiers in bilingual linked files when `authoritative` is absent (primary cannot be determined)
 - Declared `legaldown` spec version newer than the implementation supports (implementations must not fail on an unknown version)
