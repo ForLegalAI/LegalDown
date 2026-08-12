@@ -136,7 +136,9 @@ Heading levels must not skip — no jumping from `#` to `###`.
 
 **Identifiers make references stable.** Add `{#payment-terms}` after any
 heading to give it a stable identifier. Cross-references use this identifier,
-not the section number, so they never break when sections move.
+not the section number, so they never break when sections move. Anchors also
+work below headings — at the end of a list item or paragraph — so clause-level
+references like "Section 4.2(b)" stay stable too, and reorder just as safely.
 
 **Cross-references always resolve.** Write `{{ref: payment-terms}}` in your
 text. The renderer looks up the section, finds its number, and outputs
@@ -180,6 +182,8 @@ contains none of them.
 # Top-level Provision {#identifier}      ← Article / Section
 ## Subsection                            ← Nested provision
 ### Further detail                       ← Deeper nesting (up to 5 levels)
+
+- provision text {#item-id}              ← Anchor a list item (clause-level reference target)
 
 "Defined Term" {{def: term-id}} means... ← Declare a defined term (term in quotes, tag after)
 

@@ -10,6 +10,467 @@ without a major version bump until v1.0.
 
 ## [Unreleased]
 
+### Spec version declaration in frontmatter — 2026-08-12
+
+A document had no way to state which LegalDown version it targets (`version` is the *document's*
+version) — a forward-compatibility gap once later spec revisions change semantics, as the
+definitions overhaul already did within the draft.
+
+#### Added
+
+- **`legaldown` frontmatter field (spec §3.2), OPTIONAL.** Declares the specification version the
+  document was authored against, e.g. `legaldown: "0.1"` (quoted — unquoted YAML would read `0.1`
+  as a number). Implementations SHOULD warn when the declared version is newer than the one they
+  implement and MUST NOT fail solely because it is unknown; absence means the document is processed
+  under the implementation's version. Added to the §3.1 example.
+- `legaldown` joins the fields that MUST NOT hold a `{{placeholder:}}` (§3.10, §15.5) — it governs
+  processing semantics, like `document_type`.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Declared `legaldown` version newer than the implementation supports | — | **Added (Warning, §15.6)** |
+| `{{placeholder:}}` in a structural frontmatter field | Error | Error — field list now includes `legaldown` |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §3.1 example, §3.2 (field row + rules),
+  §3.10, §15.5, §15.6.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — frontmatter block, structural-field
+  lists, validation summary.
+
+---
+
+### Signature blocks: explicitly implementation-defined — 2026-08-12
+
+§2.2 asked renderers to generate signature blocks from frontmatter and §3.6 hung a MUST
+(`legal_name` always appears on signature blocks) on that feature — but nothing defined a signature
+block's content or layout: no fields exist for signing lines, dates, places, or capacities, and
+`adopted_by` is a plain string. Decision: signature block generation is **implementation-defined**
+in v0.1 rather than specified.
+
+#### Changed
+
+- **§2.2 note rewritten.** Signature blocks remain outside LegalDown markup; generation from
+  frontmatter stays a SHOULD with the per-document-type sources (all sides / issuer / issuer +
+  `adopted_by`), but content and layout are explicitly left to the implementation and its style
+  template.
+- **§3.6** — the `legal_name` rule is now conditional: *where an implementation generates signature
+  blocks*, party `legal_name` MUST appear on them (previously an unconditional MUST hanging on an
+  undefined feature).
+- **§13.7** — style template settings gain "Signature block layout", giving the
+  implementation-defined behavior a configuration home.
+
+A structured signature model (per-representative signing lines, date/place placeholders, witnesses)
+remains a candidate for a future revision; nothing in this change precludes it.
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §2.2, §3.6, §13.7.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — unchanged (the LLM reference does not
+  cover signature rendering).
+
+---
+
+### Item and paragraph anchors — 2026-08-12
+
+Legal cross-referencing happens below headings — "Section 4.2(b)", "čl. 5 odst. 2" — but anchors
+existed only on headings, and headings require title text, so enumerated items could not be
+referenced and continental untitled numbered paragraphs could not be expressed at all. This
+revision extends the existing `{#id}` / `{{ref:}}` machinery below heading level. No new directive,
+no new namespace.
+
+#### Added
+
+- **Item and paragraph anchors (new spec §5.7).** `{#id}` may be placed at the very end of a list
+  item's first paragraph (any list depth; not in lists inside block quotes/tables) or at the very
+  end of a top-level paragraph directly inside a section (not before the first heading):
+
+  ```markdown
+  Provider may suspend the Services if:
+
+  - payment is overdue by more than thirty (30) days {#suspension-overdue}
+  - Client breaches confidentiality {#suspension-breach}
+  ```
+
+  Explicit only — **never auto-generated** (prose makes bad slugs; existing documents unaffected).
+  These anchors join the anchor namespace (§5.6) and are targeted with plain `{{ref:}}`.
+- **Designation rendering (§6.3/§13.3).** A ref to an item/paragraph renders the containing
+  section's number plus the item's enumeration path or paragraph number under the active template —
+  "3.1(a)", "3.1(b)(ii)", "5.2" — hyperlinked and reorder-safe, extending the no-hardcoded-numbers
+  guarantee below heading level. If the template renders that list as plain bullets (or doesn't
+  number paragraphs), the ref falls back to the containing section's number and emits a Warning —
+  honest degradation instead of spooky forced enumeration.
+- **Continental numbered provisions (§13.2, §13.7).** Templates MAY render first-level list items
+  as section-qualified decimals (5.1, 5.2, …) and MAY number top-level paragraphs within sections
+  (off by default) — covering untitled numbered-paragraph drafting without fake headings.
+
+#### Changed
+
+- **§5 retitled** "Section Identifiers" → "Identifiers and Anchors"; §5.1, §5.6 (anchor-namespace
+  row and rules), and §6.2 updated so `{{ref:}}` resolves sections *and* item/paragraph anchors
+  (attachment ids still only via `{{attach:}}`).
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Explicit anchors unique | Error (sections only) | Error — now spans section ids + item/paragraph anchors (§15.2) |
+| `{#id}`-like marker outside an anchor position | — | **Added (Warning, §15.2)** — likely misplaced anchor |
+| `{{ref:}}` to an item/paragraph the template does not enumerate | — | **Added (Warning, §15.3)** — renders as containing section number |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §5 title, §5.1, new §5.7, §5.6, §6.2, §6.3,
+  §13.2, §13.3, §13.7, §15.2, §15.3, §16.2.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — anchors block, validation summary.
+- [`README.md`](README.md) — "Identifiers make references stable" blurb, structure-at-a-glance
+  snippet.
+
+---
+
+### File inclusion: unified fragment model and validation — 2026-08-12
+
+Includes were the least-specified multi-file feature: §12.2 required included files to be "valid
+LegalDown documents" whose frontmatter is then ignored (a different fragment model than attachment
+files use, for the same job), said nothing about heading levels at the splice point, definitions, or
+nesting — and §15 had no include validation table at all, so none of §12.2's requirements had a
+severity.
+
+> **Breaking change (minor).** An include target that carried its own frontmatter was previously
+> tolerated (frontmatter "SHOULD be ignored"); it is now an Error. Fix: delete the fragment's
+> frontmatter — it was ignored anyway.
+
+#### Changed
+
+- **One fragment model (spec §12.2, retitled "Include Fragments").** Include targets now use the
+  same file model as LegalDown attachment files (§12.4): body-only fragments — no YAML frontmatter,
+  no level 1 heading, LegalDown extensions only (`.lgd`, `.legaldown`, `.legal.md`). The old "valid
+  standalone document with ignored frontmatter" rule is gone. §12.3's comparison table gains a
+  "File model" row showing the two features now match.
+- **Splice semantics defined.** Content is spliced verbatim at the directive position — heading
+  levels are **not** re-based; the combined document must satisfy the §4.1 hierarchy (a fragment
+  whose headings would skip a level at the insertion point is invalid). The author writes the
+  surrounding heading in the including document, as §12.1's example always showed.
+- **Definitions and nesting settled.** A `{{def:}}` in an included fragment registers a
+  document-wide term (same as attachment files; §7.2 updated). Fragments may nest further
+  `{{include:}}`s; the circular-include check spans the entire chain.
+- **§12.1** no longer says implementations "MAY support" inclusion — support is governed by the
+  conformance level (Full, §16.4; the phrase predates conformance levels).
+
+#### Validation changes
+
+New table **§15.11 Include Validation** — §12's requirements finally have severities:
+
+| Rule | Level |
+|---|---|
+| Include target path exists | Error |
+| Include target is a LegalDown file | Error (extension check applies at Core, §16.2) |
+| Circular include chain | Error |
+| Included fragment contains frontmatter | Error |
+| Included fragment contains a level 1 heading | Error |
+| Fragment section identifiers unique across combined document | Error |
+| Combined document satisfies §4.1 heading hierarchy | Error |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §12.1–§12.3, §7.2, new §15.11, §16.2 and
+  §16.4 (conformance scope).
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — File Inclusion section, validation
+  summary.
+
+---
+
+### Frontmatter validation completeness — 2026-08-12
+
+`title` was the only REQUIRED metadata field, yet no validation rule anywhere checked it — nor
+whether frontmatter parses, whether date fields are real dates, or whether language codes are valid.
+And §2.2 (frontmatter OPTIONAL) sat unresolved against §3.2 (`title` REQUIRED). This revision
+closes the holes.
+
+#### Changed
+
+- **Optionality model clarified (spec §3.2).** Frontmatter is OPTIONAL as a block but RECOMMENDED;
+  field Status values apply **when frontmatter is present**. A document without frontmatter is
+  valid (untitled, no parties) and draws a Warning.
+
+#### Validation changes
+
+New **General metadata checks** table in §15.6:
+
+| Rule | Level |
+|---|---|
+| Frontmatter, when present, parses as valid YAML | **Added (Error)** |
+| Document includes frontmatter | **Added (Warning)** |
+| `title` present and non-empty when frontmatter present | **Added (Error)** |
+| `effective_date` / `adoption_date` / `date_of_birth` are valid ISO 8601 | **Added (Error)** |
+| `language` / `authoritative` / `translations` keys are valid ISO 639-1 | **Added (Warning)** |
+| `authoritative` equals `language` or a `translations` key | **Added (Warning)** |
+| Representative `name` is non-empty | **Added (Error)** |
+| Attachment `title` is non-empty | **Added (Error, §15.10)** |
+
+Placeholder interplay is explicit: where §3.10 permits a placeholder value, it satisfies the
+field's presence requirement and is **exempt from that field's format checks** (e.g.,
+`effective_date: "{{placeholder: effective-date, type=date}}"` does not fail the ISO 8601 check);
+the placeholder's own §15.5 checks apply instead.
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §3.2 (optionality note), §15.6 (general
+  metadata checks + placeholder exemption), §15.10 (attachment title row), §16.2 (Core scope).
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — frontmatter note, validation summary.
+
+---
+
+### Removed the undefined "structured output formats" clauses — 2026-08-12
+
+Six rules in §10.2–§10.7 required raw values to "be preserved in structured output formats for
+machine processing" — MUST requirements against a format the spec never defined (§13.6 lists only
+PDF, DOCX, HTML, and plain text, none of them structured). Decision: the clauses are **removed**,
+not defined. The LegalDown source file is itself the canonical machine-readable representation —
+every raw value and `note` is available by parsing the source — and the specification deliberately
+covers only the LegalDown format, not export or interchange formats. A JSON export may appear later
+as tooling or a companion document, outside this spec.
+
+#### Changed
+
+- **§10.1** — the `note` preservation clause is dropped; `note` remains a non-rendered, plain-text
+  annotation for automation. A new scope statement makes the position explicit: the source file is
+  the canonical machine-readable representation, and LegalDown defines no export or interchange
+  format.
+- **§11.3** — the value-quoting paragraph no longer lists "structured output" among downstream
+  rules.
+
+#### Removed
+
+- The "raw value … MUST be preserved in structured output formats" bullets in §10.2 (date), §10.3
+  (money), §10.4 (party), §10.5 (duration), §10.6 (field), and §10.7 (placeholder).
+
+Unaffected: §15.9 validator output ("structured output indicating file, line number, …") is a
+different, self-defined use — diagnostic structure — and stays. The LLM reference never used the
+term, so it is unchanged.
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §10.1, §10.2–§10.7, §11.3.
+
+---
+
+### Deterministic identifier generation — 2026-08-12
+
+Auto-generation (§5.3) told implementations to "transliterate non-ASCII characters to their closest
+ASCII equivalents" — an undefined mapping (`ß` → `ss` or `s`? Cyrillic? CJK?), so two conformant
+tools could generate *different* ids for the same heading and a `{{ref:}}` valid in one tool would
+break in the other. Since auto-generation is a MUST, this affected every document without explicit
+ids. The algorithm is now pinned end to end.
+
+#### Changed
+
+- **§5.3 rewritten as a fully deterministic pipeline** (identical output across implementations is
+  now a MUST): Unicode NFKD + combining-mark stripping → fixed transliteration table → remove
+  remaining non-ASCII → lowercase → hyphenation → collapse hyphen runs → trim → truncate (64) →
+  trim → `section` fallback → `section-` prefix. Via §7.2 the same pipeline governs auto-derived
+  definition ids.
+- **Transliteration is table + NFKD only — no romanization.** The exhaustive table covers Latin
+  letters NFKD cannot reduce (`ß`/`ẞ`→`ss`, `æ`→`ae`, `œ`→`oe`, `ø`→`o`, `đ`/`ð`→`d`, `þ`→`th`,
+  `ł`→`l`, `ħ`→`h`, `ı`→`i`); accented Latin (Czech, French, German, …) reduces deterministically
+  via NFKD. Scripts without an ASCII decomposition (Cyrillic, Greek, CJK) are **removed, not
+  romanized** — romanization schemes are contested and locale-dependent, which is precisely what
+  made "closest equivalent" non-deterministic. Such headings fall back to `section` and trigger the
+  new warning below; authors in those scripts should use explicit ids.
+- **Two latent §5.3 bugs fixed in passing:** (a) the old steps produced a double hyphen for
+  "Confidential Information & Trade Secrets", contradicting the spec's own single-hyphen example —
+  a collapse-hyphen-runs step now exists; (b) hyphens were trimmed *before* the 64-char truncation,
+  so a cut could leave a trailing hyphen — trimming now also runs after truncation.
+- **§5.5** — collision suffixes (`-2`, `-3`) are assigned in document order, appended after the
+  §5.3 algorithm, and exempt from the 64-character maximum (previously unspecified).
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Auto-generated section identifier lost non-transliterable characters | — | **Added (Warning, §15.2)** — recommend explicit id |
+| Auto-derived definition identifier lost non-transliterable characters | — | **Added (Warning, §15.4)** — recommend explicit id |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §5.3 (rewritten, transliteration table,
+  warning rule, expanded examples), §5.5 (suffix rules), §15.2 and §15.4 validation tables.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — auto-generation pipeline description,
+  validation summary.
+
+---
+
+### Identifier namespaces — 2026-08-12
+
+The spec settled namespace sharing for attachments ("attachment ids share the same namespace as
+section identifiers") but was silent or ambiguous everywhere else — most importantly whether a
+`{{def:}}` id may equal a section id. Two validators could disagree on whether a "Services" section
+plus a defined term "Services" (both auto-generating `services`) is a collision. This revision
+defines the full namespace model.
+
+#### Added
+
+- **Identifier Namespaces (new spec §5.6).** One identifier format, separate namespaces; every
+  directive resolves only against its own:
+
+  | Namespace | Uniqueness | Resolved by |
+  |---|---|---|
+  | Anchor (section ids + attachment ids) | Shared — unique across both | `{{ref:}}` (sections only), `{{attach:}}` (attachments only) |
+  | Definitions | Unique among definitions | `{{term:}}` |
+  | Placeholders | Repeats = same logical blank | — |
+  | Sides / Parties / `field_types` keys | Per §3.3 / §3.4 / §3.2 | — / `{{party:}}` / `{{field:}}` `type` |
+
+  A definition id MAY equal a section id — explicitly benign (the "Services" section + "Services"
+  term case), not a collision. Renderers MUST disambiguate emitted anchors in single-anchor-space
+  outputs (e.g., `def-services` vs `services`); the scheme is implementation-defined.
+- **`{{ref:}}` is type-specific (spec §6.2 rule).** Although sections and attachments share the
+  anchor namespace, `{{ref:}}` resolves only section identifiers; targeting an attachment id is a
+  broken reference and validators SHOULD suggest `{{attach:}}` in the diagnostic.
+
+#### Changed
+
+- **§5.4** notes that section identifiers share the anchor namespace with attachment ids; **§3.9**
+  now points to §5.6.
+- **§7.2** — definition ids are unique "among definitions within the document" (previously the
+  ambiguous "unique within the document").
+- **§10.7** — placeholder ids explicitly form their own namespace and may coincide with any other
+  identifier.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| `{{ref:}}` targets an attachment id | (undefined) | **Added (Error, §15.3)** — diagnostic should suggest `{{attach:}}` |
+| `{{def:}}` id equals a section identifier | (undefined — arguably a collision) | **Explicitly not an issue** (§5.6) |
+| All `{{def:}}` identifiers are unique | Error (scope ambiguous) | Error — scoped to the definitions namespace (§15.4) |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — new §5.6, §5.4, §3.9, §6.2 (rules block),
+  §7.2, §10.7, §15.3 and §15.4 validation tables.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — identifier-namespaces block,
+  cross-reference and definition notes, validation summary.
+
+---
+
+### Directive grammar and quoted values — 2026-08-12
+
+Directive syntax was previously defined only by example, so "Directives are well-formed — Error"
+(§15.2) had no testable definition, and values could never contain a comma or `}}` — making labels
+like `Smith, Jones & Co.` and comma-bearing `{{field:}}` values (case citations) unrepresentable.
+This revision gives directives a formal grammar and introduces optional quoted values. Backward
+compatible: every previously valid directive parses identically.
+
+#### Added
+
+- **Formal directive grammar (spec §11.2, EBNF).** One shared shape for every directive: at most one
+  positional value (always first), then order-insensitive named parameters. No whitespace between
+  `{{` and the name or before the `:`; whitespace around separators is syntax, never value content.
+  Duplicate named parameter → Error; parameter unknown to the directive → ignored + Warning
+  (generalizing the §13.5 placeholder rule).
+- **Quoted values (spec §11.3).** Any positional or parameter value MAY be wrapped in straight
+  double quotes (U+0022) to carry commas, `}}`, `=`, or significant leading/trailing spaces:
+
+  ```markdown
+  {{term: services, label="Services, as amended"}}
+  {{field: "Smith, Jones & Co. v. Doe", type=case-name}}
+  ```
+
+  `\"` and `\\` are the only escape sequences. Quoting is syntax, not content — quoted and unquoted
+  spellings parse to the same value, so `{{field:}}` pass-through rendering is unaffected. Typographic quotes do not delimit values; validators warn when an unquoted value
+  starts with one (auto-curled quotes).
+- **Recognition contexts and escaping (spec §11.4).** Directives are recognized in body text and in
+  frontmatter per §3.10, and are **not** recognized inside code spans, code blocks, or HTML
+  comments. Literal `{{` is written with the inherited CommonMark backslash escape (`\{{ref: x}}`).
+  "Well-formed" is now defined by opener commitment: `{{name:` that cannot complete on the same
+  line is a malformed directive (Error); a stray `{{` without `name:` is literal text (Warning).
+
+#### Changed
+
+- **§11 renamed "Directives Summary" → "Directives"** and restructured: old §11.2 (Directive Rules)
+  is now §11.5, unchanged in substance, after the new §11.2–§11.4.
+- **Comma/`}}` prohibitions rescoped to the unquoted form** in §7.3 (`{{term:}}` label), §10.1
+  (`note`), §10.4 (`{{party:}}` label), and §10.6 (`{{field:}}` value). §10.6's "preserve exactly as
+  parsed" now explicitly means after unquoting and escape processing, with no further
+  transformation.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Directives are well-formed | Error (undefined) | Error — **now defined** by the §11.2 grammar incl. quoted-value termination |
+| Duplicate named parameter in a directive | — | **Added (Error)** |
+| Named parameter not defined for the directive | — | **Added (Warning, ignored for rendering)** |
+| Unescaped `{{` not beginning a well-formed directive | — | **Added (Warning)** |
+| Unquoted value begins with a typographic quotation mark | — | **Added (Warning)** |
+| `note` / `label` / `{{field:}}` value contains a comma or `}}` | Error (always) | Error **only when unquoted**; quoted form permitted |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §11 intro and title, new §11.2–§11.4, old
+  §11.2 → §11.5, §7.3, §10.1, §10.4, §10.6, §15.2 and §15.5 validation tables.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — shared syntax rules block in
+  Directives, label/value notes, validation summary.
+
+---
+
+### Conformance levels — 2026-08-12
+
+Fills the longest-standing dangling reference in the spec: §1.5 has always required implementations
+to support "all MUST requirements at their claimed conformance level (see Section 16)" — but the
+referenced section never existed (Section 16 was the Complete Examples). This revision defines the
+levels and repoints the examples.
+
+#### Added
+
+- **Conformance Levels (new spec §16).** Three cumulative levels:
+
+  | Level | Name | Scope |
+  |---|---|---|
+  | 1 | Core | Parse + validate a single document (everything determinable from the file alone, including the single-file rows of §15.8/§15.10) |
+  | 2 | Rendering | Core + §13 rendering, at least one of PDF/DOCX/HTML |
+  | 3 | Full | Rendering + all multi-file processing: includes (§12), attachment content (§12.4/§13.8), amendment definition import (§7.5), bilingual validation (§14/§15.7), path-existence checks |
+
+  General rules: levels bind **implementations only** (documents may use any construct regardless);
+  a claimed level is a floor, not a ceiling; SHOULD/MAY features stay non-mandatory at every level.
+
+- **Behavior beyond the claimed level (spec §16.5).** No silent skips: validators MUST warn about
+  check categories they did not perform and MUST NOT report a document as passing checks they did
+  not run; renderers MUST refuse or insert a visible `[NOT PROCESSED: ...]` marker for content they
+  cannot process.
+
+#### Changed
+
+- **§11.1 directive table: "Status" column replaced by "Level".** The old REQUIRED/OPTIONAL values
+  conflated author-facing and implementation-facing optionality (no directive is ever *required to
+  appear* in a document, so REQUIRED could only sensibly describe implementation support — which the
+  conformance levels now govern). The column now names the level at which support is mandatory: Core
+  for every directive except `{{include:}}` (Full); a note clarifies that `{{attach:}}` title
+  resolution is Core while rendering attachment *content* is Full, and that directive *use* is
+  always an authoring choice.
+- **§1.5** now names the three levels inline.
+- **Complete Examples renumbered §16 → §17** (subsections 16.1–16.4 → 17.1–17.4) to make room at the
+  position §1.5 already pointed to. References to "the §16 examples" in earlier changelog entries
+  describe the pre-renumber spec. Also adds the previously missing `---` separator before the
+  section.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Check category skipped because it lies beyond the implementation's conformance level | — | **Added (Warning, §16.5)** |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §1.5 (level names), §11.1 (Level column and
+  note), new §16 (Conformance Levels), §16 → §17 renumber of Complete Examples.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — unchanged intentionally: conformance
+  levels are implementation-facing, and the LLM reference covers reading and authoring documents.
+
+---
+
 ### Frontmatter: locale/currency cleanup and template placeholders — 2026-06-17
 
 Tightens the document-metadata model so the schema and the rendering rules agree, and adds a
