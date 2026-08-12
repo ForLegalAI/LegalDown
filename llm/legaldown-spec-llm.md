@@ -142,7 +142,7 @@ Explicit identifier syntax appended to headings:
 - Must start with a lowercase ASCII letter
 - Must be unique within the document
 - Auto-generated if omitted, via a **fully deterministic** algorithm (identical output across implementations): Unicode NFKD + strip combining marks (`é`→`e`, `ř`→`r`) → apply the fixed transliteration table (`ß`→`ss`, `æ`→`ae`, `œ`→`oe`, `ø`→`o`, `đ`/`ð`→`d`, `þ`→`th`, `ł`→`l`, `ħ`→`h`, `ı`→`i` — exhaustive, no other mappings) → remove remaining non-ASCII (Cyrillic/Greek/CJK are removed, **not** romanized) → lowercase → spaces/tabs/underscores to hyphens → remove other characters → collapse hyphen runs → trim hyphens → truncate to 64 chars → trim trailing hyphen → use `section` if empty → prefix `section-` if not starting with a lowercase letter
-- If the removal step dropped characters (non-transliterable script), validators warn and recommend an explicit identifier; the same applies to auto-derived definition ids
+- If the removal step dropped letters or digits (non-transliterable script), validators warn and recommend an explicit identifier; removed punctuation and symbols (em dashes, curly apostrophes) do not warn. The same applies to auto-derived definition ids
 - Duplicate-collision suffixes (`-2`, `-3`) are appended after the algorithm, in document order, exempt from the 64-char cap
 
 **Identifier scope:**
@@ -153,7 +153,7 @@ Explicit identifier syntax appended to headings:
 **Item and paragraph anchors:** `{#id}` may also be placed at the very end of a list item's first paragraph (any list depth, but not in lists inside block quotes/tables) or at the very end of a top-level paragraph directly inside a section (not before the first heading). Explicit only — never auto-generated. Same format/uniqueness rules; they join the anchor namespace and are targeted with plain `{{ref:}}`. Rendered designation = containing section number + item enumeration path or paragraph number (`3.1(a)`, `3.1(b)(ii)`, `5.2`); if the template doesn't enumerate that list or number paragraphs, the ref falls back to the section number alone (Warning). Templates may render first-level items or top-level paragraphs as section-qualified decimals (5.1, 5.2) for continental numbered-paragraph drafting. A `{#id}`-like marker anywhere else is literal text (Warning — likely misplaced).
 
 **Identifier namespaces:** all identifiers share one format but live in separate namespaces — each directive resolves only against its own:
-- **Anchor:** section identifiers + attachment ids share one namespace (a collision between them is an Error); `{{ref:}}` resolves only section identifiers, `{{attach:}}` only attachment ids — a `{{ref:}}` targeting an attachment id is an Error (use `{{attach:}}`)
+- **Anchor:** section identifiers + item/paragraph anchors + attachment ids share one namespace (collisions are Errors); `{{ref:}}` resolves section identifiers and item/paragraph anchors, `{{attach:}}` only attachment ids — a `{{ref:}}` targeting an attachment id is an Error (use `{{attach:}}`)
 - **Definitions:** `{{def:}}` ids are unique among definitions only; a definition id may equal a section id (e.g., both `services`) — not a collision
 - **Placeholders:** own namespace; repeated ids = the same logical blank; may coincide with any other identifier
 - Side names, party names, and `field_types` keys are frontmatter namespaces with their own uniqueness rules
@@ -356,7 +356,7 @@ Separate files per language with identical heading structure and section identif
 - `amends.file` path does not exist when specified
 - `{{term:}}` references id not found in amendment or imported original (when original is a LegalDown file)
 - Attachment `id` is not unique across document
-- Attachment `id` collides with a section identifier
+- Attachment `id` collides with a section identifier or item/paragraph anchor
 - Attachment `file` path does not exist
 - LegalDown attachment file contains frontmatter
 - LegalDown attachment file contains level 1 heading
@@ -371,7 +371,7 @@ Separate files per language with identical heading structure and section identif
 - `{#id}`-like marker outside an anchor position (likely misplaced anchor)
 - `{{ref:}}` to an item/paragraph anchor the active template does not enumerate (falls back to section number)
 - Duplicate auto-generated section identifiers (implementations append `-2`, `-3` suffixes for rendering)
-- Auto-generated section or definition identifier lost non-transliterable characters (explicit id recommended)
+- Auto-generated section or definition identifier lost non-transliterable letters or digits (removed punctuation does not warn; explicit id recommended)
 - Defined term wrapped in emphasis markers (`**`, `__`) in source
 - Single-quoted term ambiguous with an apostrophe (U+2019)
 - Declared definitions never referenced

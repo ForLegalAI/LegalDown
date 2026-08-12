@@ -290,8 +290,8 @@ ids. The algorithm is now pinned end to end.
 
 | Rule | Before | After |
 |---|---|---|
-| Auto-generated section identifier lost non-transliterable characters | — | **Added (Warning, §15.2)** — recommend explicit id |
-| Auto-derived definition identifier lost non-transliterable characters | — | **Added (Warning, §15.4)** — recommend explicit id |
+| Auto-generated section identifier lost non-transliterable letters or digits | — | **Added (Warning, §15.2)** — recommend explicit id; removed punctuation does not warn |
+| Auto-derived definition identifier lost non-transliterable letters or digits | — | **Added (Warning, §15.4)** — recommend explicit id; removed punctuation does not warn |
 
 #### Files touched
 
@@ -317,7 +317,7 @@ defines the full namespace model.
 
   | Namespace | Uniqueness | Resolved by |
   |---|---|---|
-  | Anchor (section ids + attachment ids) | Shared — unique across both | `{{ref:}}` (sections only), `{{attach:}}` (attachments only) |
+  | Anchor (section ids + item/paragraph anchors + attachment ids) | Shared — unique across all | `{{ref:}}` (sections, items, paragraphs), `{{attach:}}` (attachments only) |
   | Definitions | Unique among definitions | `{{term:}}` |
   | Placeholders | Repeats = same logical blank | — |
   | Sides / Parties / `field_types` keys | Per §3.3 / §3.4 / §3.2 | — / `{{party:}}` / `{{field:}}` `type` |

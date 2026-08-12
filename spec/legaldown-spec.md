@@ -488,7 +488,7 @@ If no explicit identifier is provided, implementations MUST auto-generate one us
 10. Truncate to a maximum of 64 characters
 11. Remove any trailing hyphen left by truncation
 12. If the result is empty, use `section` as the identifier
-13. If the result does not start with a lowercase ASCII letter (e.g., starts with a digit), prefix with `section-`
+13. If the result does not start with a lowercase ASCII letter (e.g., starts with a digit), prefix with `section-`; like the §5.5 collision suffixes, the prefix is exempt from the step 10 maximum — implementations MUST NOT re-truncate after prefixing
 
 **Transliteration table.** This table is exhaustive: implementations MUST apply exactly these mappings and MUST NOT apply additional ones. It covers the Latin-script letters that NFKD normalization cannot reduce to an ASCII base.
 
@@ -505,7 +505,7 @@ If no explicit identifier is provided, implementations MUST auto-generate one us
 | `ħ`, `Ħ` | `h` |
 | `ı` | `i` |
 
-**Warning rule:** If step 4 removes at least one character (the text contained non-ASCII characters that neither the transliteration table nor NFKD decomposition could reduce to ASCII), validators MUST emit a Warning recommending an explicit identifier — the auto-generated identifier has lost information and may be empty or collide (§5.5). Accented Latin text does not trigger this warning; it transliterates deterministically.
+**Warning rule:** If step 4 removes at least one **letter or digit** (Unicode general categories `L*` or `N*`), validators MUST emit a Warning recommending an explicit identifier — the auto-generated identifier has lost information and may be empty or collide (§5.5). Removed punctuation and symbols (em dashes, typographic apostrophes and quotation marks, etc.) do not trigger the warning, and accented Latin text transliterates deterministically without triggering it — so ordinary professionally typeset Latin-script headings stay silent.
 
 **Examples:**
 
@@ -1146,11 +1146,12 @@ named-parameter  ::= parameter-name "=" value
 parameter-name   ::= lowercase ( lowercase | digit | "-" )*
 positional-value ::= value
 value            ::= quoted-value | unquoted-value
-quoted-value     ::= '"' ( safe-char | escape )* '"'
-escape           ::= "\" '"' | "\" "\"
-safe-char        ::= any character except '"', "\", and line breaks
+quoted-value     ::= '"' ( escape | quoted-char )* '"'
+escape           ::= "\" ( '"' | "\" )
+quoted-char      ::= any character except '"' and line breaks
 unquoted-value   ::= any run of characters not containing ",", the sequence "}}",
-                     or line breaks; leading and trailing whitespace is trimmed
+                     or line breaks, and not beginning with '"'; leading and
+                     trailing whitespace is trimmed
 ws               ::= " " | tab
 lowercase        ::= "a" ... "z"
 digit            ::= "0" ... "9"
@@ -1183,9 +1184,10 @@ Quoting exists to carry characters that are otherwise directive syntax:
 
 **Rules:**
 
-- An **unquoted** value MUST NOT contain a comma (`,`), the sequence `}}`, or a line break; its leading and trailing whitespace is trimmed
+- An **unquoted** value MUST NOT contain a comma (`,`), the sequence `}}`, or a line break, and MUST NOT begin with `"`; its leading and trailing whitespace is trimmed
+- A value whose first non-whitespace character is `"` MUST be parsed as a quoted value. If its closing quote is missing, the directive is malformed (§15.2) — it never falls back to an unquoted parse
 - A **quoted** value MAY contain commas, the sequence `}}`, `=`, and leading or trailing spaces (all preserved exactly); it MUST NOT contain a line break
-- Within a quoted value, `\"` denotes a literal double quote and `\\` denotes a literal backslash. A backslash followed by any other character is not an escape sequence and is preserved as written
+- Within a quoted value, `\"` denotes a literal double quote and `\\` denotes a literal backslash; the `escape` alternative is matched preferentially over `quoted-char`. A backslash followed by any other character is not an escape sequence — it is an ordinary `quoted-char` and is preserved as written (e.g., `{{field: "C:\Users\doe", type=path}}` is valid, and the value is `C:\Users\doe`)
 - A quoted value MUST be terminated by a closing `"` on the same line, followed only by optional whitespace and then `,` or `}}`; anything else makes the directive malformed (§15.2)
 - Only the straight double quote (U+0022) delimits quoted values. Typographic quotation marks (`“ ” „ « »` etc.) are ordinary value characters — validators SHOULD emit a Warning when an unquoted value begins with one, since it usually means an editor auto-curled an intended quote
 
@@ -1253,7 +1255,7 @@ Include targets use the same file model as LegalDown attachment files (§12.4): 
 | Heading | Author writes it in body | Renderer generates from frontmatter `title` |
 | Metadata | None | `id`, `title`, `file` in frontmatter |
 | File model | Body-only fragment — no frontmatter, no `#` (§12.2) | Body-only fragment — no frontmatter, no `#` (§12.4) |
-| Referenceable by | Section ids only | `{{attach: id}}` directive |
+| Referenceable by | Section ids and item/paragraph anchors (§5.7) | `{{attach: id}}` directive |
 | Non-LegalDown files | Not supported | Supported (tracked but not rendered) |
 
 ### 12.4 Attachment Files
@@ -1563,7 +1565,7 @@ Validators MUST categorize issues at three levels:
 | Explicit anchors (section identifiers, item and paragraph anchors) are unique within the anchor namespace | Error |
 | `{#id}`-like marker outside an anchor position (likely misplaced anchor, §5.7) | Warning |
 | Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
-| Auto-generated identifier lost non-transliterable characters (§5.3 — explicit identifier recommended) | Warning |
+| Auto-generated identifier lost non-transliterable letters or digits (§5.3 — explicit identifier recommended) | Warning |
 | Section identifiers follow naming rules | Error |
 | Headings do not contain hardcoded numbering | Warning |
 | Directives are well-formed per the §11.2 grammar (including quoted-value termination and escapes, §11.3) | Error |
@@ -1578,7 +1580,7 @@ Validators MUST categorize issues at three levels:
 |---|---|
 | All `{{ref: id}}` point to existing sections | Error |
 | `{{ref: id}}` targets an attachment id — attachments are referenced with `{{attach:}}` (§5.6) | Error |
-| `{{ref: id}}` targets an item or paragraph anchor whose containing list or paragraphs the active template does not enumerate (renders as the containing section number) | Warning |
+| `{{ref: id}}` targets an item or paragraph anchor whose containing list or paragraphs the active template does not enumerate (renders as the containing section number; template-dependent — evaluated from the Rendering level, §16.3) | Warning |
 | All `{{term: id}}` point to declared definitions | Error |
 | Circular definitions detected (scoped to each definition's containing paragraph, see §7.2) | Error |
 | Definitions used before declaration | Info |
@@ -1591,7 +1593,7 @@ Validators MUST categorize issues at three levels:
 | All `{{def: id}}` identifiers are unique among definitions (§5.6) | Error |
 | `{{def:}}` is immediately preceded by a recognized quoted span | Error |
 | Two definitions auto-generate the same identifier (omitted ids) | Error |
-| Auto-derived definition identifier lost non-transliterable characters (§5.3 — explicit id recommended) | Warning |
+| Auto-derived definition identifier lost non-transliterable letters or digits (§5.3 — explicit id recommended) | Warning |
 | Defined term wrapped in emphasis markers (`**`, `__`) in source | Warning |
 | Single-quoted term ambiguous with an apostrophe (U+2019) | Warning |
 | Declared definitions never referenced with `{{term:}}` (may yield false positives when §7.4 automatic term recognition is enabled) | Warning |
@@ -1681,7 +1683,7 @@ Validators MUST produce structured output indicating file, line number, identifi
 | Check | Level |
 |---|---|
 | Attachment `id` is unique across document | Error |
-| Attachment `id` does not collide with any section identifier | Error |
+| Attachment `id` does not collide with any other anchor (section identifier or item/paragraph anchor, §5.6) | Error |
 | Attachment `title` is non-empty | Error |
 | Attachment `file` path exists | Error |
 | LegalDown attachment file contains frontmatter | Error |
@@ -1734,9 +1736,9 @@ Scope: everything that can be determined from the document file alone. A Core im
 - Document structure (§4) and identifiers (§5), including automatic identifier generation (§5.3) and item/paragraph anchors (§5.7)
 - Recognition and validation of all directives in §11.1: cross-references (§6), definitions and term references (§7), field specs (§10), and attachment references (§6.4)
 - Standard text formatting (§8) and tables (§9)
-- Validation (§15): §15.1–§15.6 and §15.9 in full, plus the rows of §15.8, §15.10, and §15.11 that need only the document itself:
+- Validation (§15): §15.1–§15.6 and §15.9 in full — excluding the template-dependent §15.3 row on refs to non-enumerated item/paragraph anchors, which is evaluated from the Rendering level (§16.3) — plus the rows of §15.8, §15.10, and §15.11 that need only the document itself:
   - §15.8 — `amends.title` is non-empty; unresolved `{{term:}}` references are handled per §7.5's "original not available" rules (a Core implementation never loads the original, so that branch always applies)
-  - §15.10 — attachment `id` uniqueness, attachment `id` collisions with section identifiers, attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
+  - §15.10 — attachment `id` uniqueness, attachment `id` collisions with other anchors (§5.6), attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
   - §15.11 — the `{{include:}}` target path has a LegalDown file extension
 
 A Core implementation is not required to open any file other than the document itself. Checks that involve another file — existence of declared paths, attachment or include content, imported definitions, translation synchronization — belong to Full (§16.4).
@@ -1746,7 +1748,7 @@ A Core implementation is not required to open any file other than the document i
 Everything in Core, plus rendering (Section 13) of a single document. A Rendering implementation MUST additionally support:
 
 - Section numbering generation (§13.1), configurable per render job
-- Resolution and rendering of all §11.1 directives per §6.3, §7.3, and §13.3–§13.5, including all bracketed failure markers (`[BROKEN REF: ...]`, `[UNDEFINED: ...]`, etc.)
+- Resolution and rendering of all §11.1 directives except `{{include:}}` (Full, §16.4) per §6.3, §7.3, and §13.3–§13.5, including all bracketed failure markers (`[BROKEN REF: ...]`, `[UNDEFINED: ...]`, etc.); a Rendering implementation encountering `{{include:}}` follows §16.5
 - Party and side display rules (§3.6)
 - At least one of the RECOMMENDED output formats in §13.6 (PDF, DOCX, or HTML)
 - Comment stripping (§8.6)
