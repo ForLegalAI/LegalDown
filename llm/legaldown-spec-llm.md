@@ -54,7 +54,7 @@ governing_law: Jurisdiction             # OPTIONAL
 language: en                            # RECOMMENDED, ISO 639-1
 translations:                           # OPTIONAL
   fr: document-fr.lgd
-authoritative: en                       # OPTIONAL, ISO 639-1
+authoritative: en                       # OPTIONAL, ISO 639-1; marks the primary of a translation group (recommended with translations)
 adopted_by: Board of Directors          # OPTIONAL
 adoption_date: 2026-03-15               # OPTIONAL, ISO 8601
 supersedes: Prior policy v1             # OPTIONAL: string or {title, file} object
@@ -325,6 +325,8 @@ Standard CommonMark:
 
 Separate files per language with identical heading structure and section identifiers. Linked via `translations` and `authoritative` in frontmatter. Linked files must declare the same set of languages (each file's `language` + `translations` keys); structural or language-set mismatches are Errors.
 
+A translation is a **secondary** document: the **primary** is the linked file whose `language` equals `authoritative` (declaring it is recommended). Identifiers originate in the primary and are mirrored **explicitly** into translations — every heading and `{{def:}}` in a translation file must carry an explicit id (its counterpart's id from the primary); auto-generation is never relied on in translation files. Updating a translation = mirror the primary's change under the same id + translate the text. Without `authoritative`, validators check symmetrically and warn on auto-generated ids in linked files.
+
 ## Validation Summary
 
 **Errors** (must fix):
@@ -342,8 +344,9 @@ Separate files per language with identical heading structure and section identif
 - `{{ref:}}` targeting an attachment id (attachments are referenced with `{{attach:}}`)
 - Duplicate `{{def:}}` identifiers (within the definitions namespace)
 - Invalid `document_type`, side names, party names, or party `type` values
-- Too few sides or parties for the selected `document_type`
-- Missing `issuer` side for `unilateral_act` or `collective_act`
+- Too few sides or parties for the selected `document_type` (checked only when `sides` is present)
+- Missing `issuer` side for `unilateral_act` or `collective_act` (checked only when `sides` is present)
+- Heading or `{{def:}}` without an explicit identifier in a translation file (non-authoritative linked file)
 - Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
 - `{{party:}}` `party-name` is empty, malformed, or does not match any party declared in frontmatter
 - `field_types` keys that are malformed or collide with the reserved value-type names (`date`, `money`, `duration`, `party`, `text`)
@@ -385,7 +388,9 @@ Separate files per language with identical heading structure and section identif
 - Undeclared `{{field:}}` type when `field_types` frontmatter is present
 - Attachment declared but never referenced via `{{attach:}}`
 - Document has no frontmatter
+- `sides` absent entirely — `document_type` structural constraints cannot be verified (single warning; the per-rule Errors apply only when `sides` is present)
 - Invalid ISO 639-1 code in `language`, `authoritative`, or `translations` keys; `authoritative` not among the document's languages
+- Auto-generated identifiers in bilingual linked files when `authoritative` is absent (primary cannot be determined)
 - Declared `legaldown` spec version newer than the implementation supports (implementations must not fail on an unknown version)
 - Unknown currency on `{{placeholder: ..., type=money}}`
 - Amendment declares `{{def:}}` with same id as definition in original LegalDown source

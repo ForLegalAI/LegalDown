@@ -154,7 +154,7 @@ Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status c
 | `governing_law` | OPTIONAL | Applicable law |
 | `language` | RECOMMENDED | Primary language (ISO 639-1) |
 | `translations` | OPTIONAL | Map of translation files (see Section 14) |
-| `authoritative` | OPTIONAL | Authoritative language for disputes (ISO 639-1) |
+| `authoritative` | OPTIONAL | Authoritative language for disputes (ISO 639-1); also identifies the primary document of a translation group (§14.2). RECOMMENDED when `translations` is present |
 | `adopted_by` | OPTIONAL | Body or authority that adopted the document |
 | `adoption_date` | OPTIONAL | Adoption date (ISO 8601) |
 | `supersedes` | OPTIONAL | Prior document or version superseded by this document — a plain string, or an object with the same fields as `amends` (§3.8) |
@@ -1518,6 +1518,8 @@ Attachments are rendered after the main document body, in the order declared in 
 
 LegalDown supports bilingual and multilingual contracts via **separate files** — one document per language, with metadata linking them.
 
+A translation is a **secondary document** derived from a **primary document**: structure and identifiers originate in the primary and are mirrored into each translation; only the text is translated (§14.2).
+
 ### 14.2 Separate File Approach
 
 Maintain separate LegalDown documents per language with identical heading structure and section identifiers:
@@ -1552,12 +1554,19 @@ authoritative: en
 « Information confidentielle » {{def: confidential-info}} désigne toute information non publique...
 ```
 
-**Rules for separate file approach:**
+**Rules for the separate file approach:**
 
 - Linked translation files MUST have identical heading hierarchy
 - Linked translation files MUST use identical section identifiers
 - Validators MUST check structural consistency between linked files
 - Cross-references resolve to section numbers (same in both versions)
+
+**Primary and translations:**
+
+- The **primary** document is the linked file whose `language` equals the declared `authoritative` language. Declaring `authoritative` is RECOMMENDED whenever `translations` is present
+- Identifiers originate in the primary — including any auto-generated there (§5.3 is deterministic, so tooling can compute them) — and are mirrored into each translation **explicitly**. Updating a translation means mirroring the primary's structural change under the same identifier and translating the text
+- In a translation file, every heading and every `{{def:}}` MUST therefore carry an explicit identifier (its counterpart's identifier from the primary). Auto-generation MUST NOT be relied upon in translation files — translated text would produce different identifiers and break the matching rules above
+- When `authoritative` is absent, implementations cannot distinguish the primary from its translations; validators check the linked files symmetrically and SHOULD warn about auto-generated identifiers in any linked file
 
 ### 14.3 Bilingual Validation
 
@@ -1658,6 +1667,8 @@ If `document_type` is omitted, validators MUST treat it as `contract` when apply
 | Minimum total parties | ≥ 2 | ≥ 1 | ≥ 1 |
 | `document_type` is valid value | Error if not | Error if not | Error if not |
 
+**Severities for the table above:** an invalid `document_type` value is always an **Error**. When `sides` is present, violations of the minimum-sides, `issuer`-side, and minimum-parties rows are **Errors**. When `sides` is absent entirely, those structural rows cannot be verified: validators MUST NOT report them as violated and MUST instead emit a single **Warning** stating that the `document_type` constraints cannot be verified without `sides` — keeping `sides` genuinely RECOMMENDED (§3.2) rather than effectively required.
+
 Violations of the following additional checks MUST be reported as **Error**:
 
 - Every party `name` is unique across the entire document
@@ -1690,6 +1701,8 @@ Where §3.10 permits a placeholder in a value field, a placeholder value satisfi
 | Section identifiers match between translations | Error |
 | Definition IDs match between translations | Error |
 | Linked files declare the same set of languages (`language` + `translations` keys) | Error |
+| Every heading and `{{def:}}` in a translation file (a linked file whose `language` differs from `authoritative`) carries an explicit identifier | Error |
+| Auto-generated identifiers used in linked files when `authoritative` is absent (primary cannot be determined) | Warning |
 
 ### 15.8 Amendment Validation (when amends metadata present)
 

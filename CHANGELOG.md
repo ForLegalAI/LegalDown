@@ -10,6 +10,70 @@ without a major version bump until v1.0.
 
 ## [Unreleased]
 
+### Translations are secondary documents — 2026-08-12
+
+The bilingual rules required identical section and definition identifiers across linked files but
+never said how to achieve that — and auto-generated identifiers, slugged from language-specific
+text, guarantee a mismatch. Resolution: make the authoring model explicit rather than nudging with
+warnings.
+
+#### Changed
+
+- **Primary/secondary model (spec §14.1, §14.2).** A translation is a **secondary document**
+  derived from a **primary**: structure and identifiers originate in the primary — including ids
+  auto-generated there (§5.3 is deterministic, so tooling can compute them) — and are mirrored into
+  each translation **explicitly**; only the text is translated. Updating a translation means
+  mirroring the primary's change under the same identifier and translating the text. There is no
+  reason for auto-generation in a translation file, and relying on it is now prohibited.
+- **`authoritative` identifies the primary (§3.2, §14.2).** The primary is the linked file whose
+  `language` equals the declared `authoritative` language; declaring `authoritative` is RECOMMENDED
+  whenever `translations` is present. Without it, validators check the group symmetrically and
+  SHOULD warn about auto-generated ids in any linked file.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Heading or `{{def:}}` without an explicit identifier in a translation file | — | **Added (Error, §15.7)** |
+| Auto-generated identifiers in linked files when `authoritative` is absent | — | **Added (Warning, §15.7)** |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §3.2 (`authoritative` row), §14.1, §14.2
+  (primary/translations rules), §15.7.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — bilingual section, frontmatter
+  comment, validation summary.
+
+---
+
+### Document-type constraint severities — 2026-08-12
+
+§15.6's document-type table (minimum sides/parties, required `issuer` side) carried no severities,
+and taken as Errors it would contradict `sides` being RECOMMENDED — a contract without a `sides`
+block would implicitly fail. Severities are now explicit.
+
+#### Changed
+
+- **§15.6 severity model.** An invalid `document_type` value is always an Error. When `sides` is
+  **present**, violations of the minimum-sides, `issuer`-side, and minimum-parties rows are
+  **Errors**. When `sides` is **absent entirely**, those rows cannot be verified: validators MUST
+  NOT report them as violated and MUST emit a single **Warning** that the `document_type`
+  constraints cannot be verified without `sides` — keeping `sides` genuinely RECOMMENDED.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| Document-type minimums (sides/parties/`issuer`) | Severity unstated | **Error when `sides` present** |
+| `sides` absent entirely | (implicitly failing the minimums) | **Single Warning** — constraints not verifiable |
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §15.6.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — validation summary.
+
+---
+
 ### Consistency cleanup pass — 2026-08-12
 
 Clears the remaining internal contradictions and editorial defects from the release-readiness

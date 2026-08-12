@@ -6,12 +6,12 @@ issued against commit `d05a8b8`).
 - **Round 1** — all release-blocking and major gaps (G1–G11) — **merged to `main`** in
   [PR #24](https://github.com/ForLegalAI/LegalDown/pull/24), including 12 additional fixes from its
   two review passes.
-- **Round 2** — the consistency-cleanup tier (I1–I2, I4, I6–I12, E1–E13, P6, P13) — open as
-  [PR #25](https://github.com/ForLegalAI/LegalDown/pull/25).
+- **Round 2** — the consistency-cleanup tier (I1–I2, I4, I6–I12, E1–E13, P6, P13) plus the two
+  decided items **I3** (document-type severities) and **I5** (translations as secondary documents)
+  — open as [PR #25](https://github.com/ForLegalAI/LegalDown/pull/25).
 
-**Progress: 36 of 50 tracked items resolved** (11 G + 10 I + 2 P + 13 E), 13 open, 1 deferred.
-Open: two decision items (I3, I5) and the practical-improvement tier (P1–P5, P7–P12); deferred:
-the ecosystem work (G12).
+**Progress: 38 of 50 tracked items resolved** (11 G + 12 I + 2 P + 13 E), 11 open, 1 deferred.
+Open: the practical-improvement tier (P1–P5, P7–P12); deferred: the ecosystem work (G12).
 
 **Scope:** [`spec/legaldown-spec.md`](spec/legaldown-spec.md), [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md),
 [`README.md`](README.md), [`CHANGELOG.md`](CHANGELOG.md), [`LICENSE`](LICENSE). Detailed change
@@ -31,9 +31,9 @@ records for every resolved item are in [`CHANGELOG.md`](CHANGELOG.md) under *Unr
 | G12 | ⏸ Deferred | Ecosystem: examples dir, CONTRIBUTING.md, test corpus |
 | I1 | ✅ Round 2 | Ghost `{{lang:}}` blocks removed from §1.3 and README |
 | I2 | ✅ Round 2 | Numbering scheme: dangling "document metadata" clause struck (§13.1) |
-| I3 | ⬜ Open | §15.6 minimum-sides rules vs `sides: RECOMMENDED`; severities unstated |
+| I3 | ✅ Round 2 | Document-type minimums: Error when `sides` present; single Warning when absent |
 | I4 | ✅ Round 2 | §14 rewritten tool-neutrally; severities aligned; language-set row added to §15.7 |
-| I5 | ⬜ Open | Bilingual id-matching incompatible with auto-generated ids |
+| I5 | ✅ Round 2 | Translations modeled as secondary documents; explicit ids required in translation files |
 | I6 | ✅ Round 2 | §13.2 table collapsed; ordered-list rule added; §8.2 aligned to SHOULD |
 | I7 | ✅ Round 2 | Attachment wording now order-only (§3.9, §12.4, §13.8) |
 | I8 | ✅ Round 2 | `{{ref:}}` defined under "None" scheme and across attachment restarts (§13.3) |
@@ -120,35 +120,18 @@ Short implementation notes; full details per item in [`CHANGELOG.md`](CHANGELOG.
   separator is "one or more spaces or tabs"; revision date in the spec header; `.gitignore` added.
 - **Behavior changes to note:** unknown directives Warning → Error; `field_types` key `text` now
   reserved (minor breaking).
+- **I3 (decided):** the §15.6 document-type minimums are Errors when `sides` is present; when
+  `sides` is absent entirely, a single Warning ("constraints cannot be verified") — `sides` stays
+  genuinely RECOMMENDED.
+- **I5 (decided):** translations are **secondary documents** (§14.1/§14.2): identifiers originate
+  in the primary (the file whose `language` equals `authoritative`; declaring it is RECOMMENDED)
+  and are mirrored explicitly into translations — every heading and `{{def:}}` in a translation
+  file must carry an explicit id (Error); auto-generation is never relied on there. Without
+  `authoritative`, validators check symmetrically and warn on auto-generated ids.
 
 ---
 
-## Part 1 — Open: Decision Items
-
-### I3. §15.6 contradicts `sides: RECOMMENDED`; severities unstated 🟠
-
-The §15.6 document-type table requires ≥2 sides/parties for a `contract` (and an `issuer` side for
-the other types), but `sides` is only RECOMMENDED in §3.2 and the table's first three rows carry no
-severity. Is a contract with no `sides` block an Error, a Warning, or fine?
-
-**Proposed fix:** when `sides` is present, the minimums are Error; when absent entirely, one
-Warning ("document_type constraints cannot be verified without `sides`"). Keeps `sides` genuinely
-RECOMMENDED while making the table enforceable.
-
-### I5. Bilingual id-matching incompatible with auto-generated ids 🟠
-
-§14.2 requires identical section identifiers across translation files and §15.7 requires matching
-definition ids — but auto-generated ids are slugged from language-specific text, so mismatch is
-guaranteed unless every heading and `{{def:}}` carries an explicit id. The spec never tells
-bilingual authors this. (G4's warning covers non-Latin scripts but not, e.g., English↔French
-Latin-script drift.)
-
-**Proposed fix:** in §14.2, documents declaring `translations` SHOULD use explicit identifiers on
-all headings and defs; validators SHOULD warn on any auto-generated id in such documents.
-
----
-
-## Part 2 — Open: Practical Improvements
+## Part 1 — Open: Practical Improvements
 
 ### P1. No way to reference a side collectively 🟠
 
@@ -245,7 +228,7 @@ v0.2 candidate: a `{{meta: field-name}}` insertion directive.
 
 ---
 
-## Part 3 — Deferred: G12 (after all spec changes are final)
+## Part 2 — Deferred: G12 (after all spec changes are final)
 
 - `examples/` directory containing the §17 documents as real files, including their attachment
   files, so they can be validated once tooling exists
@@ -259,8 +242,7 @@ v0.2 candidate: a `{{meta: field-name}}` insertion directive.
 
 ## Remaining Sequencing
 
-1. **Decision items:** I3, I5 — small normative additions once decided.
-2. **Practical tier:** P1–P5, P7–P12 — each is either a small normative addition or an explicit
+1. **Practical tier:** P1–P5, P7–P12 — each is either a small normative addition or an explicit
    deferral; deferred ones get a line in a *Roadmap / Known Limitations* section so silence reads
    as a decision.
-3. **G12**, then tag v0.1.
+2. **G12**, then tag v0.1.
