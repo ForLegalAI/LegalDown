@@ -197,7 +197,6 @@ contains none of them.
 {{placeholder: fee, type=money, currency=EUR}} ← Typed inline blank
 {{party: acme}}                          ← Inline party reference
 {{include: schedules/pricing.lgd}}       ← Include an external file
-{{lang: fr}} ... {{/lang}}              ← Bilingual language block
 ```
 
 ---
@@ -205,7 +204,8 @@ contains none of them.
 ### File Format 📁
 
 LegalDown files use the `.lgd` extension (short for LegalDown). The
-alternative `.legaldown` extension is also supported. Files must be UTF-8
+alternative `.legaldown` extension is also supported, and `.legal.md` is
+accepted for compatibility with Markdown tooling. Files must be UTF-8
 encoded.
 
 ---
