@@ -7,7 +7,7 @@ LegalDown is a plain-text markup language for legal documents, including contrac
 - Extension: `.lgd` or `.legaldown` (`.legal.md` for Markdown tooling compatibility)
 - Encoding: UTF-8
 - Line endings: LF preferred, CRLF accepted
-- File-reference paths (includes, attachments, `amends.file`, `translations`, images) must be **relative** and resolve **within the configured document root** — absolute or root-escaping paths are Errors
+- File-reference paths (includes, attachments, `amends.file`, `translations`, images) must be **relative** and carry no URI scheme (`https://`, `file://` count as absolute → Error; remote resources are never fetched). When a document root is configured, paths must also resolve inside it (escaping it is an Error); there is **no default root**, so without configuration `../shared/x.lgd` is fine. Both checks are lexical (Core level); existence checks are Full
 
 ## Document Structure
 
@@ -174,6 +174,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 - Directives are recognized in body text (paragraphs, lists, table cells, block quotes) and in frontmatter only as quoted placeholder strings; they are **not** recognized inside code spans, code blocks, or HTML comments
 - Literal `{{` in text: escape the first brace — `\{{ref: x}}` renders as literal `{{ref: x}}` (CommonMark backslash escape)
 - A `{{` followed by a name and `:` that cannot be completed as a directive on the same line is malformed (Error); a stray `{{` not followed by `name:` is literal text (Warning)
+- A `label` never suppresses a failure marker — an unresolved target renders its bracketed marker (`[UNKNOWN PARTY:]`, `[UNKNOWN SIDE:]`, `[UNDEFINED:]`, …) even when a `label` was supplied
 - An unknown directive name is an Error and renders as `[UNKNOWN DIRECTIVE: name]` — it is never printed verbatim into output (pass-through exists only as an explicit non-default permissive mode). If the document declares a `legaldown` version newer than the implementation supports, validators downgrade the Error to a Warning (the directive may come from the newer version)
 
 ### Cross-References
@@ -350,7 +351,7 @@ A translation is a **secondary** document: the **primary** is the linked file wh
 - Skipped heading levels
 - Heading depth beyond level 5
 - Unknown directive name (renders as `[UNKNOWN DIRECTIVE: name]`)
-- Absolute or root-escaping file-reference path
+- Absolute, URI-scheme, or root-escaping file-reference path (root check only when a root is configured)
 - Duplicate explicit anchors (section identifiers, item/paragraph anchors — one shared namespace)
 - Malformed section identifiers
 - Malformed directive after a `{{name:` opener (grammar violation, including an unterminated quoted value)
@@ -393,7 +394,7 @@ A translation is a **secondary** document: the **primary** is the linked file wh
 **Warnings** (should fix):
 - Hardcoded numbering in headings
 - Circular definitions (scoped to each definition's containing paragraph)
-- Raw HTML other than comments in body (ignored for output)
+- Raw HTML other than comments in body (ignored for output; the warning fires even when an extension processes it, since it does not render portably)
 - Named parameter not defined for the directive (ignored for rendering)
 - Stray `{{` in body text that does not begin a well-formed directive
 - Unquoted directive value beginning with a typographic quotation mark (auto-curled quote)

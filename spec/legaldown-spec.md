@@ -79,9 +79,10 @@ A LegalDown document consists of two parts in order:
 
 LegalDown documents reference external files in several places: `{{include:}}` (§12), `attachments[].file` (§3.9), `amends.file` (§3.8), `translations` (§14), and image paths (§8.7). All such paths:
 
-- MUST be relative paths — absolute paths are a validation Error
-- MUST resolve to a location within the **document root** — a boundary directory that implementations MUST enforce and MUST allow to be configured (typically the repository or workspace root; it MUST NOT default to anything wider than the working tree). A path that escapes the document root (e.g., via `../` traversal) is a validation Error
-- The relative-form check is syntactic and applies at Core (§16.2); root containment is checked against the configured root; file **existence** checks remain Full-level (§16.4) per each feature's validation table
+- MUST be relative paths. An absolute path, or any path beginning with a URI scheme (`https://`, `file://`, etc. — a scheme makes the target absolute regardless of filesystem syntax), is a validation Error. Remote resources are therefore never fetched while processing a document
+- MUST resolve to a location within the **document root** when one is configured. The document root is a boundary directory outside which no referenced file may be read; a path that escapes it (e.g., via `../` traversal) is a validation Error
+- This specification defines **no default document root**: when none is configured, the containment check does not run, and paths such as `../shared/definitions.lgd` are valid. Implementations that process documents they do not control — hosted validators, renderers, and services — MUST support configuring a document root and SHOULD require one
+- Both the relative-form check and, when a root is configured, the containment check are syntactic — they resolve the path lexically without reading the filesystem — and apply at Core (§16.2). File **existence** checks remain Full-level (§16.4) per each feature's validation table
 
 This is a safety boundary for hosted validators and renderers: a document must never be able to read files outside the tree it belongs to.
 
@@ -903,7 +904,7 @@ HTML-style comments are valid in LegalDown and MUST be stripped from all rendere
 
 As a CommonMark superset (§1.3), LegalDown documents may contain constructs to which this specification assigns no legal-drafting semantics. They are handled as follows:
 
-- **Raw HTML** (inline or block), other than comments (§8.6): ignored for rendered output by default — renderers MUST NOT emit it into output — and a validation Warning is emitted. Implementations MAY support the extended-table exception of §9.2 as a documented extension
+- **Raw HTML** (inline or block), other than comments (§8.6): ignored for rendered output by default — renderers MUST NOT emit it into output — and a validation Warning is emitted. Implementations MAY support the extended-table exception of §9.2 as a documented extension. The Warning fires whenever raw HTML is present, whether or not an extension processes it: it reports that the construct does not render portably, which remains true for every implementation that lacks the extension
 - **Links** (`[text](url)` and autolinks): valid. Renderers MUST render them as hyperlinks in formats that support linking; in print-oriented output, style templates MAY additionally render the URL visibly (e.g., in parentheses or a note)
 - **Images** (`![alt](path)`): valid. The path follows the file-reference rules of §2.3; the image is rendered where the output format supports images and replaced by its alt text where it does not. Existence checking of image paths is a Full-level capability (§16.4)
 
@@ -1285,6 +1286,7 @@ In those contexts, directive-like text is literal text.
 
 - Directives are case-sensitive — always lowercase
 - Directives MUST NOT span multiple lines
+- A `label` parameter (or any other display override) never suppresses a failure marker: when a directive's target cannot be resolved, the applicable bracketed marker and its validation diagnostic take precedence over the override, so a broken reference can never render as though it resolved
 - An unknown directive (well-formed per §11.2, but with a name this specification does not define) is a validation **Error**. Renderers MUST replace it with `[UNKNOWN DIRECTIVE: name]` — consistent with the other bracketed failure markers — and MUST NOT print the directive source verbatim into rendered output (a typo like `{{trem: services}}` must never leak into an executed document)
 - Implementations MAY offer an explicit, non-default permissive mode that instead emits a Warning and passes unknown directives through as-is (forward compatibility with future directive names)
 - When the document declares a `legaldown` version newer than the implementation supports (§3.2), validators SHOULD report unknown directives as Warnings rather than Errors — they may be constructs introduced by the newer version, and §3.2 promises processing does not fail solely on an unknown version; the `[UNKNOWN DIRECTIVE: name]` rendering marker still applies
@@ -1488,23 +1490,23 @@ When rendering `{{money: amount}}`, `{{money: amount, note=text}}`, `{{money: am
 
 When rendering `{{party: party-name}}`, `{{party: party-name, note=text}}`, `{{party: party-name, label=text}}`, or `{{party: party-name, label=text, note=text}}`:
 
-1. If a `label` parameter is provided, use it as the display text
-2. If no `label` is provided, resolve the party from frontmatter `sides[].parties[]` by matching the `party-name` against party `name` fields; use the party's `label` field as the display text, falling back to `legal_name` if `label` is absent
-3. Format the display text according to the active locale or render template
-4. Ignore any `note` parameter for rendered output
-5. Replace the directive with the formatted party reference text
-6. If the `party-name` value is empty or malformed, insert `[INVALID PARTY: party-name]` and emit a validation error
-7. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error
+1. If the `party-name` value is empty or malformed, insert `[INVALID PARTY: party-name]` and emit a validation error
+2. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error. Steps 1 and 2 take precedence over any `label`: a `label` never suppresses a failure marker, so an unresolved reference can never render as if it were fine
+3. If a `label` parameter is provided, use it as the display text
+4. If no `label` is provided, use the party's `label` field as the display text, falling back to `legal_name` if `label` is absent
+5. Format the display text according to the active locale or render template
+6. Ignore any `note` parameter for rendered output
+7. Replace the directive with the formatted party reference text
 
 When rendering `{{side: side-name}}`, `{{side: side-name, note=text}}`, `{{side: side-name, label=text}}`, or `{{side: side-name, label=text, note=text}}`:
 
-1. If a `label` parameter is provided, use it as the display text
-2. If no `label` is provided, resolve the side from frontmatter `sides[]` by matching the `side-name` against side `name` fields; use the side's `label` field as the display text, falling back to the §3.6 derivation from `name` if `label` is absent
-3. Format the display text according to the active locale or render template
-4. Ignore any `note` parameter for rendered output
-5. Replace the directive with the formatted side reference text
-6. If the `side-name` value is empty or malformed, insert `[INVALID SIDE: side-name]` and emit a validation error
-7. If the `side-name` does not match any side declared in frontmatter, insert `[UNKNOWN SIDE: side-name]` and emit a validation error
+1. If the `side-name` value is empty or malformed, insert `[INVALID SIDE: side-name]` and emit a validation error
+2. If the `side-name` does not match any side declared in frontmatter, insert `[UNKNOWN SIDE: side-name]` and emit a validation error. Steps 1 and 2 take precedence over any `label`: a `label` never suppresses a failure marker, so an unresolved reference can never render as if it were fine
+3. If a `label` parameter is provided, use it as the display text
+4. If no `label` is provided, use the side's `label` field as the display text, falling back to the §3.6 derivation from `name` if `label` is absent
+5. Format the display text according to the active locale or render template
+6. Ignore any `note` parameter for rendered output
+7. Replace the directive with the formatted side reference text
 
 When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT, note=text}}`:
 
@@ -1677,9 +1679,9 @@ Validators MUST categorize issues at three levels:
 | Named parameter not defined for the directive (ignored for rendering) | Warning |
 | Unescaped `{{` in body text that does not begin a well-formed directive | Warning |
 | Unquoted directive value begins with a typographic quotation mark (possible auto-curled quote) | Warning |
-| File-reference paths are relative (§2.3) | Error |
-| File-reference paths resolve within the configured document root (§2.3) | Error |
-| Raw HTML other than comments present (ignored for rendered output, §8.7) | Warning |
+| File-reference paths are relative and carry no URI scheme (§2.3) | Error |
+| File-reference paths resolve within the document root, when one is configured (§2.3) | Error |
+| Raw HTML other than comments present (§8.7 — fires whether or not an extension processes it) | Warning |
 
 ### 15.3 Reference Validation
 

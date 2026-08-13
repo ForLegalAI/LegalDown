@@ -33,13 +33,18 @@ resolved.
 - **Weeks (§10.5; P3).** `W` joins the duration units ("two weeks' notice" no longer becomes 14
   days).
 - **File-reference path safety (new spec §2.3; P9).** All referenced paths — includes, attachments,
-  `amends.file`, `translations`, images — MUST be relative and MUST resolve within a configured
-  **document root** (implementations must enforce the boundary; typically the repository root).
-  Absolute or root-escaping paths are Errors (§15.2). Existence checks stay Full-level.
+  `amends.file`, `translations`, images — MUST be relative and MUST NOT carry a URI scheme
+  (`https://`, `file://` are absolute; remote resources are never fetched). Where a **document
+  root** is configured, paths MUST also resolve inside it. The specification defines **no default
+  root** — without configuration the containment check does not run, so ordinary layouts such as
+  `../original/msa.lgd` (§3.8's own example) stay valid; implementations processing documents they
+  do not control MUST support configuring a root and SHOULD require one. Both checks are lexical
+  and apply at Core; existence checks stay Full-level.
 - **Inherited CommonMark features (new spec §8.7; P10).** Raw HTML other than comments: ignored
-  for output + Warning (the §9.2 extended-table exception may stand). Links: rendered as
-  hyperlinks; print templates may show the URL visibly. Images: allowed, path per §2.3, alt-text
-  fallback, existence checked at Full (§16.4).
+  for output + Warning — which fires whether or not a documented extension (§9.2) processes the
+  construct, since it reports non-portable rendering. Links: rendered as hyperlinks; print
+  templates may show the URL visibly. Images: allowed, path per §2.3, alt-text fallback, existence
+  checked at Full (§16.4).
 - **Roadmap and Known Limitations (new spec §18, non-normative).** Deliberate deferrals now have a
   home: qualified cross-document amendment refs, `{{meta:}}` insertion (P12), structured
   `adopted_by`/organ type, template-generated attachment labels, a structured signature model,
@@ -60,6 +65,10 @@ resolved.
 - **Reference label words (§6.2 note; P11).** The "Section"/"Article" word before a `{{ref:}}` is
   author text while the number is scheme-generated — the tension is documented with authoring
   guidance.
+- **Failure markers beat display overrides (§11.5).** Stated once as a general directive rule: a
+  `label` never suppresses a bracketed failure marker, so an unresolved `{{party:}}`, `{{side:}}`,
+  `{{term:}}`, or `{{attach:}}` can never render as though it resolved. The §13.5 party and side
+  step lists are reordered to match (resolution failures first).
 
 #### Validation changes
 
@@ -69,7 +78,7 @@ resolved.
 | `{{side:}}` name malformed or unknown | — | **Added (Error ×2, §15.5)** |
 | `{{money:}}` amount negative | (undefined) | **Error** — amount must be non-negative |
 | `{{duration:}}` unit `M` | Error listed `M` as valid (minutes) | **Rejected** with `MIN`/`MO` hint; `MIN` and `W` valid |
-| File-reference path absolute or escaping the document root | — | **Added (Error ×2, §15.2)** |
+| File-reference path absolute, URI-scheme, or escaping a configured document root | — | **Added (Error ×2, §15.2)** |
 | Raw HTML other than comments | (undefined) | **Added (Warning, §15.2)** — ignored for output |
 
 #### Files touched
