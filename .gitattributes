@@ -1,0 +1,10 @@
+# Binary assets — never line-ending converted
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.docx  binary
+
+# LegalDown sources and docs — normalize to LF (spec §2.1 prefers LF)
+*.lgd        text eol=lf
+*.legaldown  text eol=lf
+*.md         text eol=lf
