@@ -75,6 +75,17 @@ A LegalDown document consists of two parts in order:
 
 > **Note:** Signature blocks are NOT defined in LegalDown markup, and their generation is **implementation-defined** in this version of the specification. Renderers SHOULD generate signature blocks automatically from frontmatter — for contracts from all sides, for unilateral acts from the issuer side, for collective acts from the issuer side and `adopted_by` — but the content and layout of generated blocks (signing lines, representatives, dates, places, capacities) are left to the implementation and its style template (§13.7). Where an implementation generates signature blocks, party `legal_name` MUST appear on them (§3.6).
 
+### 2.3 File References
+
+LegalDown documents reference external files in several places: `{{include:}}` (§12), `attachments[].file` (§3.9), `amends.file` (§3.8), `translations` (§14), and image paths (§8.7). All such paths:
+
+- MUST be relative paths. An absolute path, or any path beginning with a URI scheme (`https://`, `file://`, etc. — a scheme makes the target absolute regardless of filesystem syntax), is a validation Error. Remote resources are therefore never fetched while processing a document
+- MUST resolve to a location within the **document root** when one is configured. The document root is a boundary directory outside which no referenced file may be read; a path that escapes it (e.g., via `../` traversal) is a validation Error
+- This specification defines **no default document root**: when none is configured, the containment check does not run, and paths such as `../shared/definitions.lgd` are valid. Implementations that process documents they do not control — hosted validators, renderers, and services — MUST support configuring a document root and SHOULD require one
+- Both the relative-form check and, when a root is configured, the containment check are syntactic — they resolve the path lexically without reading the filesystem — and apply at Core (§16.2). File **existence** checks remain Full-level (§16.4) per each feature's validation table
+
+This is a safety boundary for hosted validators and renderers: a document must never be able to read files outside the tree it belongs to.
+
 ---
 
 ## 3. Metadata (Frontmatter)
@@ -301,6 +312,7 @@ The `amends` object has the following fields:
 - The original file MAY be a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
 - The amendment document itself follows the same structure rules as any other LegalDown document — all existing features (headings, section identifiers, cross-references, definitions, field specs, etc.) work unchanged
 - An amendment MAY declare its own definitions using `{{def:}}` for new terms introduced by the amendment
+- **Referencing the original's provisions:** `{{ref:}}` resolves only within the amendment itself (§6); references to the original's sections are written as literal text (e.g., "Section 5.1 of the Agreement"), citing the original's **executed rendering**. Because rendered numbers depend on the numbering scheme active at render time (§13.1), parties SHOULD pin the numbering scheme used for the executed original — for example in repository or template configuration — so such citations remain accurate. Qualified cross-document references are a Roadmap candidate (§18)
 
 **Example:**
 
@@ -555,7 +567,7 @@ All LegalDown identifiers share one format (§5.2) but live in separate **namesp
 | Anchor | Section identifiers (§5.2), item and paragraph anchors (§5.7), and attachment ids (§3.9) | Shared — unique across all | `{{ref:}}` (sections, items, paragraphs), `{{attach:}}` (attachment ids only) |
 | Definition | `{{def:}}` identifiers (§7.2) | Unique among definitions | `{{term:}}` |
 | Placeholder | `{{placeholder:}}` ids (§10.7) | Not applicable — repeated ids denote the same logical blank | — |
-| Side | Side `name` values (§3.3) | Unique among sides | — |
+| Side | Side `name` values (§3.3) | Unique among sides | `{{side:}}` |
 | Party | Party `name` values (§3.4) | Unique among all parties | `{{party:}}` |
 | Field type | `field_types` keys (§3.2) | Unique keys | `{{field:}}` `type` parameter |
 
@@ -620,6 +632,8 @@ The payment schedule in Article {{ref: payment-schedule}} applies from the Effec
 
 - The identifier MUST be a section identifier or an item/paragraph anchor (§5.7). `{{ref:}}` resolves against those members of the anchor namespace (§5.6); attachments are referenced with `{{attach:}}` (§6.4). A `{{ref:}}` targeting an attachment id is a broken reference, and validators SHOULD suggest `{{attach:}}` in the diagnostic message
 
+> **Note:** The word before a reference ("Section", "Article", "Clause") is ordinary body text chosen by the author, while the number comes from the render-time numbering scheme (§13.1). Changing the scheme can make the author's word read unconventionally — e.g., "Section I.A" under the legal outline scheme, where "Article I.A" is customary. Authors SHOULD choose wording compatible with the schemes the document will render under; a template-supplied reference label is a Roadmap candidate (§18).
+
 ### 6.3 Reference Rendering
 
 Renderers MUST:
@@ -640,6 +654,7 @@ Rendering under the "None" numbering scheme and across attachment numbering rest
 
 ```markdown
 {{attach: attachment-id}}
+{{attach: attachment-id, label=text}}
 ```
 
 **Examples:**
@@ -647,14 +662,14 @@ Rendering under the "None" numbering scheme and across attachment numbering rest
 ```markdown
 Services are described in {{attach: schedule-a}}.
 
-Pricing is set out in {{attach: schedule-b}}.
+Pricing is set out in {{attach: schedule-b, label=Schedule B}}.
 
 Technical requirements per {{attach: schedule-c}} shall apply.
 ```
 
 **Rendering rules:**
 
-- Resolves to the attachment `title` from frontmatter
+- Resolves to the attachment `title` from frontmatter; the optional `label` parameter (plain text, §11.3 value rules) overrides the displayed text — useful mid-sentence, where the full title reads awkwardly
 - Creates a hyperlink to the attachment in formats that support linking
 - For LegalDown attachments — links to the rendered attachment section
 - For non-LegalDown attachments — links to the external file
@@ -714,6 +729,7 @@ A quoted span is delimited by one of the recognized opening/closing quotation-ma
 | Single guillemets | `‹` | `›` | U+2039 / U+203A |
 
 - The parser matches the closing delimiter immediately preceding the directive, then scans back to the corresponding opening delimiter to delimit the term. For symmetric pairs (where opening and closing are the same character) it pairs with the nearest prior identical mark on the same line.
+- This matching is deterministic only because **no character in the active set serves as the closing mark of two different pairs**. Configured sets — narrowed or extended per document `language` or implementation configuration — MUST preserve that property. When the backward scan fails to find the opening mark, the §15.4 no-quoted-span Error applies; the diagnostic SHOULD mention mismatched or typo'd quotation marks as a likely cause.
 - Double-quote forms are RECOMMENDED. Single-quote forms are accepted, but because the right single quotation mark (U+2019) also serves as an apostrophe, a single-quoted term containing an apostrophe may be mis-delimited; validators SHOULD emit a warning in that case.
 
 **Identifiers:**
@@ -884,6 +900,14 @@ HTML-style comments are valid in LegalDown and MUST be stripped from all rendere
 # Limitation of Liability {#liability-limitations}
 ```
 
+### 8.7 Inherited CommonMark Features
+
+As a CommonMark superset (§1.3), LegalDown documents may contain constructs to which this specification assigns no legal-drafting semantics. They are handled as follows:
+
+- **Raw HTML** (inline or block), other than comments (§8.6): ignored for rendered output by default — renderers MUST NOT emit it into output — and a validation Warning is emitted. Implementations MAY support the extended-table exception of §9.2 as a documented extension. The Warning fires whenever raw HTML is present, whether or not an extension processes it: it reports that the construct does not render portably, which remains true for every implementation that lacks the extension
+- **Links** (`[text](url)` and autolinks): valid. Renderers MUST render them as hyperlinks in formats that support linking; in print-oriented output, style templates MAY additionally render the URL visibly (e.g., in parentheses or a note)
+- **Images** (`![alt](path)`): valid. The path follows the file-reference rules of §2.3; the image is rendered where the output format supports images and replaced by its alt text where it does not. Existence checking of image paths is a Full-level capability (§16.4)
+
 ---
 
 ## 9. Tables
@@ -978,8 +1002,9 @@ The monthly fee is {{money: 500, currency=EUR, note=Base monthly service fee}}.
 
 **Rules:**
 
-- The amount MUST be a numeric value (integer or decimal, using period `.` as the decimal separator)
+- The amount MUST be a non-negative numeric value (integer or decimal, using period `.` as the decimal separator); negative amounts are invalid — express reductions, credits, or deductions in the surrounding prose
 - The amount MUST NOT include grouping separators, currency symbols, or whitespace
+- Renderers MUST NOT round, truncate, or otherwise alter the numeric value. Display formatting — separators, currency symbol, and padding to the currency's conventional minor units (e.g., "10000" → "$10,000.00") — follows the active locale and template settings per the formatting rule below
 - The optional `currency` parameter specifies the currency using an ISO 4217 three-letter code (e.g., `USD`, `EUR`, `CZK`, `GBP`)
 - If `currency` is omitted, the renderer MAY apply a default currency configured in the render template or renderer configuration; if none is configured, it MUST emit a validation warning. LegalDown defines no document-level default currency — currency is specified per `{{money:}}` directive
 - Renderers MUST format the amount according to the active locale or render template settings (e.g., "$10,000.00", "USD 10,000.00", "€500.00")
@@ -1026,7 +1051,7 @@ The `{{duration:}}` directive represents a time duration inline in document text
 {{duration: value, unit=UNIT, note=text}}
 ```
 
-Where `UNIT` is one of: `S` (seconds), `M` (minutes), `H` (hours), `D` (days), `MO` (months), `Y` (years).
+Where `UNIT` is one of: `S` (seconds), `MIN` (minutes), `H` (hours), `D` (days), `W` (weeks), `MO` (months), `Y` (years).
 
 **Examples:**
 
@@ -1035,13 +1060,15 @@ This Agreement shall remain in effect for {{duration: 12, unit=MO}}.
 
 The notice period shall be {{duration: 30, unit=D}}.
 
+The cure period shall be {{duration: 2, unit=W}}.
+
 The service level response time shall not exceed {{duration: 4, unit=H, note=Critical incident response target}}.
 ```
 
 **Rules:**
 
 - The `value` MUST be a positive numeric value (integer or decimal, using period `.` as the decimal separator); zero and negative values are not allowed
-- The `unit` parameter is REQUIRED and MUST be one of: `S`, `M`, `H`, `D`, `MO`, `Y`
+- The `unit` parameter is REQUIRED and MUST be one of: `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y`. The bare unit `M` is deliberately not defined — in ISO 8601 it denotes months while earlier drafts used it for minutes; validators MUST reject it with a diagnostic suggesting `MIN` (minutes) or `MO` (months)
 - Renderers MUST format the duration according to the active locale or render template settings (e.g., "12 months", "30 days", "4 hours", "1 year")
 
 ### 10.6 Custom Field Directive
@@ -1123,6 +1150,34 @@ Governed by the laws of {{placeholder: governing-jurisdiction}}.
 - All occurrences of the same `placeholder-id` MUST use the same effective `type`
 - When the same `placeholder-id` appears multiple times with type-specific parameters, those parameters SHOULD remain consistent across occurrences; validators MAY emit a warning when they differ
 
+### 10.8 Side Directive
+
+The `{{side:}}` directive references a **side** declared in frontmatter (§3.3) — the collective grouping of parties — by its `name` identifier, with an optional inline display override. It is the collective counterpart of `{{party:}}` (§10.4).
+
+**Syntax:**
+
+```markdown
+{{side: side-name}}
+{{side: side-name, label=text}}
+{{side: side-name, note=text}}
+{{side: side-name, label=text, note=text}}
+```
+
+**Examples:**
+
+```markdown
+The {{side: clients, label=Clients}} shall be jointly and severally liable for the fees.
+
+Notices to the {{side: providers}} shall be delivered to each of its parties.
+```
+
+**Rules:**
+
+- The `side-name` value MUST be a non-empty string matching the identifier format `[a-z][a-z0-9-]*`
+- The directive MUST resolve against a side `name` in the frontmatter `sides[]` array
+- The optional `label` parameter specifies display text for rendering; if omitted, the renderer MUST use the side's `label`, falling back to the §3.6 derivation from `name` (hyphens replaced by spaces, each word capitalized)
+- The `label` and `note` values are plain text and follow the value rules in §11.3
+
 ---
 
 ## 11. Directives
@@ -1142,12 +1197,15 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{money: amount, currency=CODE}}` | Core | Inline monetary amount with currency |
 | `{{party: party-name}}` | Core | Inline party reference by name |
 | `{{party: party-name, label=text}}` | Core | Inline party reference with display text |
+| `{{side: side-name}}` | Core | Inline side (collective) reference by name |
+| `{{side: side-name, label=text}}` | Core | Inline side reference with display text |
 | `{{duration: value, unit=UNIT}}` | Core | Inline time duration with unit |
 | `{{field: value, type=type-name}}` | Core | Inline custom typed value with pass-through rendering |
 | `{{placeholder: placeholder-id}}` | Core | Inline fillable blank (defaults to `type=text`) |
 | `{{placeholder: placeholder-id, type=money, currency=CODE}}` | Core | Inline typed blank with type-specific parameters |
 | `{{include: path}}` | Full | Include external file |
 | `{{attach: id}}` | Core | Reference a declared attachment |
+| `{{attach: id, label=text}}` | Core | Attachment reference with display text |
 
 The **Level** column states the conformance level (Section 16) at which implementations MUST support the directive. `{{include:}}` expansion is a Full capability, and rendering the *content* of attachment files referenced via `{{attach:}}` is likewise Full (§16.4); resolving `{{attach:}}` to its declared `title` is Core. The column says nothing about documents: no directive is ever required to appear in a document — which directives to use is an authoring choice.
 
@@ -1228,6 +1286,7 @@ In those contexts, directive-like text is literal text.
 
 - Directives are case-sensitive — always lowercase
 - Directives MUST NOT span multiple lines
+- A `label` parameter (or any other display override) never suppresses a failure marker: when a directive's target cannot be resolved, the applicable bracketed marker and its validation diagnostic take precedence over the override, so a broken reference can never render as though it resolved
 - An unknown directive (well-formed per §11.2, but with a name this specification does not define) is a validation **Error**. Renderers MUST replace it with `[UNKNOWN DIRECTIVE: name]` — consistent with the other bracketed failure markers — and MUST NOT print the directive source verbatim into rendered output (a typo like `{{trem: services}}` must never leak into an executed document)
 - Implementations MAY offer an explicit, non-default permissive mode that instead emits a Warning and passes unknown directives through as-is (forward compatibility with future directive names)
 - When the document declares a `legaldown` version newer than the implementation supports (§3.2), validators SHOULD report unknown directives as Warnings rather than Errors — they may be constructs introduced by the newer version, and §3.2 promises processing does not fail solely on an unknown version; the `[UNKNOWN DIRECTIVE: name]` rendering marker still applies
@@ -1421,7 +1480,7 @@ When rendering `{{date: value}}` or `{{date: value, note=text}}`:
 
 When rendering `{{money: amount}}`, `{{money: amount, note=text}}`, `{{money: amount, currency=CODE}}`, or `{{money: amount, currency=CODE, note=text}}`:
 
-1. Validate the amount is a valid numeric value
+1. Validate the amount is a valid, non-negative numeric value
 2. If a `currency` parameter is provided, validate it is a recognized ISO 4217 code
 3. Format the amount according to the active locale or render template, including the currency symbol or code
 4. Ignore any `note` parameter for rendered output
@@ -1431,18 +1490,28 @@ When rendering `{{money: amount}}`, `{{money: amount, note=text}}`, `{{money: am
 
 When rendering `{{party: party-name}}`, `{{party: party-name, note=text}}`, `{{party: party-name, label=text}}`, or `{{party: party-name, label=text, note=text}}`:
 
-1. If a `label` parameter is provided, use it as the display text
-2. If no `label` is provided, resolve the party from frontmatter `sides[].parties[]` by matching the `party-name` against party `name` fields; use the party's `label` field as the display text, falling back to `legal_name` if `label` is absent
-3. Format the display text according to the active locale or render template
-4. Ignore any `note` parameter for rendered output
-5. Replace the directive with the formatted party reference text
-6. If the `party-name` value is empty or malformed, insert `[INVALID PARTY: party-name]` and emit a validation error
-7. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error
+1. If the `party-name` value is empty or malformed, insert `[INVALID PARTY: party-name]` and emit a validation error
+2. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error. Steps 1 and 2 take precedence over any `label`: a `label` never suppresses a failure marker, so an unresolved reference can never render as if it were fine
+3. If a `label` parameter is provided, use it as the display text
+4. If no `label` is provided, use the party's `label` field as the display text, falling back to `legal_name` if `label` is absent
+5. Format the display text according to the active locale or render template
+6. Ignore any `note` parameter for rendered output
+7. Replace the directive with the formatted party reference text
+
+When rendering `{{side: side-name}}`, `{{side: side-name, note=text}}`, `{{side: side-name, label=text}}`, or `{{side: side-name, label=text, note=text}}`:
+
+1. If the `side-name` value is empty or malformed, insert `[INVALID SIDE: side-name]` and emit a validation error
+2. If the `side-name` does not match any side declared in frontmatter, insert `[UNKNOWN SIDE: side-name]` and emit a validation error. Steps 1 and 2 take precedence over any `label`: a `label` never suppresses a failure marker, so an unresolved reference can never render as if it were fine
+3. If a `label` parameter is provided, use it as the display text
+4. If no `label` is provided, use the side's `label` field as the display text, falling back to the §3.6 derivation from `name` if `label` is absent
+5. Format the display text according to the active locale or render template
+6. Ignore any `note` parameter for rendered output
+7. Replace the directive with the formatted side reference text
 
 When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT, note=text}}`:
 
 1. Validate the value is a positive numeric value
-2. Validate the `unit` parameter is one of: `S`, `M`, `H`, `D`, `MO`, `Y`
+2. Validate the `unit` parameter is one of: `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y` (a bare `M` is rejected with a diagnostic suggesting `MIN` or `MO`, §10.5)
 3. Format the duration according to the active locale or render template (e.g., "12 months", "30 days", "1 year")
 4. Ignore any `note` parameter for rendered output
 5. Replace the directive with the formatted duration text
@@ -1610,6 +1679,9 @@ Validators MUST categorize issues at three levels:
 | Named parameter not defined for the directive (ignored for rendering) | Warning |
 | Unescaped `{{` in body text that does not begin a well-formed directive | Warning |
 | Unquoted directive value begins with a typographic quotation mark (possible auto-curled quote) | Warning |
+| File-reference paths are relative and carry no URI scheme (§2.3) | Error |
+| File-reference paths resolve within the document root, when one is configured (§2.3) | Error |
+| Raw HTML other than comments present (§8.7 — fires whether or not an extension processes it) | Warning |
 
 ### 15.3 Reference Validation
 
@@ -1619,7 +1691,7 @@ Validators MUST categorize issues at three levels:
 | `{{ref: id}}` targets an attachment id — attachments are referenced with `{{attach:}}` (§5.6) | Error |
 | `{{ref: id}}` targets an item or paragraph anchor whose containing list or paragraphs the active template does not enumerate (renders as the containing section number; template-dependent — evaluated from the Rendering level, §16.3) | Warning |
 | All `{{term: id}}` point to declared definitions | Error |
-| Circular definitions detected (scoped to each definition's containing paragraph, see §7.2) | Error |
+| Circular definitions detected (scoped to each definition's containing paragraph, see §7.2) | Warning |
 | Definitions used before declaration | Info |
 
 ### 15.4 Definition Validation
@@ -1639,13 +1711,15 @@ Validators MUST categorize issues at three levels:
 | Check | Level |
 |---|---|
 | `{{date:}}` value is valid ISO 8601 date | Error |
-| `{{money:}}` amount is a valid numeric value | Error |
+| `{{money:}}` amount is a valid, non-negative numeric value | Error |
 | `{{money:}}` `currency` parameter is a recognized ISO 4217 code | Warning |
 | `{{money:}}` used without `currency` parameter and no default configured | Warning |
 | `{{party:}}` `party-name` value is non-empty and matches identifier format | Error |
 | `{{party:}}` `party-name` references a party declared in frontmatter `sides[].parties[]` | Error |
+| `{{side:}}` `side-name` value is non-empty and matches identifier format | Error |
+| `{{side:}}` `side-name` references a side declared in frontmatter `sides[]` | Error |
 | `{{duration:}}` value is a positive numeric value | Error |
-| `{{duration:}}` `unit` parameter is one of `S`, `M`, `H`, `D`, `MO`, `Y` | Error |
+| `{{duration:}}` `unit` parameter is one of `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y` (bare `M` rejected with a `MIN`/`MO` hint) | Error |
 | `field_types` keys follow the identifier format `[a-z][a-z0-9-]*` | Error |
 | `field_types` keys do not collide with the reserved value-type names `date`, `money`, `duration`, `party`, `text` | Error |
 | `{{field:}}` `type` parameter is present and matches identifier format | Error |
@@ -1805,7 +1879,7 @@ Everything in Rendering, plus all processing that reads files beyond the documen
 - Attachment file processing: content rules (§12.4), attachment rendering (§13.8), and the remaining §15.10 checks (attachment file exists, contains no frontmatter and no level 1 heading, identifier uniqueness across the combined document)
 - Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §15.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
 - Bilingual documents: Section 14 and the remaining §15.7 checks (cross-file structure, identifier, and language-set matching)
-- Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `translations`)
+- Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `translations`) and for image paths (§8.7)
 
 ### 16.5 Constructs Beyond the Claimed Level
 
@@ -2049,3 +2123,17 @@ accordance with applicable data protection laws.
 All other terms and conditions of the {{term: agreement}} remain in full
 force and effect.
 ```
+
+---
+
+## 18. Roadmap and Known Limitations (Non-Normative)
+
+Candidates considered during the v0.1 draft and deliberately deferred. Their absence from this version is a decision, not an oversight:
+
+- **Qualified cross-document references for amendments** — a `{{ref: id, doc=amends}}` form resolving against the imported original (§3.8, §7.5); v0.1 instead provides authoring guidance in §3.8
+- **`{{meta:}}` field insertion** — rendering frontmatter values (e.g., `effective_date`) in body text, removing the duplication between frontmatter and `{{date:}}` directives
+- **Structured `adopted_by` / an organ party type** — so collective acts can reference their adopting body through a directive rather than plain text
+- **Template-generated attachment labels** — so attachment titles need not hardcode ordinals ("Schedule A", "Schedule B") that require manual renaming on reorder
+- **A structured signature model** — per-representative signing lines, date and place, signing capacities; signature block generation is implementation-defined in v0.1 (§2.2)
+- **Template-supplied reference label words** — e.g., `{{ref: id, style=full}}` rendering "Article I.A" with the label word chosen by the style template (§6.2 note)
+- **Machine-readable export** — a JSON document model as a companion specification; the source file remains the canonical machine-readable representation (§10.1)

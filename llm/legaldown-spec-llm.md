@@ -7,6 +7,7 @@ LegalDown is a plain-text markup language for legal documents, including contrac
 - Extension: `.lgd` or `.legaldown` (`.legal.md` for Markdown tooling compatibility)
 - Encoding: UTF-8
 - Line endings: LF preferred, CRLF accepted
+- File-reference paths (includes, attachments, `amends.file`, `translations`, images) must be **relative** and carry no URI scheme (`https://`, `file://` count as absolute → Error; remote resources are never fetched). When a document root is configured, paths must also resolve inside it (escaping it is an Error); there is **no default root**, so without configuration `../shared/x.lgd` is fine. Both checks are lexical (Core level); existence checks are Full
 
 ## Document Structure
 
@@ -173,6 +174,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 - Directives are recognized in body text (paragraphs, lists, table cells, block quotes) and in frontmatter only as quoted placeholder strings; they are **not** recognized inside code spans, code blocks, or HTML comments
 - Literal `{{` in text: escape the first brace — `\{{ref: x}}` renders as literal `{{ref: x}}` (CommonMark backslash escape)
 - A `{{` followed by a name and `:` that cannot be completed as a directive on the same line is malformed (Error); a stray `{{` not followed by `name:` is literal text (Warning)
+- A `label` never suppresses a failure marker — an unresolved target renders its bracketed marker (`[UNKNOWN PARTY:]`, `[UNKNOWN SIDE:]`, `[UNDEFINED:]`, …) even when a `label` was supplied
 - An unknown directive name is an Error and renders as `[UNKNOWN DIRECTIVE: name]` — it is never printed verbatim into output (pass-through exists only as an explicit non-default permissive mode). If the document declares a `legaldown` version newer than the implementation supports, validators downgrade the Error to a Warning (the directive may come from the newer version)
 
 ### Cross-References
@@ -233,7 +235,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{money: 500, currency=EUR, note=Base monthly service fee}}
 ```
 
-- Amount: numeric (period decimal separator), no grouping separators or symbols
+- Amount: non-negative numeric (period decimal separator), no grouping separators or symbols; renderers never round or alter the value (display separators/symbol/minor-unit padding come from the locale/template)
 - `currency`: optional, ISO 4217 code
 - `note`: optional plain-text explanation for automation
 
@@ -252,6 +254,18 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 - If the `party-name` does not match any party in frontmatter, render as `[UNKNOWN PARTY: party-name]`
 - `note`: optional plain-text explanation for automation
 
+### Side
+
+```markdown
+{{side: side-name}}
+{{side: side-name, label=the Clients}}
+```
+
+- Collective counterpart of `{{party:}}`: resolves against `sides[].name`
+- Without `label`, renders the side's `label`, falling back to `name` with hyphens→spaces and each word capitalized
+- Empty/malformed → `[INVALID SIDE: side-name]` (Error); unknown → `[UNKNOWN SIDE: side-name]` (Error)
+- `note`: optional plain-text explanation for automation
+
 ### Duration
 
 ```markdown
@@ -260,7 +274,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 ```
 
 - Value: positive numeric
-- `unit` (required): `S` | `M` | `H` | `D` | `MO` | `Y`
+- `unit` (required): `S` | `MIN` | `H` | `D` | `W` | `MO` | `Y` — bare `M` is invalid (Error with a hint: `MIN` for minutes, `MO` for months)
 - `note`: optional plain-text explanation for automation
 
 ### Custom Field
@@ -304,9 +318,10 @@ Path is relative to the including document. The target is a **body-only LegalDow
 
 ```markdown
 {{attach: attachment-id}}
+{{attach: attachment-id, label=Schedule B}}
 ```
 
-- Resolves to the attachment `title` from frontmatter
+- Resolves to the attachment `title` from frontmatter; optional `label` overrides the displayed text (for mid-sentence references)
 - Creates a hyperlink to the attachment (rendered section for LegalDown files, external file for others)
 - If the id is not found, renders as `[UNKNOWN ATTACHMENT: id]`
 
@@ -320,6 +335,9 @@ Standard CommonMark:
 - Block quotes (used for recitals/WHEREAS clauses)
 - HTML comments `<!-- ... -->` — stripped from rendered output
 - Horizontal rules `---` — for major document divisions
+- Raw HTML other than comments: ignored for output + Warning
+- Links `[text](url)` and autolinks: rendered as hyperlinks (print templates may show the URL visibly)
+- Images `![alt](path)`: allowed; relative path under the document-root rule; alt text where the format has no images
 
 ## Bilingual Documents
 
@@ -333,7 +351,7 @@ A translation is a **secondary** document: the **primary** is the linked file wh
 - Skipped heading levels
 - Heading depth beyond level 5
 - Unknown directive name (renders as `[UNKNOWN DIRECTIVE: name]`)
-- Circular definitions (scoped to each definition's containing paragraph)
+- Absolute, URI-scheme, or root-escaping file-reference path (root check only when a root is configured)
 - Duplicate explicit anchors (section identifiers, item/paragraph anchors — one shared namespace)
 - Malformed section identifiers
 - Malformed directive after a `{{name:` opener (grammar violation, including an unterminated quoted value)
@@ -349,6 +367,7 @@ A translation is a **secondary** document: the **primary** is the linked file wh
 - Heading or `{{def:}}` without an explicit identifier in a translation file (non-authoritative linked file)
 - Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
 - `{{party:}}` `party-name` is empty, malformed, or does not match any party declared in frontmatter
+- `{{side:}}` `side-name` is empty, malformed, or does not match any side declared in frontmatter
 - `field_types` keys that are malformed or collide with the reserved value-type names (`date`, `money`, `duration`, `party`, `text`)
 - Missing or malformed `type` on `{{field:}}`
 - Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
@@ -374,6 +393,8 @@ A translation is a **secondary** document: the **primary** is the linked file wh
 
 **Warnings** (should fix):
 - Hardcoded numbering in headings
+- Circular definitions (scoped to each definition's containing paragraph)
+- Raw HTML other than comments in body (ignored for output; the warning fires even when an extension processes it, since it does not render portably)
 - Named parameter not defined for the directive (ignored for rendering)
 - Stray `{{` in body text that does not begin a well-formed directive
 - Unquoted directive value beginning with a typographic quotation mark (auto-curled quote)
