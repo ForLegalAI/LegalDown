@@ -12,6 +12,14 @@ Development work outside the agreed backlog is charged at
 {{money: 185, currency=USD, note=Blended hourly rate}} per hour, estimated in advance and invoiced
 monthly in arrears.
 
+<!-- This heading carries no explicit {#id}: its identifier is auto-generated per §5.3,
+     producing `currency-and-taxes`. -->
+
+## Currency and Taxes
+
+All amounts are stated exclusive of value added tax, which is charged in addition at the rate
+applicable on the invoice date.
+
 ## Annual Review {#pricing-review}
 
 The parties shall review pricing annually. Any increase takes effect no earlier than

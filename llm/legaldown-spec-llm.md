@@ -7,7 +7,7 @@ LegalDown is a plain-text markup language for legal documents, including contrac
 - Extension: `.lgd` or `.legaldown` (`.legal.md` for Markdown tooling compatibility)
 - Encoding: UTF-8
 - Line endings: LF preferred, CRLF accepted
-- File-reference paths (includes, attachments, `amends.file`, `translations`, images) must be **relative** and carry no URI scheme (`https://`, `file://` count as absolute → Error; remote resources are never fetched). When a document root is configured, paths must also resolve inside it (escaping it is an Error); there is **no default root**, so without configuration `../shared/x.lgd` is fine. Both checks are lexical (Core level); existence checks are Full
+- File-reference paths (includes, attachments, `amends.file`, `supersedes.file`, `translations`, images) must be **relative** and carry no URI scheme (`https://`, `file://` count as absolute → Error; remote resources are never fetched). When a document root is configured, paths must also resolve inside it (escaping it is an Error); there is **no default root**, so without configuration `../shared/x.lgd` is fine. Both checks are lexical (Core level); existence checks are Full
 
 ## Document Structure
 
@@ -58,7 +58,7 @@ translations:                           # OPTIONAL
 authoritative: en                       # OPTIONAL, ISO 639-1; marks the primary of a translation group (recommended with translations)
 adopted_by: Board of Directors          # OPTIONAL
 adoption_date: 2026-03-15               # OPTIONAL, ISO 8601
-supersedes: Prior policy v1             # OPTIONAL: string or {title, file} object
+supersedes: Prior policy v1             # OPTIONAL: string, or {title, file} object (file existence checked at Full; never loaded)
 amends:                                  # OPTIONAL: amendment metadata
   title: Original Document Title         # REQUIRED when amends is present
   file: ../original/document.lgd         # OPTIONAL: relative path to original
@@ -201,6 +201,7 @@ The Provider performs marketing services (the "Services" {{def: services}}).
 - `{{def:}}` MUST be on the same line as, and immediately preceded by, a quoted span (only optional spaces/tabs — no line break — in between); the term is the text inside the quotation marks
 - Defined terms carry NO emphasis markers in source (`**bold**`); styling is applied by the renderer. The quotation marks are a source-only delimiter and are NOT rendered — at neither the definition nor any `{{term:}}` reference
 - Accepted quotation pairs (all on by default; double quotes recommended): `"…"` (U+0022), `“…”` (U+201C/D), `«…»`, `»…«`, `„…“`, `‘…’`, `‚…‘`, `‹…›`. Single-quote forms are accepted but ambiguous with apostrophes — validators warn
+- Whitespace inside the marks is typographic, not part of the term: `« Services »` and `"Services"` both define the term `Services`
 - The `id` follows section-identifier format rules and MUST be unique **among definitions** (definitions are their own namespace — a def id may equal a section id without conflict); it MAY be omitted and is then auto-derived from the term via the §5.3 slug algorithm (`"Services" {{def:}}` → `services`). Explicit ids are recommended and required to break slug collisions
 - A `{{def:}}` MAY appear anywhere in the body — there is no required, single, or first-positioned Definitions section. A top "Definitions" heading is a recommended convention only
 - Definitions MAY be introduced inside attachment files (they register document-wide terms)

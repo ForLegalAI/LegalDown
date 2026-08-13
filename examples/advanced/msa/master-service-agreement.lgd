@@ -95,9 +95,11 @@ a Saturday, Sunday, or public holiday in the State of Delaware.
 "Deliverable" {{def: deliverable}} means any work product the Provider is required to deliver to a
 Client under the {{term: agreement}}.
 
+<!-- The id on the {{def:}} below is omitted, so it is derived from the term via the §5.3 slug
+     algorithm, producing `acceptance-criteria`. -->
+
 "Acceptance Criteria" {{def:}} means the written criteria against which a {{term: deliverable}} is
-tested before promotion to production. The identifier for this definition is omitted and derived
-from the term itself (§5.3), producing `acceptance-criteria`.
+tested before promotion to production.
 
 ## Interpretation {#definitions-interpretation}
 
@@ -152,9 +154,12 @@ The Provider retains all rights in its pre-existing materials and in any general
 while performing the {{term: services}}. Nothing in this Article transfers rights in any
 {{term: deliverable, label=Deliverables}} that remain unpaid.
 
----
+# Limitation of Liability {#limitation-of-liability}
 
-The Provider shall not be liable for any failure caused by a Client's own systems.
+The Provider shall not be liable for any failure of the {{term: services}} caused by a Client's own
+systems, network, or third-party software.
+
+Neither side excludes liability for fraud or for death or personal injury caused by negligence.
 
 # Term and Termination {#term-and-termination}
 
@@ -187,3 +192,9 @@ attention of {{party: acme, label=the Chief Financial Officer}}.
 Notices to a Client shall be sent to that Client at the address stated in this
 {{term: agreement}}, with a copy to {{party: john-novak}} where the notice concerns
 {{attach: exhibit-1}}.
+
+<!-- Major division: the schedules and exhibits declared in frontmatter are appended after this
+     point in rendered output (§8.5, §13.8). -->
+
+---
+

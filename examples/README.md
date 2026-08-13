@@ -53,7 +53,7 @@ Where to find a live example of each feature. Section numbers refer to the speci
 | Preamble before the first heading | 4.4 | every example |
 | Heading depth to level 4 | 4.1 | `advanced/msa` (attachment `service-description`) |
 | Explicit section identifiers | 5.2 | every example |
-| Auto-generated identifiers | 5.3 | `simple/*` (attachment headings) |
+| Auto-generated identifiers | 5.3 | `advanced/msa` attachment `pricing` (`## Currency and Taxes` → `currency-and-taxes`) |
 | Item and paragraph anchors | 5.7 | `advanced/msa`, its include fragment |
 | `{{ref:}}` to a section | 6.2 | `advanced/msa` attachment `pricing` → `scope-changes` |
 | `{{ref:}}` to an item anchor | 5.7, 6.3 | `advanced/msa` (`change-approval`, `cause-breach`) |
@@ -66,14 +66,14 @@ Where to find a live example of each feature. Section numbers refer to the speci
 | Emphasis, code spans | 8.1 | `advanced/msa` (§ Interpretation) |
 | Lists — unordered, nested, ordered | 8.2–8.3 | `advanced/msa`, attachment `service-description` |
 | Block quotes (recitals) | 8.4 | `advanced/msa` |
-| Horizontal rule | 8.5 | `advanced/msa` |
+| Horizontal rule | 8.5 | `advanced/msa` (end of body, before the appended schedules) |
 | HTML comments | 8.6 | `advanced/msa` |
 | Links and images | 8.7 | attachment `service-description` |
 | Tables | 9.1 | `advanced/msa`, attachment `pricing` |
 | `{{date:}}` | 10.2 | every example |
 | `{{money:}}` with `currency` and `note` | 10.3 | `advanced/msa`, its include and attachments |
 | `{{party:}}` with `label` | 10.4 | `simple/nda`, `advanced/msa` |
-| `{{duration:}}` — `MIN`, `H`, `D`, `W`, `MO`, `Y` | 10.5 | `advanced/msa` (all six), `simple/amendment` (`Y`) |
+| `{{duration:}}` — all seven units | 10.5 | `advanced/msa` and its fragments cover `S`, `MIN`, `H`, `D`, `W`, `MO`; `simple/amendment` covers `Y` |
 | `{{field:}}` custom typed values | 10.6 | `advanced/msa` (`ticket-id`), include (`invoice-id`) |
 | `{{placeholder:}}` — text, date, money | 10.7 | `advanced/template`, `advanced/msa` |
 | `{{side:}}` collective reference | 10.8 | `advanced/msa` |
@@ -87,8 +87,10 @@ Where to find a live example of each feature. Section numbers refer to the speci
 
 - **Attachment and include fragments** carry no frontmatter and no level 1 heading — the parent
   document supplies both (§12.2, §12.4).
-- **Binary placeholders.** The `.pdf` and `.png` files are minimal valid stubs; they exist so that
-  file-existence checks (§15.10, §16.4) have something to resolve. Their content is irrelevant.
+- **Binary placeholders.** The `.pdf` and `.png` files are minimal but structurally valid — the
+  PDFs carry a correct cross-reference table, `/Size`, and `/Length`, so a renderer that opens them
+  gets a parseable one-page document rather than a parse error. They exist so file-existence checks
+  (§15.10, §16.4) have something to resolve; their visible content is irrelevant.
 - **Expected diagnostics.** These documents should validate with no Errors. A conforming validator
   may still emit Info-level notes (for example, a definition used before its declaration point).
 - **Rendering** these documents requires choosing a numbering scheme and style template (§13); none

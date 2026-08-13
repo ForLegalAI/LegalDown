@@ -237,7 +237,7 @@ following this repository for changes.
 
 LegalDown is in early draft stage. Current priorities:
 
-- [x] Finalize v0.1 specification
+- [x] Complete the v0.1 specification review (all release-readiness items resolved)
 - [x] Publish reference examples for common document types
 - [ ] Publish the validation fixtures corpus (conformance test suite)
 - [ ] Tag v0.1

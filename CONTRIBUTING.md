@@ -58,6 +58,7 @@ A specification change usually touches more than the specification. Before openi
 - [ ] **[`examples/`](examples)** — if the change adds a feature, add or extend an example, and
       update the feature-coverage table in [`examples/README.md`](examples/README.md)
 - [ ] **[`CHANGELOG.md`](CHANGELOG.md)** — a dated entry under `[Unreleased]` (format below)
+- [ ] **The spec's `Revision:` date** — bump it when `spec/legaldown-spec.md` changes
 - [ ] Cross-references still resolve — section numbers shift when sections are added
 
 If you deliberately skip one of these, say why in the PR description. Reviewers check for this.
@@ -75,14 +76,18 @@ conventions. Look at existing entries for the shape:
 
 ---
 
-## Examples and fixtures
+## Examples
 
-Every document in [`examples/`](examples) must be **valid** under the current specification.
-Deliberately invalid documents belong in the validation fixtures corpus, where the expected
-diagnostic is recorded alongside them.
+Every document in [`examples/`](examples) must be **valid** under the current specification — no
+Errors and no Warnings. When you add a feature, add or extend an example that exercises it, and
+update the feature-coverage table in [`examples/README.md`](examples/README.md) so the claim and
+the file agree.
 
-When you add a feature, add a fixture pair: a valid case and an invalid case with its expected
-diagnostic. This is what lets independent implementations verify they agree.
+> **Fixtures corpus — not yet published.** A validation fixtures corpus (deliberately invalid
+> documents paired with their expected diagnostics, one per §15 rule) is planned before the v0.1
+> tag; see the project status in the [README](README.md#project-status-). Once it exists,
+> contributors adding a feature will also add a valid/invalid fixture pair. Until then, examples
+> are the only required artifact — please do not invent a fixture layout in the meantime.
 
 ---
 
@@ -93,7 +98,10 @@ diagnostic. This is what lets independent implementations verify they agree.
 - **Say who is bound.** "Renderers MUST…", "Validators SHOULD…", "Authors MAY…" — a requirement
   without a subject is ambiguous.
 - Reference sections as `§5.3`, and keep a link to the section where the reader may need it.
-- Wrap prose at roughly 100 characters.
+- **Match the surrounding file's line-wrapping.** `spec/legaldown-spec.md` and
+  `llm/legaldown-spec-llm.md` keep each prose paragraph on a single line, so that an edit produces a
+  one-line diff instead of a reflow; `CHANGELOG.md`, `CONTRIBUTING.md`, and the example documents
+  wrap at roughly 100 characters. Do not reflow a paragraph you did not otherwise change.
 - Examples should look like real legal documents, not `foo`/`bar`.
 
 ---

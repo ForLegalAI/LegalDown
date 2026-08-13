@@ -1,7 +1,7 @@
 # LegalDown Specification
 ## Version 0.1 DRAFT
 
-**Revision:** 2026-08-12 — change history in [CHANGELOG.md](../CHANGELOG.md)
+**Revision:** 2026-08-13 — change history in [CHANGELOG.md](../CHANGELOG.md)
 
 ---
 
@@ -175,7 +175,7 @@ Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status c
 
 If `legaldown` is present, it declares the specification version the document was authored against. The value SHOULD be written as a quoted string (unquoted, YAML would parse `0.1` as a number). Implementations SHOULD emit a Warning when the declared version is newer than the version they implement, and MUST NOT fail solely because the declared version is unknown. When the field is absent, implementations process the document under the version they implement. A newer declared version also softens unknown-directive handling — see §11.5.
 
-If `supersedes` is present, it MAY be either a plain string describing the superseded document, or an object with the same fields as `amends` (`title` REQUIRED, `file` OPTIONAL — §3.8).
+If `supersedes` is present, it MAY be either a plain string describing the superseded document, or an object with the same fields as `amends` (`title` REQUIRED, `file` OPTIONAL — §3.8). In the object form, `supersedes.file` is a file reference governed by §2.3, and its existence is checked at the Full level (§16.4). Unlike `amends`, a superseded document is never loaded: it is a historical pointer, so no definitions are imported from it.
 
 If `field_types` is present, it MUST be a YAML map where each entry is `type-name: description`.
 
@@ -707,7 +707,7 @@ The Provider shall perform the marketing services described in this Article
 
 **Term extraction:**
 
-- The defined term is the text inside the quotation marks of the quoted span that immediately precedes the directive
+- The defined term is the text inside the quotation marks of the quoted span that immediately precedes the directive, with leading and trailing whitespace removed. Several languages set a space inside the marks — French typography writes `« Services »` — so the spacing is typographic, not part of the term. Implementations MUST strip it: the term of `« Services »` is `Services`, identical to that of `"Services"`
 - The directive MUST be on the same line as the quoted span; only optional spaces or tabs (no line break) may appear between the closing quotation mark and the directive. If any other character intervenes, the directive is not attached to that span
 - A `{{def:}}` not immediately preceded by a recognized quoted span is an error
 - Defined terms MUST NOT carry emphasis markers in source (e.g., `**bold**`); how a defined term is displayed (bold, underline, small caps) is determined at render time by the style template (§13.7)
@@ -783,7 +783,7 @@ Renderers MUST:
 
 1. Locate the definition by identifier
 2. If a `label` parameter is provided, use the label text as the display text
-3. Otherwise, use the defined term text — the text inside the quotation marks at the definition site, without the delimiting marks (§7.2)
+3. Otherwise, use the defined term text — the text inside the quotation marks at the definition site, without the delimiting marks and without the whitespace they may enclose (§7.2)
 4. Replace `{{term: id}}` (or `{{term: id, label=...}}`) with the display text
 5. Create a hyperlink to the definition's location (the `{{def:}}` anchor) in formats that support hyperlinking
 6. If the definition is not found, insert `[UNDEFINED: id]` and emit a validation error
@@ -1464,7 +1464,7 @@ When rendering `{{term: id}}` or `{{term: id, label=text}}`:
 
 1. Locate definition by identifier
 2. If a `label` parameter is provided, use the label text as the display text
-3. Otherwise, use the defined term — the text inside the quotation marks at the definition site, without the delimiting marks (§7.2)
+3. Otherwise, use the defined term — the text inside the quotation marks at the definition site, without the delimiting marks and without the whitespace they may enclose (§7.2)
 4. Replace directive with the display text and hyperlink it to the definition's location (the `{{def:}}` anchor)
 5. If definition not found, insert `[UNDEFINED: id]` and emit validation error
 
@@ -1763,6 +1763,8 @@ Violations of the following additional checks MUST be reported as **Error**:
 | `language`, `authoritative`, and `translations` keys, when present, are valid ISO 639-1 codes | Warning |
 | `authoritative`, when present, equals the document `language` or a `translations` key | Warning |
 | `legaldown`, when present, does not declare a version newer than the implementation supports | Warning |
+| `supersedes.title` is non-empty when `supersedes` uses the object form | Error |
+| `supersedes.file` path exists when specified (Full level, §16.4) | Error |
 | Representative `name` is non-empty | Error |
 
 Where §3.10 permits a placeholder in a value field, a placeholder value satisfies that field's presence requirement and is **exempt from the field's format checks** above (for example, `effective_date: "{{placeholder: effective-date, type=date}}"` does not fail the ISO 8601 check); the placeholder's own checks (§15.5) apply instead.
@@ -1879,7 +1881,7 @@ Everything in Rendering, plus all processing that reads files beyond the documen
 - Attachment file processing: content rules (§12.4), attachment rendering (§13.8), and the remaining §15.10 checks (attachment file exists, contains no frontmatter and no level 1 heading, identifier uniqueness across the combined document)
 - Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §15.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
 - Bilingual documents: Section 14 and the remaining §15.7 checks (cross-file structure, identifier, and language-set matching)
-- Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `translations`) and for image paths (§8.7)
+- Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `supersedes.file`, `translations`) and for image paths (§8.7)
 
 ### 16.5 Constructs Beyond the Claimed Level
 

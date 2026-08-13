@@ -37,4 +37,7 @@ The Provider publishes its current platform status at
 The Provider shall maintain production availability of 99.9% measured monthly, excluding scheduled
 maintenance notified at least {{duration: 7, unit=D}} in advance.
 
+Availability is measured by an automated health check issued every {{duration: 30, unit=S}} from
+at least two independent monitoring locations.
+
 Scheduled maintenance shall be performed outside {{term: business-hours}} wherever practicable.

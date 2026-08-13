@@ -31,6 +31,21 @@ sides:
         representatives:
           - name: Jane Doe
             title: General Counsel
+      - name: gamma
+        label: Gamma
+        type: legal_entity
+        legal_name: Gamma Solutions Ltd.
+        identification_number: CA-11223344
+        address: 789 Pine Road, San Jose, CA 95101
+        representatives:
+          - name: Bob Johnson
+            title: Managing Director
+      - name: john-novak
+        type: natural_person
+        legal_name: John Novak
+        date_of_birth: 1985-03-15
+        identification_number: 850315/1234
+        address: 12 Maple Lane, Austin, TX 78701
 governing_law: Delaware
 language: en
 ---
@@ -41,7 +56,11 @@ meaning given in the {{term: amended-agreement}}.
 
 # Payment Terms {#amend-payment}
 
-Section 4.1 of the Agreement is amended to read as follows:
+<!-- Citations reference the executed rendering of the original under the decimal scheme (§3.8):
+     1 Definitions, 2 Scope of Work, 3 Payment Terms, 4 Service Levels, 5 Intellectual Property,
+     6 Limitation of Liability, 7 Term and Termination, 8 Governing Law, 9 Notices. -->
+
+The first paragraph of Article 3 (Payment Terms) of the Agreement is amended to read as follows:
 
 > Each Client shall pay the fees within {{duration: 15, unit=D}} of the date of the relevant
 > invoice. Late payments bear interest at {{money: 250, currency=USD, note=Fixed daily charge}}
@@ -49,7 +68,7 @@ Section 4.1 of the Agreement is amended to read as follows:
 
 # Data Protection {#amend-data-protection}
 
-The following new Article is added after Article 6 of the Agreement:
+The following new Article is added after Article 6 (Limitation of Liability) of the Agreement:
 
 "Personal Data" {{def: personal-data}} means any information relating to an identified or
 identifiable natural person that the Provider processes in performing the {{term: services}}.
@@ -59,7 +78,8 @@ protection laws and only on documented instructions from the relevant Client.
 
 # Service Levels {#amend-service-levels}
 
-The restoration target for non-critical defects in Schedule A of the Agreement is reduced from
+The restoration target for non-critical defects in Article 4 (Service Levels) of the Agreement —
+stated both in the opening paragraph and in the severity table — is reduced from
 {{duration: 2, unit=W}} to {{duration: 5, unit=D}}.
 
 # Unchanged Provisions {#amend-unchanged}

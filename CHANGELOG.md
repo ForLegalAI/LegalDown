@@ -29,8 +29,12 @@ of the language.
     using frontmatter placeholders.
   - **[`examples/README.md`](examples/README.md)** — a feature-coverage table mapping every
     specification section to a live example, so implementers can find a working case per rule.
-  - All documents validate with no Errors and no Warnings; binary attachments are minimal valid
-    stubs so that file-existence checks resolve.
+  - All documents validate with no Errors and no Warnings; binary attachments are minimal but
+    structurally valid stubs (correct PDF cross-reference table, `/Size`, and `/Length`) so that
+    file-existence checks resolve and a renderer opening one gets a parseable document.
+- **[`.gitattributes`](.gitattributes)** — marks binary assets so Git never applies line-ending
+  conversion to them (the placeholder PDFs contain no NUL bytes, so Git classified them as text and
+  would have corrupted them on checkout), and normalizes `.lgd`/`.md` sources to LF per §2.1.
 - **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — linked from the README since the first commit, now
   written: where to start, the standing design commitments (no hardcoded numbers, content/
   presentation separation, determinism, minimal extensions, every rule needs a severity *and* a
@@ -45,16 +49,36 @@ of the language.
   definitions (`agreement`, `confidential-info`) actually resolve and the example demonstrates §7.5
   definition import rather than merely asserting it. It also no longer redeclares `{{def: agreement}}`,
   which would have tripped the §15.8 override Warning.
-- **§2.3** — `supersedes.file` added to the list of file references governed by the path-safety
-  rules. The object form of `supersedes` (added as review item E4) introduced a file path that the
-  path rules did not cover; writing the advanced example surfaced the omission.
+- **`supersedes` object form completed.** The form was added as review item E4 without the
+  supporting rules: §2.3 now governs `supersedes.file` under the path-safety rules, §3.2 states that
+  a superseded document is never loaded (it is a historical pointer, so no definitions are imported
+  — unlike `amends`), §15.6 gains severities for `supersedes.title` (Error) and `supersedes.file`
+  existence (Error), and §16.4 lists it among the Full-level existence checks. Writing the advanced
+  example surfaced the omission; review of that example surfaced the missing severities.
+- **Defined-term whitespace (§7.2, §7.3, §13.4).** The extracted term is now explicitly trimmed of
+  leading and trailing whitespace inside the quotation marks. French typography writes
+  `« Services »`, which previously extracted the term as `" Services "` — so `{{term:}}` rendered
+  with doubled spaces on a literal implementation and cleanly on a trimming one. The bilingual
+  example made the ambiguity concrete.
 - **[`README.md`](README.md)** — the "Examples" link pointed at `llm/`; it now points at
   `examples/`, with the LLM reference linked separately. Project status updated.
 
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| `supersedes.title` non-empty in the object form | — | **Added (Error, §15.6)** |
+| `supersedes.file` path exists when specified | — | **Added (Error, §15.6; Full level)** |
+| Defined term includes whitespace inside the quotation marks | (undefined — implementation-dependent) | **Trimmed** (§7.2) |
+
 #### Files touched
 
-- New: `examples/**` (16 files), [`CONTRIBUTING.md`](CONTRIBUTING.md).
-- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §2.3, §17.4.
+- New: `examples/**` (18 files), [`CONTRIBUTING.md`](CONTRIBUTING.md),
+  [`.gitattributes`](.gitattributes) — 20 new files in total.
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — revision date, §2.3, §3.2, §7.2, §7.3,
+  §13.4, §15.6, §16.4, §17.4.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — file-reference rule (`supersedes.file`),
+  `supersedes` frontmatter note, defined-term whitespace rule.
 - [`README.md`](README.md) — navigation, specification section, project status.
 
 ---
