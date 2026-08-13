@@ -1003,7 +1003,7 @@ The monthly fee is {{money: 500, currency=EUR, note=Base monthly service fee}}.
 
 - The amount MUST be a non-negative numeric value (integer or decimal, using period `.` as the decimal separator); negative amounts are invalid — express reductions, credits, or deductions in the surrounding prose
 - The amount MUST NOT include grouping separators, currency symbols, or whitespace
-- Renderers MUST preserve the amount's decimal precision as written; they MAY pad to the currency's conventional minor units (e.g., "10" → "10.00") when the style template says so
+- Renderers MUST NOT round, truncate, or otherwise alter the numeric value. Display formatting — separators, currency symbol, and padding to the currency's conventional minor units (e.g., "10000" → "$10,000.00") — follows the active locale and template settings per the formatting rule below
 - The optional `currency` parameter specifies the currency using an ISO 4217 three-letter code (e.g., `USD`, `EUR`, `CZK`, `GBP`)
 - If `currency` is omitted, the renderer MAY apply a default currency configured in the render template or renderer configuration; if none is configured, it MUST emit a validation warning. LegalDown defines no document-level default currency — currency is specified per `{{money:}}` directive
 - Renderers MUST format the amount according to the active locale or render template settings (e.g., "$10,000.00", "USD 10,000.00", "€500.00")

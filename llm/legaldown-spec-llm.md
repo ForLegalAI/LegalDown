@@ -234,7 +234,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{money: 500, currency=EUR, note=Base monthly service fee}}
 ```
 
-- Amount: non-negative numeric (period decimal separator), no grouping separators or symbols; renderers preserve the written precision (templates may pad to the currency's minor units)
+- Amount: non-negative numeric (period decimal separator), no grouping separators or symbols; renderers never round or alter the value (display separators/symbol/minor-unit padding come from the locale/template)
 - `currency`: optional, ISO 4217 code
 - `note`: optional plain-text explanation for automation
 

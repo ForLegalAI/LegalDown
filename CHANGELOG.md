@@ -51,9 +51,9 @@ resolved.
   citing the original's *executed rendering*; parties SHOULD pin the numbering scheme used at
   execution (repository or template configuration). The qualified `{{ref: id, doc=amends}}` form is
   deferred to §18.
-- **Money (§10.3; P7).** Amounts MUST be non-negative (reductions belong in prose); renderers
-  preserve the written decimal precision and MAY pad to the currency's minor units when the
-  template says so.
+- **Money (§10.3; P7).** Amounts MUST be non-negative (reductions belong in prose); renderers MUST
+  NOT round, truncate, or otherwise alter the numeric value — display separators, symbol, and
+  minor-unit padding are locale/template settings.
 - **Quoted-span determinism (§7.2; P8).** The invariant behind the term-matching rule is now
   stated: no character in the active quotation set may close two different pairs, and configured
   sets MUST preserve that property; failed backward scans should hint at mismatched marks.
