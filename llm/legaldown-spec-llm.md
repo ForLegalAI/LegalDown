@@ -372,7 +372,7 @@ A translation is a **secondary** document: the **primary** is the linked file wh
 - `field_types` keys that are malformed or collide with the reserved value-type names (`date`, `money`, `duration`, `party`, `text`)
 - Missing or malformed `type` on `{{field:}}`
 - Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
-- `{{placeholder:}}` in a frontmatter identifier or structural field (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure)
+- `{{placeholder:}}` in a frontmatter identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure) — representative `name` is a display value and MAY hold a placeholder
 - Frontmatter present but not valid YAML
 - Missing or empty `title` when frontmatter is present
 - Invalid `effective_date`, `adoption_date`, or `date_of_birth` (not a valid ISO 8601 date; placeholders exempt)
@@ -383,6 +383,8 @@ A translation is a **secondary** document: the **primary** is the linked file wh
 - Mismatched bilingual structure (heading hierarchy, section ids, definition ids, or declared language sets)
 - `amends.title` is empty or missing when `amends` is present
 - `amends.file` path does not exist when specified
+- `supersedes.title` is empty when `supersedes` uses the object form
+- `supersedes.file` path does not exist when specified (Full level)
 - `{{term:}}` references id not found in amendment or imported original (when original is a LegalDown file)
 - Attachment `id` is not unique across document
 - Attachment `id` collides with a section identifier or item/paragraph anchor

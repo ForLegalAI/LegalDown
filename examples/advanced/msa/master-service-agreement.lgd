@@ -92,6 +92,8 @@ described in {{attach: schedule-a, label=Schedule A}}.
 "Business Hours" {{def: business-hours}} means 09:00 to 17:00 Central Time on any day that is not
 a Saturday, Sunday, or public holiday in the State of Delaware.
 
+"Effective Date" {{def: effective-date}} means {{date: 2026-03-01}}.
+
 "Deliverable" {{def: deliverable}} means any work product the Provider is required to deliver to a
 Client under the {{term: agreement}}.
 
@@ -112,7 +114,7 @@ The Provider shall perform the {{term: services}} with the degree of skill and c
 expected of a qualified provider of comparable services.
 
 The Provider shall assign a technical account manager to each Client within
-{{duration: 10, unit=D}} of the Effective Date. {#scope-account-manager}
+{{duration: 10, unit=D}} of the {{term: effective-date}}. {#scope-account-manager}
 
 ## Change Requests {#scope-changes}
 
@@ -124,7 +126,8 @@ Either side may request a change to the {{term: services}}. A change becomes bin
   - approval by electronic signature is sufficient
   - approval may not be withheld unreasonably
 
-A change approved under {{ref: change-approval}} amends {{attach: schedule-b, label=Schedule B}}
+A change approved under Section {{ref: change-approval}} amends
+{{attach: schedule-b, label=Schedule B}}
 from the date stated in the approval.
 
 # Payment Terms {#payment-terms}
@@ -133,14 +136,13 @@ from the date stated in the approval.
 
 # Service Levels {#service-levels}
 
-The Provider shall respond to critical incidents within {{duration: 4, unit=H}} during
-{{term: business-hours}} and shall restore service within {{duration: 2, unit=W}} for any
-non-critical defect.
+The Provider shall acknowledge critical incidents within {{duration: 30, unit=MIN}} of receipt and
+shall restore service within the targets set out below, measured during {{term: business-hours}}.
 
 | Severity | Response target | Restoration target |
 |---|---|---|
-| Critical | {{duration: 4, unit=H}} | {{duration: 24, unit=H}} |
-| Major | {{duration: 30, unit=MIN}} triage, then next business day | {{duration: 5, unit=D}} |
+| Critical | {{duration: 30, unit=MIN}} | {{duration: 24, unit=H}} |
+| Major | {{duration: 4, unit=H}} | {{duration: 5, unit=D}} |
 | Minor | Next business day | {{duration: 2, unit=W}} |
 
 Incidents are tracked by ticket reference, for example {{field: TCK-2026-0417, type=ticket-id}}.
@@ -163,7 +165,7 @@ Neither side excludes liability for fraud or for death or personal injury caused
 
 # Term and Termination {#term-and-termination}
 
-The {{term: agreement}} commences on {{date: 2026-03-01}} and continues for
+The {{term: agreement}} commences on the {{term: effective-date}} and continues for
 {{duration: 24, unit=MO}} unless terminated earlier under this Article.
 
 ## Termination for Convenience {#termination-convenience}
@@ -177,7 +179,7 @@ A party may terminate immediately if the other party:
 - commits a material breach that remains uncured after {{duration: 30, unit=D}} {#cause-breach}
 - becomes insolvent or enters liquidation {#cause-insolvency}
 
-Termination under {{ref: cause-breach}} does not affect any accrued right to payment.
+Termination under Section {{ref: cause-breach}} does not affect any accrued right to payment.
 
 # Governing Law and Jurisdiction {#governing-law}
 

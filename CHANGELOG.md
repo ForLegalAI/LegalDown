@@ -55,6 +55,14 @@ of the language.
   — unlike `amends`), §15.6 gains severities for `supersedes.title` (Error) and `supersedes.file`
   existence (Error), and §16.4 lists it among the Full-level existence checks. Writing the advanced
   example surfaced the omission; review of that example surfaced the missing severities.
+- **Placeholders in representative fields (§3.10, §15.5).** §3.10 permitted placeholders everywhere
+  except side and party `name`, but the §15.5 validation row said "any `name`" — which made a
+  placeholder in a representative's `name` an Error, though a representative name is a display
+  value, not an identifier. The row now matches §3.10, and §3.10 states the permission explicitly.
+  The template example exercises it.
+- **Anchor markers in comments and code (§11.4).** The exclusion covering directives now covers
+  anchor markers too: a `{#id}` inside a code span, code block, or HTML comment is not an anchor,
+  does not enter the anchor namespace, and MUST NOT trigger the §15.2 misplaced-anchor Warning.
 - **Defined-term whitespace (§7.2, §7.3, §13.4).** The extracted term is now explicitly trimmed of
   leading and trailing whitespace inside the quotation marks. French typography writes
   `« Services »`, which previously extracted the term as `" Services "` — so `{{term:}}` rendered
@@ -68,15 +76,17 @@ of the language.
 | Rule | Before | After |
 |---|---|---|
 | `supersedes.title` non-empty in the object form | — | **Added (Error, §15.6)** |
-| `supersedes.file` path exists when specified | — | **Added (Error, §15.6; Full level)** |
+| `supersedes.file` path exists when specified | — | **Added (Error, §15.6; Full level, carved out of Core in §16.2)** |
+| `{{placeholder:}}` in a representative `name` or `title` | Error (per §15.5's "any `name`") | **Permitted** — row narrowed to side and party names, matching §3.10 |
+| `{#id}` inside a code span, code block, or comment | (undefined — could trip the §15.2 Warning) | **Not an anchor**; no Warning (§11.4) |
 | Defined term includes whitespace inside the quotation marks | (undefined — implementation-dependent) | **Trimmed** (§7.2) |
 
 #### Files touched
 
 - New: `examples/**` (18 files), [`CONTRIBUTING.md`](CONTRIBUTING.md),
   [`.gitattributes`](.gitattributes) — 20 new files in total.
-- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — revision date, §2.3, §3.2, §7.2, §7.3,
-  §13.4, §15.6, §16.4, §17.4.
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — revision date, §2.3, §3.2, §3.10, §7.2,
+  §7.3, §11.4, §13.4, §15.5, §15.6, §16.2, §16.4, §17 (intro naming the example files), §17.4.
 - [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — file-reference rule (`supersedes.file`),
   `supersedes` frontmatter note, defined-term whitespace rule.
 - [`README.md`](README.md) — navigation, specification section, project status.

@@ -417,7 +417,7 @@ effective_date: "{{placeholder: effective-date, type=date}}"
 **Rules:**
 
 - A placeholder in frontmatter MUST be written as a quoted YAML string, because an unquoted `{{` begins a YAML flow mapping and is not valid YAML
-- Placeholders MAY appear in **value** fields (for example `title`, `legal_name`, `address`, `identification_number`, `effective_date`, `governing_law`)
+- Placeholders MAY appear in **value** fields (for example `title`, `legal_name`, `address`, `identification_number`, `effective_date`, `governing_law`). A representative's `name` and `title` (§3.5) are display values, not identifiers, and MAY hold placeholders
 - Placeholders MUST NOT appear in **identifier** or **structural** fields — any side or party `name` (these must satisfy the identifier format; a party `name` is additionally referenced by `{{party:}}`), party `type`, `document_type`, `legaldown`, or the `sides`/`parties` array structure
 - Type-specific placeholders follow §10.7 (for example `"{{placeholder: effective-date, type=date}}"`)
 - A required field whose value is a placeholder satisfies that field's presence requirement; the document is treated as a template or draft with unfilled values
@@ -1276,7 +1276,7 @@ Directives are **not** recognized inside:
 - Fenced or indented code blocks
 - HTML comments (`<!-- -->`) — their content is stripped from output regardless (§8.6)
 
-In those contexts, directive-like text is literal text.
+In those contexts, directive-like text is literal text. The same exclusion applies to anchor markers (`{#id}`, §5.2 and §5.7): a `{#id}` appearing inside a code span, code block, or comment is not an anchor, does not enter the anchor namespace, and MUST NOT trigger the misplaced-anchor Warning of §15.2.
 
 **Escaping a literal `{{`:** LegalDown inherits CommonMark backslash escapes for punctuation, so escaping the first brace (`\{`) prevents the sequence from forming a directive opener — `\{{ref: x}}` renders as the literal text `{{ref: x}}`.
 
@@ -1728,7 +1728,7 @@ Validators MUST categorize issues at three levels:
 | `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, or `money` | Error |
 | Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type` | Error |
 | `{{placeholder:}}` `currency` parameter for `type=money` is a recognized ISO 4217 code | Warning |
-| `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure) | Error |
+| `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure) | Error |
 | Field spec `note` parameter is plain text and satisfies the value rules in §11.3 (unquoted: no commas or closing braces) | Error |
 
 ### 15.6 Document Metadata Validation
@@ -1853,7 +1853,7 @@ Scope: everything that can be determined from the document file alone. A Core im
 - Document structure (§4) and identifiers (§5), including automatic identifier generation (§5.3) and item/paragraph anchors (§5.7)
 - Recognition and validation of all directives in §11.1: cross-references (§6), definitions and term references (§7), field specs (§10), and attachment references (§6.4)
 - Standard text formatting (§8) and tables (§9)
-- Validation (§15): §15.1–§15.6 and §15.9 in full — excluding the template-dependent §15.3 row on refs to non-enumerated item/paragraph anchors, which is evaluated from the Rendering level (§16.3) — plus the rows of §15.7, §15.8, §15.10, and §15.11 that need only the document itself:
+- Validation (§15): §15.1–§15.6 and §15.9 in full — excluding two rows that cannot be evaluated from the document alone: the template-dependent §15.3 row on refs to non-enumerated item/paragraph anchors (evaluated from the Rendering level, §16.3) and the §15.6 `supersedes.file` existence row (Full, §16.4) — plus the rows of §15.7, §15.8, §15.10, and §15.11 that need only the document itself:
   - §15.7 — the single-file translation rows: every heading and `{{def:}}` carries an explicit identifier when the document itself is a translation (its `language` differs from its declared `authoritative`), and the auto-generated-identifier Warning when the document declares `translations` without `authoritative`
   - §15.8 — `amends.title` is non-empty; unresolved `{{term:}}` references are handled per §7.5's "original not available" rules (a Core implementation never loads the original, so that branch always applies)
   - §15.10 — attachment `id` uniqueness, attachment `id` collisions with other anchors (§5.6), attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
@@ -1893,6 +1893,13 @@ An implementation that encounters a construct whose processing lies beyond its c
 ---
 
 ## 17. Complete Examples
+
+These examples exist as real files in the repository's `examples/simple/` directory, one per
+subsection: `nda/mutual-nda.lgd` (§17.1) with `attachments/confidential-categories.lgd`,
+`notice/termination-notice.lgd` (§17.2), `policy/remote-work-policy.lgd` (§17.3), and
+`amendment/first-amendment.lgd` (§17.4). Relative paths shown in the frontmatter below — such as the
+amendment's `amends.file` — resolve against that layout. Further examples covering the full feature
+surface are in `examples/advanced/`.
 
 ### 17.1 Contract Example
 

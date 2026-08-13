@@ -1,4 +1,5 @@
-The fees below apply from the Effective Date until amended under {{ref: scope-changes}}.
+The fees below apply from the {{term: effective-date}} until amended under Section
+{{ref: scope-changes}}.
 
 | Service tier | Monthly volume | Unit price |
 |---|---|---:|
@@ -12,8 +13,8 @@ Development work outside the agreed backlog is charged at
 {{money: 185, currency=USD, note=Blended hourly rate}} per hour, estimated in advance and invoiced
 monthly in arrears.
 
-<!-- This heading carries no explicit {#id}: its identifier is auto-generated per §5.3,
-     producing `currency-and-taxes`. -->
+<!-- The heading below carries no explicit anchor, so its identifier is auto-generated per §5.3,
+     producing "currency-and-taxes". -->
 
 ## Currency and Taxes
 
@@ -23,5 +24,5 @@ applicable on the invoice date.
 ## Annual Review {#pricing-review}
 
 The parties shall review pricing annually. Any increase takes effect no earlier than
-{{duration: 12, unit=MO}} after the Effective Date and shall not exceed
+{{duration: 12, unit=MO}} after the {{term: effective-date}} and shall not exceed
 {{placeholder: annual-increase-cap, note=Cap negotiated per Client}}.

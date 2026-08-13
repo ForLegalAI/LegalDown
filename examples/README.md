@@ -60,7 +60,7 @@ Where to find a live example of each feature. Section numbers refer to the speci
 | `{{attach:}}`, with and without `label` | 6.4 | `simple/nda`, `advanced/msa` |
 | Definitions — sectioned, inline, auto-derived id | 7.2 | `advanced/msa` (`acceptance-criteria` omits its id) |
 | Definitions introduced in an amendment | 7.5 | `advanced/amendment` (`personal-data`) |
-| Definition import from an amended original | 7.5 | `simple/amendment` |
+| Definition import from an amended original | 7.5 | `simple/amendment`, `advanced/amendment` — both use the original's terms without redeclaring them |
 | `{{term:}}` with `label` (inflected form) | 7.3 | `advanced/msa` (`Deliverables`) |
 | Guillemet term delimiters | 7.2 | `advanced/bilingual` (fr) |
 | Emphasis, code spans | 8.1 | `advanced/msa` (§ Interpretation) |
@@ -70,8 +70,8 @@ Where to find a live example of each feature. Section numbers refer to the speci
 | HTML comments | 8.6 | `advanced/msa` |
 | Links and images | 8.7 | attachment `service-description` |
 | Tables | 9.1 | `advanced/msa`, attachment `pricing` |
-| `{{date:}}` | 10.2 | every example |
-| `{{money:}}` with `currency` and `note` | 10.3 | `advanced/msa`, its include and attachments |
+| `{{date:}}` | 10.2 | every example except `advanced/template`, which uses `{{placeholder: …, type=date}}` instead |
+| `{{money:}}` with `currency` and `note` | 10.3 | `advanced/msa` fragments: `includes/payment-terms.lgd`, `attachments/pricing.lgd` |
 | `{{party:}}` with `label` | 10.4 | `simple/nda`, `advanced/msa` |
 | `{{duration:}}` — all seven units | 10.5 | `advanced/msa` and its fragments cover `S`, `MIN`, `H`, `D`, `W`, `MO`; `simple/amendment` covers `Y` |
 | `{{field:}}` custom typed values | 10.6 | `advanced/msa` (`ticket-id`), include (`invoice-id`) |
@@ -91,7 +91,10 @@ Where to find a live example of each feature. Section numbers refer to the speci
   PDFs carry a correct cross-reference table, `/Size`, and `/Length`, so a renderer that opens them
   gets a parseable one-page document rather than a parse error. They exist so file-existence checks
   (§15.10, §16.4) have something to resolve; their visible content is irrelevant.
-- **Expected diagnostics.** These documents should validate with no Errors. A conforming validator
-  may still emit Info-level notes (for example, a definition used before its declaration point).
+- **Expected diagnostics.** These documents validate with **no Errors** under any conforming
+  implementation. Warnings and Info notes depend on render-time configuration and are expected in
+  some setups — for example, §15.3's Warning for a `{{ref:}}` to an item anchor fires under a
+  template that disables list enumeration (§13.2), and a definition used before its declaration
+  point is an Info note. "No Errors" is the portable bar; the rest is configuration-dependent.
 - **Rendering** these documents requires choosing a numbering scheme and style template (§13); none
   is included here, since presentation is deliberately outside the document.

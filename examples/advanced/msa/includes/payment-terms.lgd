@@ -17,7 +17,8 @@ The Provider shall not suspend the {{term: services}} for late payment unless:
 - the sum has been overdue for more than {{duration: 45, unit=D}} {#suspend-overdue}
 - the Provider has given {{duration: 10, unit=D}} written notice of its intention to suspend {#suspend-notice}
 
-Suspension under {{ref: suspend-overdue}} does not relieve the Client of its payment obligations.
+Suspension under paragraph {{ref: suspend-overdue}} does not relieve the Client of its payment
+obligations.
 
 ## Invoicing Disputes {#payment-disputes}
 

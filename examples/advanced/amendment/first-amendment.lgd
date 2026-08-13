@@ -51,8 +51,9 @@ language: en
 ---
 
 The parties hereby amend the Master Service Agreement dated {{date: 2026-03-01}} (the
-"Agreement" {{def: amended-agreement}}) as follows. Capitalised terms not defined here have the
-meaning given in the {{term: amended-agreement}}.
+{{term: agreement}}) as follows. Capitalised terms not defined here have the meaning given in the
+{{term: agreement}} — its definitions are imported under §7.5 because `amends.file` points to a
+LegalDown document, so this amendment neither repeats nor overrides them.
 
 # Payment Terms {#amend-payment}
 
@@ -78,9 +79,8 @@ protection laws and only on documented instructions from the relevant Client.
 
 # Service Levels {#amend-service-levels}
 
-The restoration target for non-critical defects in Article 4 (Service Levels) of the Agreement —
-stated both in the opening paragraph and in the severity table — is reduced from
-{{duration: 2, unit=W}} to {{duration: 5, unit=D}}.
+In the severity table in Article 4 (Service Levels) of the Agreement, the restoration target for
+Minor defects is reduced from {{duration: 2, unit=W}} to {{duration: 1, unit=W}}.
 
 # Unchanged Provisions {#amend-unchanged}
 

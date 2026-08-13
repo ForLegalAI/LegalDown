@@ -42,7 +42,10 @@ argument:
 - **Every rule needs a severity.** A new requirement belongs in the §15 validation tables as an
   Error, Warning, or Info — otherwise implementations will disagree about what to do with it.
 - **Every rule needs a conformance level.** Decide whether the check is Core, Rendering, or Full
-  (§16). The test: can it be determined from the document file alone? If yes, it is Core.
+  (§16). Roughly: a check needing only the document file is **Core**; one needing the active style
+  template or rendered output is **Rendering**; one needing another file is **Full**. Where a rule
+  sits in a §15 table whose level differs, §16.2 carves it out by name — as it does for the
+  template-dependent §15.3 row and the `supersedes.file` existence row.
 
 ---
 
@@ -79,7 +82,9 @@ conventions. Look at existing entries for the shape:
 ## Examples
 
 Every document in [`examples/`](examples) must be **valid** under the current specification — no
-Errors and no Warnings. When you add a feature, add or extend an example that exercises it, and
+Errors. Warnings and Info notes may be configuration-dependent (see the notes in
+[`examples/README.md`](examples/README.md)), so "no Errors" is the bar a contributor can actually
+verify. When you add a feature, add or extend an example that exercises it, and
 update the feature-coverage table in [`examples/README.md`](examples/README.md) so the claim and
 the file agree.
 
