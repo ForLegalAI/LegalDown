@@ -10,7 +10,7 @@ LegalDown is an open specification that extends Markdown with legal-specific con
 structured sections, cross-references, defined terms, and party references —
 so legal documents are human-readable, machine-parseable, and AI-friendly.
 
-[Specification](spec/legaldown-spec.md) · [Examples](llm) · [Discussions](../../discussions)
+[Specification](spec/legaldown-spec.md) · [Examples](examples) · [LLM Reference](llm/legaldown-spec-llm.md) · [Discussions](../../discussions)
 
 </div>
 
@@ -219,6 +219,10 @@ It covers document structure, frontmatter format, all directive syntax,
 validation rules, rendering requirements, bilingual support, and conformance
 levels in detail.
 
+Working documents live in [`examples/`](examples) — a simple tier mirroring the
+specification's own examples, and an advanced tier exercising the full feature
+surface, with a table mapping every feature to a live example.
+
 | Version | Status | Document |
 |---------|--------|----------|
 | v0.1 | 🚧 DRAFT | [spec/legaldown-spec.md](spec/legaldown-spec.md) |
@@ -233,8 +237,10 @@ following this repository for changes.
 
 LegalDown is in early draft stage. Current priorities:
 
-- [ ] Finalize v0.1 specification
-- [ ] Publish reference examples for common document types
+- [x] Finalize v0.1 specification
+- [x] Publish reference examples for common document types
+- [ ] Publish the validation fixtures corpus (conformance test suite)
+- [ ] Tag v0.1
 - [ ] Release reference parser and validator
 - [ ] Release CLI rendering tool
 - [ ] Gather community feedback and publish v0.2

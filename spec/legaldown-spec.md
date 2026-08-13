@@ -77,7 +77,7 @@ A LegalDown document consists of two parts in order:
 
 ### 2.3 File References
 
-LegalDown documents reference external files in several places: `{{include:}}` (§12), `attachments[].file` (§3.9), `amends.file` (§3.8), `translations` (§14), and image paths (§8.7). All such paths:
+LegalDown documents reference external files in several places: `{{include:}}` (§12), `attachments[].file` (§3.9), `amends.file` (§3.8), `supersedes.file` (§3.2), `translations` (§14), and image paths (§8.7). All such paths:
 
 - MUST be relative paths. An absolute path, or any path beginning with a URI scheme (`https://`, `file://`, etc. — a scheme makes the target absolute regardless of filesystem syntax), is a validation Error. Remote resources are therefore never fetched while processing a document
 - MUST resolve to a location within the **document root** when one is configured. The document root is a boundary directory outside which no referenced file may be read; a path that escapes it (e.g., via `../` traversal) is a validation Error
@@ -2064,18 +2064,23 @@ The Issuer may issue equipment and security requirements needed to support
 
 ### 17.4 Amendment Example
 
+This example amends the contract of §17.1. Because `amends.file` points to a LegalDown file, that
+document's definitions are imported (§7.5): `{{term: agreement}}` and `{{term: confidential-info}}`
+resolve against the original without being redeclared here.
+
 ```markdown
 ---
-title: First Amendment to Master Service Agreement
+title: First Amendment to Mutual Non-Disclosure Agreement
+document_type: contract
 amends:
-  title: Master Service Agreement
-  file: ../original/msa.lgd
+  title: Mutual Non-Disclosure Agreement
+  file: ../nda/mutual-nda.lgd
 effective_date: 2026-06-01
 sides:
-  - name: providers
-    label: Providers
+  - name: disclosers
+    label: Disclosing Parties
     parties:
-      - name: acme-corporation
+      - name: acme
         label: Acme
         type: legal_entity
         legal_name: Acme Corporation
@@ -2084,10 +2089,10 @@ sides:
         representatives:
           - name: John Smith
             title: Chief Executive Officer
-  - name: clients
-    label: Clients
+  - name: recipients
+    label: Receiving Parties
     parties:
-      - name: beta-industries
+      - name: beta
         label: Beta
         type: legal_entity
         legal_name: Beta Industries Inc.
@@ -2100,25 +2105,26 @@ governing_law: Delaware
 language: en
 ---
 
-The parties hereby agree to amend the Master Service Agreement
-dated {{date: 2025-01-15}} (the "Agreement" {{def: agreement}}) as follows:
+The parties hereby agree to amend the Mutual Non-Disclosure Agreement
+dated {{date: 2026-02-01}} (the {{term: agreement}}) as follows.
 
-# Payment Terms {#payment-terms}
+# Term of Confidentiality {#amend-term}
 
-Section 5.1 of the {{term: agreement}} is amended to read as follows:
+Section 2 (Confidentiality Obligations) of the {{term: agreement}} is
+amended to read as follows:
 
-Client shall pay Provider within fifteen (15) days of invoice
-date. Late payments shall bear interest at {{money: 500, currency=USD}}
-per day of delay.
+> Each party shall protect the {{term: confidential-info}} using at least
+> reasonable care for {{duration: 5, unit=Y}} from the date of disclosure.
 
-# Data Protection {#data-protection}
+# Permitted Disclosures {#amend-permitted}
 
-The following new section is added after Section 8 of the {{term: agreement}}:
+The following new Article is added after Section 3 of the {{term: agreement}}:
 
-Provider shall process all {{term: confidential-info}} in
-accordance with applicable data protection laws.
+A party may disclose {{term: confidential-info}} where required by law,
+provided it gives the other party {{duration: 10, unit=D}} prior written
+notice where lawful to do so.
 
-# Unchanged Provisions {#unchanged}
+# Unchanged Provisions {#amend-unchanged}
 
 All other terms and conditions of the {{term: agreement}} remain in full
 force and effect.

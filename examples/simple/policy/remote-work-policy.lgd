@@ -1,0 +1,37 @@
+---
+title: Remote Work Policy
+document_type: collective_act
+effective_date: 2026-04-01
+adopted_by: Board of Directors of Acme Corporation
+adoption_date: 2026-03-15
+supersedes: Remote Work Policy adopted on 2025-01-10
+sides:
+  - name: issuer
+    label: Issuer
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+language: en
+---
+
+This Policy is adopted by the Board of Directors of {{party: acme}} and takes
+effect on {{date: 2026-04-01}}.
+
+# Definitions {#definitions}
+
+"Remote Work" {{def: remote-work}} means performance of assigned duties at a location other
+than the Issuer's premises.
+
+# Eligibility {#eligibility}
+
+Employees of {{party: acme}} may perform {{term: remote-work}} when approved
+by their manager and consistent with applicable law.
+
+# Equipment {#equipment}
+
+The Issuer may issue equipment and security requirements needed to support
+{{term: remote-work}}.

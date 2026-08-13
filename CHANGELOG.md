@@ -10,6 +10,55 @@ without a major version bump until v1.0.
 
 ## [Unreleased]
 
+### Examples directory and contributor guide — 2026-08-13
+
+First part of the ecosystem work (review item G12). The §17 examples existed only as fenced blocks
+inside the specification — unvalidatable, and with dangling dependencies (§17.4 amended a document
+that did not exist). They are now real files, alongside a second tier that exercises every feature
+of the language.
+
+#### Added
+
+- **[`examples/`](examples)** in two tiers:
+  - **`simple/`** — the §17 examples verbatim: NDA (contract), termination notice
+    (`unilateral_act`), remote work policy (`collective_act`), and an amendment.
+  - **`advanced/`** — a Master Service Agreement exercising multi-party sides, a `natural_person`
+    party, `field_types`, `{{side:}}`, item and paragraph anchors, `{{include:}}`, LegalDown and
+    non-LegalDown attachments, recitals, tables, and the `supersedes` object form; an amendment to
+    it; an en/fr bilingual pair (primary/translation model, guillemet delimiters); and a template
+    using frontmatter placeholders.
+  - **[`examples/README.md`](examples/README.md)** — a feature-coverage table mapping every
+    specification section to a live example, so implementers can find a working case per rule.
+  - All documents validate with no Errors and no Warnings; binary attachments are minimal valid
+    stubs so that file-existence checks resolve.
+- **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — linked from the README since the first commit, now
+  written: where to start, the standing design commitments (no hardcoded numbers, content/
+  presentation separation, determinism, minimal extensions, every rule needs a severity *and* a
+  conformance level), the PR checklist mirroring the discipline these revisions followed, changelog
+  entry conventions, and licensing.
+
+#### Changed
+
+- **§17.4 amendment example retargeted.** It amended "Master Service Agreement" at
+  `../original/msa.lgd` — a file that never existed — while referencing `{{term: confidential-info}}`,
+  a term the §17.1 NDA defines and an MSA would not. It now amends the §17.1 NDA, so the imported
+  definitions (`agreement`, `confidential-info`) actually resolve and the example demonstrates §7.5
+  definition import rather than merely asserting it. It also no longer redeclares `{{def: agreement}}`,
+  which would have tripped the §15.8 override Warning.
+- **§2.3** — `supersedes.file` added to the list of file references governed by the path-safety
+  rules. The object form of `supersedes` (added as review item E4) introduced a file path that the
+  path rules did not cover; writing the advanced example surfaced the omission.
+- **[`README.md`](README.md)** — the "Examples" link pointed at `llm/`; it now points at
+  `examples/`, with the LLM reference linked separately. Project status updated.
+
+#### Files touched
+
+- New: `examples/**` (16 files), [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — §2.3, §17.4.
+- [`README.md`](README.md) — navigation, specification section, project status.
+
+---
+
 ### Practical improvements (P-tier) — 2026-08-12
 
 Closes the remaining practical items from the release-readiness review (P1–P5, P7–P12). One

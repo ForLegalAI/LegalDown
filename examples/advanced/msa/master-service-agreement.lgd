@@ -1,0 +1,189 @@
+---
+legaldown: "0.1"
+title: Master Service Agreement
+subtitle: Between Acme Corporation and the Client Group
+version: "2.0"
+document_type: contract
+effective_date: 2026-03-01
+supersedes:
+  title: Master Service Agreement (2024)
+  file: superseded/msa-2024.pdf
+field_types:
+  invoice-id: Invoice identifier used in Provider billing systems
+  ticket-id: Support ticket reference in the Provider service desk
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+          - name: Maria Alvarez
+            title: Chief Financial Officer
+  - name: clients
+    label: Clients
+    parties:
+      - name: beta
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
+      - name: gamma
+        label: Gamma
+        type: legal_entity
+        legal_name: Gamma Solutions Ltd.
+        identification_number: CA-11223344
+        address: 789 Pine Road, San Jose, CA 95101
+        representatives:
+          - name: Bob Johnson
+            title: Managing Director
+      - name: john-novak
+        type: natural_person
+        legal_name: John Novak
+        date_of_birth: 1985-03-15
+        identification_number: 850315/1234
+        address: 12 Maple Lane, Austin, TX 78701
+governing_law: Delaware
+language: en
+attachments:
+  - id: schedule-a
+    title: "Schedule A: Service Description"
+    file: attachments/service-description.lgd
+  - id: schedule-b
+    title: "Schedule B: Pricing"
+    file: attachments/pricing.lgd
+  - id: exhibit-1
+    title: "Exhibit 1: Technical Specifications"
+    file: attachments/tech-specs.pdf
+tags:
+  - SaaS
+  - B2B
+  - master-agreement
+---
+
+<!-- Internal note: 2026 rewrite, approved by partner review on 2026-02-14 -->
+
+This Master Service Agreement (this "Agreement" {{def: agreement}}) is entered into on
+{{date: 2026-03-01}} between {{party: acme}} and the {{side: clients}}.
+
+> WHEREAS, {{party: acme, label=the Provider}} possesses expertise in software development and
+> hosting services; and
+>
+> WHEREAS, the {{side: clients, label=Clients}} desire to engage the Provider for certain
+> technology services;
+>
+> NOW, THEREFORE, in consideration of the mutual covenants herein, the parties agree as follows:
+
+# Definitions {#definitions}
+
+"Services" {{def: services}} means the software development, hosting, and support services
+described in {{attach: schedule-a, label=Schedule A}}.
+
+"Business Hours" {{def: business-hours}} means 09:00 to 17:00 Central Time on any day that is not
+a Saturday, Sunday, or public holiday in the State of Delaware.
+
+"Deliverable" {{def: deliverable}} means any work product the Provider is required to deliver to a
+Client under the {{term: agreement}}.
+
+"Acceptance Criteria" {{def:}} means the written criteria against which a {{term: deliverable}} is
+tested before promotion to production. The identifier for this definition is omitted and derived
+from the term itself (§5.3), producing `acceptance-criteria`.
+
+## Interpretation {#definitions-interpretation}
+
+Defined terms apply equally to their singular and plural forms. References to a *statute* include
+any amendment to it. The words `include` and `including` are not limiting.
+
+# Scope of Work {#scope-of-work}
+
+The Provider shall perform the {{term: services}} with the degree of skill and care reasonably
+expected of a qualified provider of comparable services.
+
+The Provider shall assign a technical account manager to each Client within
+{{duration: 10, unit=D}} of the Effective Date. {#scope-account-manager}
+
+## Change Requests {#scope-changes}
+
+Either side may request a change to the {{term: services}}. A change becomes binding only when:
+
+- the request is submitted in writing {#change-written}
+- the Provider confirms the schedule and price impact {#change-impact}
+- an authorised representative of each affected party approves it {#change-approval}
+  - approval by electronic signature is sufficient
+  - approval may not be withheld unreasonably
+
+A change approved under {{ref: change-approval}} amends {{attach: schedule-b, label=Schedule B}}
+from the date stated in the approval.
+
+# Payment Terms {#payment-terms}
+
+{{include: includes/payment-terms.lgd}}
+
+# Service Levels {#service-levels}
+
+The Provider shall respond to critical incidents within {{duration: 4, unit=H}} during
+{{term: business-hours}} and shall restore service within {{duration: 2, unit=W}} for any
+non-critical defect.
+
+| Severity | Response target | Restoration target |
+|---|---|---|
+| Critical | {{duration: 4, unit=H}} | {{duration: 24, unit=H}} |
+| Major | {{duration: 30, unit=MIN}} triage, then next business day | {{duration: 5, unit=D}} |
+| Minor | Next business day | {{duration: 2, unit=W}} |
+
+Incidents are tracked by ticket reference, for example {{field: TCK-2026-0417, type=ticket-id}}.
+
+# Intellectual Property {#intellectual-property}
+
+Each {{term: deliverable}} becomes the property of the commissioning Client on payment in full of
+the invoice covering it, provided it satisfies the {{term: acceptance-criteria}}.
+
+The Provider retains all rights in its pre-existing materials and in any general know-how acquired
+while performing the {{term: services}}. Nothing in this Article transfers rights in any
+{{term: deliverable, label=Deliverables}} that remain unpaid.
+
+---
+
+The Provider shall not be liable for any failure caused by a Client's own systems.
+
+# Term and Termination {#term-and-termination}
+
+The {{term: agreement}} commences on {{date: 2026-03-01}} and continues for
+{{duration: 24, unit=MO}} unless terminated earlier under this Article.
+
+## Termination for Convenience {#termination-convenience}
+
+Either side may terminate the {{term: agreement}} on {{duration: 90, unit=D}} written notice.
+
+## Termination for Cause {#termination-cause}
+
+A party may terminate immediately if the other party:
+
+- commits a material breach that remains uncured after {{duration: 30, unit=D}} {#cause-breach}
+- becomes insolvent or enters liquidation {#cause-insolvency}
+
+Termination under {{ref: cause-breach}} does not affect any accrued right to payment.
+
+# Governing Law and Jurisdiction {#governing-law}
+
+The {{term: agreement}} is governed by the laws of the State of Delaware. The parties submit to
+the exclusive jurisdiction of the courts of {{placeholder: forum-city}}.
+
+# Notices {#notices}
+
+Notices to the Provider shall be sent to {{party: acme}} at its registered address, marked for the
+attention of {{party: acme, label=the Chief Financial Officer}}.
+
+Notices to a Client shall be sent to that Client at the address stated in this
+{{term: agreement}}, with a copy to {{party: john-novak}} where the notice concerns
+{{attach: exhibit-1}}.
