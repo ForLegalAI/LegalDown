@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "directive-unknown",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Unknown directive name; renders as [UNKNOWN DIRECTIVE: trem]."
+}

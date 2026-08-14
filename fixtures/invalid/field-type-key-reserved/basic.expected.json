@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "field-type-key-reserved",
+      "level": "error",
+      "line": 4
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "field_types keys must not collide with reserved value-type names."
+}

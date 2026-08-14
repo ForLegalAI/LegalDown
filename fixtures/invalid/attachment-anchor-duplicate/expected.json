@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "attachment-anchor-duplicate",
+      "level": "error",
+      "file": "a.lgd",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.10",
+  "note": "Section identifiers must be unique across main body and all attachments."
+}

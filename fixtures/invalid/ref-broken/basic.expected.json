@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "ref-broken",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.3",
+  "note": "Reference target does not exist."
+}

@@ -1,0 +1,11 @@
+---
+title: Fixture
+sides:
+  - name: 1st-side
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+---
+
+# Scope {#scope}

@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "def-unreferenced",
+      "level": "warning",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.4",
+  "note": "Definition declared but never referenced."
+}

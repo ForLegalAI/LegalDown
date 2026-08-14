@@ -1,0 +1,15 @@
+{
+  "entry": "doc-en.lgd",
+  "diagnostics": [
+    {
+      "rule": "translation-implicit-id",
+      "level": "error",
+      "file": "doc-fr.lgd",
+      "line": 9
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.7",
+  "note": "Headings in a translation file must carry explicit identifiers."
+}

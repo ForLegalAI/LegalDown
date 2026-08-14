@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "directive-duplicate-param",
+      "level": "error",
+      "line": 23
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Same named parameter given twice."
+}

@@ -1,0 +1,34 @@
+---
+title: Fixture
+document_type: contract
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# Definitions {#definitions}
+
+"Services" {{def: services}} means the work described here.
+
+# Terms {#terms}
+
+The {{term: services}} start on {{date: 2026-03-01}} and run for
+{{duration: 12, unit=MO}}, with a review every {{duration: 2, unit=W}}.
+
+The fee is {{money: 1500, currency=EUR, note=Monthly retainer}}, invoiced to
+{{party: beta}} by the {{side: providers}}.
+
+Reference {{field: INV-2026-01, type=invoice-id}} and fill
+{{placeholder: contact-name}} before signature.
+
+See Section {{ref: definitions}} for defined terms.

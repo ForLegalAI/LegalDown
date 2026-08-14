@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "placeholder-id-malformed",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "Placeholder id must start with a lowercase letter."
+}

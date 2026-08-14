@@ -1,0 +1,12 @@
+---
+title: Fixture
+document_type: unilateral_act
+sides:
+  - name: senders
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+---
+
+# Scope {#scope}

@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "placeholder-in-structural-field",
+      "level": "error",
+      "line": 4
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "A placeholder may not appear in a side name, which is an identifier field."
+}

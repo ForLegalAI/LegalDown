@@ -1,0 +1,11 @@
+---
+title: Contrat
+language: fr
+authoritative: en
+translations:
+  en: doc-en.lgd
+---
+
+# Definitions
+
+« Services » {{def: services}} désigne x. Voir {{term: services}}.

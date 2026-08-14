@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "attachment-has-frontmatter",
+      "level": "error",
+      "file": "a.lgd",
+      "line": 2
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.10",
+  "note": "Attachment files are body-only and must not carry frontmatter."
+}

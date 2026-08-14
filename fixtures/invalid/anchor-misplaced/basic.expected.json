@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "anchor-misplaced",
+      "level": "warning",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Anchor marker outside an anchor position is literal text."
+}

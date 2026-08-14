@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "attach-undeclared",
+      "level": "error",
+      "file": "main.lgd",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.10",
+  "note": "Attachment reference names an id that frontmatter never declares."
+}

@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "def-autogen-collision",
+      "level": "error",
+      "line": 23
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.4",
+  "note": "Two omitted ids slug to the same identifier."
+}

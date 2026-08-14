@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "include-file-missing",
+      "level": "error",
+      "file": "main.lgd",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.11",
+  "note": "Include target does not exist."
+}

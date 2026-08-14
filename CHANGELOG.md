@@ -10,6 +10,58 @@ without a major version bump until v1.0.
 
 ## [Unreleased]
 
+### Rule identifiers and the validation fixtures corpus — 2026-08-14
+
+Completes the ecosystem work (review item G12). §15 defined 98 checks that no document could
+reference and no implementation could name in its output; there was also no way for two
+implementations to demonstrate they agree. Both are now addressed.
+
+#### Added
+
+- **Rule identifiers (spec §15.1).** Every check in §15.2–§15.11 carries a stable id in the
+  language's own identifier format (`heading-skip`, `ref-broken`, `include-cycle`, …). Ids are
+  never renamed or reused, so they survive section renumbering — which §16/§17 has undergone twice
+  in this release. Implementations SHOULD emit the id with each diagnostic (§15.9), making
+  suppression and filtering portable across tools; implementation-specific checks must namespace
+  their ids with a hyphenated prefix. The specification defines each rule's meaning, severity, and
+  conformance level, but never its message text.
+- **[`fixtures/`](fixtures) — the conformance corpus.** One directory per rule id, each holding a
+  document that trips exactly that rule and an expectation file recording rule id, level, and
+  location. **95 of 98 rules have fixtures**; the three that cannot be exercised by a document are
+  recorded in [`coverage.json`](fixtures/coverage.json) with a reason rather than given a fixture
+  that would not test them. Also includes four `valid/` documents that must produce no Errors.
+  - Expectations assert **rule id, severity, and location only** — never message wording, which
+    §15.9 leaves to implementations; a fixture pinning message strings would fail conformant
+    validators.
+  - Multi-file cases (include cycles, attachment and translation errors, amendment definition
+    import) declare an `entry` file and a `requires_level`, so a Core implementation skips what it
+    cannot evaluate rather than reporting a false pass (§16.5).
+  - The corpus lives in the specification repository deliberately: it is the operational definition
+    of the §15 rules, and under CC BY 4.0 it is usable by implementations under any license.
+- **[`fixtures/verify.py`](fixtures/verify.py)** — checks the corpus is self-consistent: every
+  directory names a real rule id, every expectation is well-formed, every asserted line exists and
+  is non-blank, and `coverage.json` accounts for every rule in §15.
+
+#### Changed
+
+- **§15.1** retitled "Validation Levels and Rule Identifiers"; **§15.9** now asks validators to
+  include the rule id, since it is the only part of a diagnostic stable across implementations and
+  revisions.
+- **§15.6** — the four side and party checks that were prose bullets are now a table, so they can
+  carry ids like every other rule.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — adding a validation rule now requires assigning a rule id,
+  adding a fixture, and running the verifier.
+
+#### Files touched
+
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — revision date, §15.1, §15.2–§15.11 (ID
+  column on every table), §15.6 (bullets to table), §15.9.
+- New: `fixtures/**` (95 rule directories, 4 valid documents, `README.md`, `coverage.json`,
+  `verify.py`).
+- [`README.md`](README.md), [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+---
+
 ### Examples directory and contributor guide — 2026-08-13
 
 First part of the ecosystem work (review item G12). The §17 examples existed only as fenced blocks

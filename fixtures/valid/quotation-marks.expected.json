@@ -1,0 +1,7 @@
+{
+  "diagnostics": [],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "7.2",
+  "note": "All double-quote delimiter pairs, including guillemets with the typographic spacing that must be trimmed from the extracted term."
+}

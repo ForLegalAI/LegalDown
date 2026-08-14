@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "attachment-file-missing",
+      "level": "error",
+      "file": "main.lgd",
+      "line": 6
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.10",
+  "note": "Declared attachment file does not exist."
+}

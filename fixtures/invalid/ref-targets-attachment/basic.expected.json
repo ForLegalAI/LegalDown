@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "ref-targets-attachment",
+      "level": "error",
+      "line": 11
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.3",
+  "note": "Attachments share the anchor namespace but are referenced with the attach directive."
+}

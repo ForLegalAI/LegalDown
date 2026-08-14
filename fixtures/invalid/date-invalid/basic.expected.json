@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "date-invalid",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "2026-02-30 is not a valid calendar date."
+}

@@ -1,0 +1,11 @@
+---
+title: Fixture
+attachments:
+  - id: scope
+    title: "Schedule A"
+    file: schedule-a.lgd
+---
+
+# Scope {#scope}
+
+See {{attach: scope}}.

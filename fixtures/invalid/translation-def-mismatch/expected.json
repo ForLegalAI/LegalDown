@@ -1,0 +1,15 @@
+{
+  "entry": "doc-en.lgd",
+  "diagnostics": [
+    {
+      "rule": "translation-def-mismatch",
+      "level": "error",
+      "file": "doc-fr.lgd",
+      "line": 11
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.7",
+  "note": "Definition ids must match between linked translations."
+}

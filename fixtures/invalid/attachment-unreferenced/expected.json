@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "attachment-unreferenced",
+      "level": "warning",
+      "file": "main.lgd",
+      "line": 4
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.10",
+  "note": "Attachment declared in frontmatter but never referenced."
+}

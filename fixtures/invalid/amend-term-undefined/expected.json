@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "amend-term-undefined",
+      "level": "error",
+      "file": "main.lgd",
+      "line": 10
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.8",
+  "note": "Original is LegalDown and its definitions are imported, so an unresolved term is an Error."
+}

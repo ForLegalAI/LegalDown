@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "supersedes-file-missing",
+      "level": "error",
+      "file": "main.lgd",
+      "line": 5
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.6",
+  "note": "Declared supersedes.file does not exist. The document is never loaded, only checked for existence."
+}

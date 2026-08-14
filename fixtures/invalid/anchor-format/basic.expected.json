@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "anchor-format",
+      "level": "error",
+      "line": 19
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Anchor contains an uppercase letter and an underscore."
+}

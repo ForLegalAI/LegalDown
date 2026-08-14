@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "field-type-undeclared",
+      "level": "warning",
+      "line": 9
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "field_types is present, so an undeclared type draws a warning."
+}

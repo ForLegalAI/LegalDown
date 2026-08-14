@@ -1,0 +1,15 @@
+---
+title: Contrat
+language: fr
+authoritative: en
+translations:
+  en: doc-en.lgd
+---
+
+# Définitions {#definitions}
+
+« Services » {{def: services}} désigne x. Voir {{term: services}}.
+
+## Extra {#extra}
+
+Heading absent from the primary.

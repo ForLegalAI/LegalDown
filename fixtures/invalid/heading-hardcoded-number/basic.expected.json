@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "heading-hardcoded-number",
+      "level": "warning",
+      "line": 19
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Numbering is generated at render time."
+}

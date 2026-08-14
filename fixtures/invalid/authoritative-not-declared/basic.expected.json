@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "authoritative-not-declared",
+      "level": "warning",
+      "line": 4
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "authoritative names a language that is neither the document language nor a translation key."
+}

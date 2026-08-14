@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "anchor-duplicate",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Two headings declare the same explicit anchor."
+}

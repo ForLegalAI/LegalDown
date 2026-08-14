@@ -1,0 +1,15 @@
+{
+  "entry": "doc-en.lgd",
+  "diagnostics": [
+    {
+      "rule": "translation-file-missing",
+      "level": "error",
+      "file": "doc-en.lgd",
+      "line": 6
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.7",
+  "note": "Declared translation file does not exist."
+}

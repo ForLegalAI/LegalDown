@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "metadata-date-invalid",
+      "level": "error",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "effective_date is not a valid ISO 8601 date."
+}

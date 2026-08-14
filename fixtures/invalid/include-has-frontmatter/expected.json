@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "include-has-frontmatter",
+      "level": "error",
+      "file": "part.lgd",
+      "line": 2
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.11",
+  "note": "Include fragments are body-only and must not carry frontmatter."
+}

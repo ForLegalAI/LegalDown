@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "side-name-duplicate",
+      "level": "error",
+      "line": 10
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "Two sides declare the same name."
+}

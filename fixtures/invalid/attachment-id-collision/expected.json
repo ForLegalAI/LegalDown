@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "attachment-id-collision",
+      "level": "error",
+      "file": "main.lgd",
+      "line": 4
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.10",
+  "note": "Attachment id collides with a section identifier in the shared anchor namespace."
+}

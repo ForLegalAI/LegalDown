@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "value-curly-quote",
+      "level": "warning",
+      "line": 23
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Unquoted value begins with a typographic quotation mark."
+}

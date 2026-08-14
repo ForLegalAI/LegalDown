@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "money-missing-currency",
+      "level": "warning",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "No currency given and none configured."
+}

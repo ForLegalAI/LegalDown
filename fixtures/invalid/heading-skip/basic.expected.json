@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "heading-skip",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Level 1 followed by level 3 with no intervening level 2."
+}

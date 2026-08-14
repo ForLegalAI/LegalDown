@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "def-no-quoted-span",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.4",
+  "note": "The def directive is not immediately preceded by a quoted span."
+}

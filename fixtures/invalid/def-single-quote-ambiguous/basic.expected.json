@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "def-single-quote-ambiguous",
+      "level": "warning",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.4",
+  "note": "A single-quoted term containing an apostrophe (U+2019) may be mis-delimited."
+}
