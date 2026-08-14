@@ -2,6 +2,8 @@
 
 LegalDown is a plain-text markup language for legal documents, including contracts, unilateral acts, and collective acts. It is a CommonMark superset with legal-specific directives. This document is a condensed technical reference for reading, understanding, and generating LegalDown documents.
 
+Full specification: [`spec/legaldown-spec.md`](../spec/legaldown-spec.md). Working documents: [`examples/`](../examples) (simple and advanced tiers, with a feature-coverage table). Conformance corpus: [`fixtures/`](../fixtures) (one case per validation rule with its expected diagnostic).
+
 ## File Format
 
 - Extension: `.lgd` or `.legaldown` (`.legal.md` for Markdown tooling compatibility)
@@ -346,7 +348,20 @@ Separate files per language with identical heading structure and section identif
 
 A translation is a **secondary** document: the **primary** is the linked file whose `language` equals `authoritative` (declaring it is recommended). Identifiers originate in the primary and are mirrored **explicitly** into translations — every heading and `{{def:}}` in a translation file must carry an explicit id (its counterpart's id from the primary); auto-generation is never relied on in translation files. Updating a translation = mirror the primary's change under the same id + translate the text. Without `authoritative`, validators check symmetrically and warn on auto-generated ids in linked files.
 
+## Not in the language
+
+These do not exist. Do not invent syntax for them — if a document needs one, express it in ordinary body text or frontmatter.
+
+- **No signature block markup.** Renderers generate signature blocks from frontmatter; generation and layout are implementation-defined
+- **No `{{meta:}}`** or any directive that inserts a frontmatter value into body text — write the value, or use `{{date:}}` / `{{placeholder:}}`
+- **No cross-document references.** `{{ref:}}` resolves only within the current document (plus its includes and attachments); an amendment cites the original's provisions as literal text
+- **No section-scoped definitions, no definition "kinds", no paired `{{def:}}…{{/def}}` form, no `{{lang:}}` blocks** (bilingual documents are separate files)
+- **No document-level locale or default currency**, and no numbering-scheme field in frontmatter — all presentation lives in the style template
+- **No export or interchange format** — the source file is the canonical machine-readable representation
+
 ## Validation Summary
+
+Every check in the specification carries a stable **rule id** (`heading-skip`, `ref-broken`, `include-cycle`, …) that validators report with each diagnostic; message wording is implementation-defined. The lists below group the checks by severity.
 
 **Errors** (must fix):
 - Skipped heading levels

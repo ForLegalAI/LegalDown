@@ -197,6 +197,8 @@ contains none of them.
 {{placeholder: fee, type=money, currency=EUR}} ← Typed inline blank
 {{party: acme}}                          ← Inline party reference
 {{side: clients}}                        ← Inline side (collective) reference
+{{duration: 30, unit=D}}                 ← Inline duration (S MIN H D W MO Y)
+{{attach: schedule-a}}                   ← Reference a declared attachment
 {{include: schedules/pricing.lgd}}       ← Include an external file
 ```
 
@@ -241,7 +243,7 @@ following this repository for changes.
 
 LegalDown is in early draft stage. Current priorities:
 
-- [x] Resolve the specification review findings (structure, grammar, validation, conformance)
+- [x] Complete the v0.1 specification text
 - [x] Publish reference examples for common document types
 - [x] Publish the validation fixtures corpus (conformance test suite)
 - [ ] Tag v0.1
