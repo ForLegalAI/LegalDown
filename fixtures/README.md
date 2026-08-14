@@ -52,6 +52,7 @@ renumbering.
 | `diagnostics` | Diagnostics that MUST appear. Matching is on `rule` + `level` (+ `line` when given) |
 | `exhaustive` | When `true`, the listed diagnostics are the **only** ones permitted. Default `false` |
 | `requires_level` | Lowest conformance level (§16) that can evaluate the case: `core`, `rendering`, or `full` |
+| `requires_config` | Optional. Configuration the case depends on, e.g. `{"document_root": "."}` (paths relative to the case directory). Runners that cannot supply it skip the case and report it as skipped |
 | `spec` | Section the rule is defined in — informational |
 | `note` | Why the case trips the rule — informational |
 

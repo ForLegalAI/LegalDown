@@ -3,11 +3,11 @@
     {
       "rule": "party-name-malformed",
       "level": "error",
-      "line": 6
+      "line": 21
     }
   ],
   "exhaustive": false,
   "requires_level": "core",
   "spec": "15.6",
-  "note": "Party name must match the lowercase identifier format."
+  "note": "The party directive value does not match the lowercase identifier format; renders as [INVALID PARTY: Bad_Name]. Frontmatter name format is the separate rule side-party-name-format."
 }

@@ -18,4 +18,4 @@ sides:
 
 # Scope {#scope}
 
-Due {{date: 2026-01-01, note=first, second}}.
+Due on {{date: 2026-01-01, note=**urgent** deadline}}.

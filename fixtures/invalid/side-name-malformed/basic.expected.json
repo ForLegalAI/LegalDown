@@ -3,11 +3,11 @@
     {
       "rule": "side-name-malformed",
       "level": "error",
-      "line": 4
+      "line": 21
     }
   ],
   "exhaustive": false,
   "requires_level": "core",
   "spec": "15.6",
-  "note": "Side name must begin with a lowercase letter."
+  "note": "The side directive value does not match the lowercase identifier format; renders as [INVALID SIDE: 9bad]. Frontmatter name format is the separate rule side-party-name-format."
 }
