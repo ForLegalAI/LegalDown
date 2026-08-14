@@ -189,7 +189,7 @@ the exclusive jurisdiction of the courts of {{placeholder: forum-city}}.
 # Notices {#notices}
 
 Notices to the Provider shall be sent to {{party: acme}} at its registered address, marked for the
-attention of {{party: acme, label=the Chief Financial Officer}}.
+attention of its Chief Financial Officer.
 
 Notices to a Client shall be sent to that Client at the address stated in this
 {{term: agreement}}, with a copy to {{party: john-novak}} where the notice concerns

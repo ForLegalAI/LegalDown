@@ -2,12 +2,14 @@
 
 Working LegalDown documents, kept as real files so they can be validated and rendered by tooling —
 not just read. Every document here is intended to be **valid** under
-[the specification](../spec/legaldown-spec.md); deliberately invalid documents live in the
-validation fixtures corpus instead.
+[the specification](../spec/legaldown-spec.md). Deliberately invalid documents will live in the
+validation fixtures corpus, which is planned before the v0.1 tag and does not exist yet — see the
+[project status](../README.md#project-status-).
 
 Two tiers:
 
-- **[`simple/`](simple)** — the specification's §17 examples, verbatim. Start here.
+- **[`simple/`](simple)** — the specification's §17 examples, verbatim (kept byte-identical to the
+  fenced blocks in §17). Start here.
 - **[`advanced/`](advanced)** — larger documents exercising the full feature surface: includes,
   attachments, anchors below heading level, bilingual pairs, and templates.
 
@@ -20,7 +22,7 @@ Two tiers:
 | [`nda/mutual-nda.lgd`](simple/nda/mutual-nda.lgd) | `contract` | Two sides, definitions (sectioned and inline), `{{term:}}`, `{{party:}}` with `label`, `{{date:}}`, attachments (LegalDown + PDF), `{{attach:}}` |
 | [`notice/termination-notice.lgd`](simple/notice/termination-notice.lgd) | `unilateral_act` | `issuer` side, a definition whose body is a `{{date:}}` |
 | [`policy/remote-work-policy.lgd`](simple/policy/remote-work-policy.lgd) | `collective_act` | `adopted_by`, `adoption_date`, `supersedes` (string form) |
-| [`amendment/first-amendment.lgd`](simple/amendment/first-amendment.lgd) | amendment | `amends` metadata; definitions imported from the amended NDA (§7.5) — `{{term: agreement}}` and `{{term: confidential-info}}` resolve without redeclaration |
+| [`amendment/first-amendment.lgd`](simple/amendment/first-amendment.lgd) | `contract` (an amendment) | `amends` metadata; definitions imported from the amended NDA (§7.5) — `{{term: agreement}}` and `{{term: confidential-info}}` resolve without redeclaration |
 
 ## advanced/
 

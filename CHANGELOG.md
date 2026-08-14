@@ -29,12 +29,18 @@ of the language.
     using frontmatter placeholders.
   - **[`examples/README.md`](examples/README.md)** — a feature-coverage table mapping every
     specification section to a live example, so implementers can find a working case per rule.
-  - All documents validate with no Errors and no Warnings; binary attachments are minimal but
+  - All documents validate with **no Errors**. Warnings and Info notes are configuration-dependent
+    (a Core validator warns about check categories it did not run, §16.5; the item-anchor Warning
+    of §15.3 fires under a template with list enumeration disabled), so "no Errors" is the portable
+    bar — see the notes in [`examples/README.md`](examples/README.md). Binary attachments are
+    minimal but
     structurally valid stubs (correct PDF cross-reference table, `/Size`, and `/Length`) so that
     file-existence checks resolve and a renderer opening one gets a parseable document.
-- **[`.gitattributes`](.gitattributes)** — marks binary assets so Git never applies line-ending
-  conversion to them (the placeholder PDFs contain no NUL bytes, so Git classified them as text and
-  would have corrupted them on checkout), and normalizes `.lgd`/`.md` sources to LF per §2.1.
+- **[`.gitattributes`](.gitattributes)** — sets `* text=auto` and marks binary assets explicitly, so
+  Git never applies line-ending conversion to them, and normalizes `.lgd`/`.md` sources to LF per
+  §2.1. The placeholder PDFs contain no NUL bytes, so Git's default heuristic classified them as
+  text and would have corrupted them on checkout; setting the default rather than relying on an
+  extension list keeps the next unlisted binary format from regressing the same way.
 - **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — linked from the README since the first commit, now
   written: where to start, the standing design commitments (no hardcoded numbers, content/
   presentation separation, determinism, minimal extensions, every rule needs a severity *and* a
@@ -55,6 +61,9 @@ of the language.
   — unlike `amends`), §15.6 gains severities for `supersedes.title` (Error) and `supersedes.file`
   existence (Error), and §16.4 lists it among the Full-level existence checks. Writing the advanced
   example surfaced the omission; review of that example surfaced the missing severities.
+- **§13.4 no longer duplicates §7.3.** Both sections carried a verbatim copy of the `{{term:}}`
+  rendering algorithm, and the whitespace change below had to be applied to each independently.
+  §13.4 now references §7.3 as normative, removing the copy that could drift.
 - **Placeholders in representative fields (§3.10, §15.5).** §3.10 permitted placeholders everywhere
   except side and party `name`, but the §15.5 validation row said "any `name`" — which made a
   placeholder in a representative's `name` an Error, though a representative name is a display
@@ -67,7 +76,9 @@ of the language.
   leading and trailing whitespace inside the quotation marks. French typography writes
   `« Services »`, which previously extracted the term as `" Services "` — so `{{term:}}` rendered
   with doubled spaces on a literal implementation and cleanly on a trimming one. The bilingual
-  example made the ambiguity concrete.
+  example made the ambiguity concrete. "Whitespace" is defined as any character with the Unicode
+  `White_Space` property, since French typography uses U+00A0 and U+202F inside guillemets and a
+  rule stripping only ASCII space and tab would leave the defect in place for real documents.
 - **[`README.md`](README.md)** — the "Examples" link pointed at `llm/`; it now points at
   `examples/`, with the LLM reference linked separately. Project status updated.
 

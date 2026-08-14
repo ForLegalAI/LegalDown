@@ -1,7 +1,7 @@
 # LegalDown Specification
 ## Version 0.1 DRAFT
 
-**Revision:** 2026-08-13 — change history in [CHANGELOG.md](../CHANGELOG.md)
+**Revision:** 2026-08-14 — change history in [CHANGELOG.md](../CHANGELOG.md)
 
 ---
 
@@ -602,7 +602,7 @@ Provider may suspend the Services if:
 - They are **never auto-generated** — automatic generation (§5.3) applies to headings only; anchors below heading level are always explicit and opt-in
 - The anchor marker is source-only and MUST NOT appear in rendered output
 - The rendered designation of an anchored item or paragraph is produced by the renderer under the active template (§6.3, §13.2, §13.3) — the source never contains item letters or paragraph numbers
-- A `{#id}`-like marker in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor
+- A `{#id}`-like marker in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor. This Warning does **not** apply inside code spans, code blocks, or HTML comments, where anchor markers are not recognized at all (§11.4)
 
 ---
 
@@ -707,7 +707,7 @@ The Provider shall perform the marketing services described in this Article
 
 **Term extraction:**
 
-- The defined term is the text inside the quotation marks of the quoted span that immediately precedes the directive, with leading and trailing whitespace removed. Several languages set a space inside the marks — French typography writes `« Services »` — so the spacing is typographic, not part of the term. Implementations MUST strip it: the term of `« Services »` is `Services`, identical to that of `"Services"`
+- The defined term is the text inside the quotation marks of the quoted span that immediately precedes the directive, with leading and trailing whitespace removed. Several languages set a space inside the marks — French typography writes `« Services »`, commonly with a narrow no-break space — so the spacing is typographic, not part of the term. Implementations MUST strip it: the term of `« Services »` is `Services`, identical to that of `"Services"`. For this rule, **whitespace** means any character with the Unicode `White_Space` property, which includes U+0020, tab, U+00A0 (no-break space), and U+202F (narrow no-break space); stripping only ASCII space and tab is not conformant
 - The directive MUST be on the same line as the quoted span; only optional spaces or tabs (no line break) may appear between the closing quotation mark and the directive. If any other character intervenes, the directive is not attached to that span
 - A `{{def:}}` not immediately preceded by a recognized quoted span is an error
 - Defined terms MUST NOT carry emphasis markers in source (e.g., `**bold**`); how a defined term is displayed (bold, underline, small caps) is determined at render time by the style template (§13.7)
@@ -1460,13 +1460,7 @@ For targets that are item or paragraph anchors (§5.7), render the containing se
 
 ### 13.4 Definition Resolution
 
-When rendering `{{term: id}}` or `{{term: id, label=text}}`:
-
-1. Locate definition by identifier
-2. If a `label` parameter is provided, use the label text as the display text
-3. Otherwise, use the defined term — the text inside the quotation marks at the definition site, without the delimiting marks and without the whitespace they may enclose (§7.2)
-4. Replace directive with the display text and hyperlink it to the definition's location (the `{{def:}}` anchor)
-5. If definition not found, insert `[UNDEFINED: id]` and emit validation error
+`{{term: id}}` and `{{term: id, label=text}}` render according to the algorithm in §7.3, which is normative: locate the definition, use the `label` when present and otherwise the defined term itself, hyperlink the result to the `{{def:}}` anchor, and insert `[UNDEFINED: id]` with a validation Error when the definition is not found. Failure markers take precedence over any `label` (§11.5).
 
 ### 13.5 Field Spec Resolution
 
@@ -1668,7 +1662,7 @@ Validators MUST categorize issues at three levels:
 | Heading levels do not skip | Error |
 | Heading depth does not exceed level 5 | Error |
 | Explicit anchors (section identifiers, item and paragraph anchors) are unique within the anchor namespace | Error |
-| `{#id}`-like marker outside an anchor position (likely misplaced anchor, §5.7) | Warning |
+| `{#id}`-like marker outside an anchor position (likely misplaced anchor, §5.7; not raised inside code spans, code blocks, or comments, §11.4) | Warning |
 | Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
 | Auto-generated identifier lost non-transliterable letters or digits (§5.3 — explicit identifier recommended) | Warning |
 | Section identifiers follow naming rules | Error |
@@ -1853,7 +1847,7 @@ Scope: everything that can be determined from the document file alone. A Core im
 - Document structure (§4) and identifiers (§5), including automatic identifier generation (§5.3) and item/paragraph anchors (§5.7)
 - Recognition and validation of all directives in §11.1: cross-references (§6), definitions and term references (§7), field specs (§10), and attachment references (§6.4)
 - Standard text formatting (§8) and tables (§9)
-- Validation (§15): §15.1–§15.6 and §15.9 in full — excluding two rows that cannot be evaluated from the document alone: the template-dependent §15.3 row on refs to non-enumerated item/paragraph anchors (evaluated from the Rendering level, §16.3) and the §15.6 `supersedes.file` existence row (Full, §16.4) — plus the rows of §15.7, §15.8, §15.10, and §15.11 that need only the document itself:
+- Validation (§15): §15.1–§15.6 and §15.9 in full, with two rows excluded — the §15.3 row on refs to non-enumerated item/paragraph anchors, which depends on the active style template and is therefore evaluated from the Rendering level (§16.3), and the §15.6 `supersedes.file` existence row, which requires opening another file and is therefore Full (§16.4) — plus the rows of §15.7, §15.8, §15.10, and §15.11 that need only the document itself:
   - §15.7 — the single-file translation rows: every heading and `{{def:}}` carries an explicit identifier when the document itself is a translation (its `language` differs from its declared `authoritative`), and the auto-generated-identifier Warning when the document declares `translations` without `authoritative`
   - §15.8 — `amends.title` is non-empty; unresolved `{{term:}}` references are handled per §7.5's "original not available" rules (a Core implementation never loads the original, so that branch always applies)
   - §15.10 — attachment `id` uniqueness, attachment `id` collisions with other anchors (§5.6), attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
@@ -1894,12 +1888,7 @@ An implementation that encounters a construct whose processing lies beyond its c
 
 ## 17. Complete Examples
 
-These examples exist as real files in the repository's `examples/simple/` directory, one per
-subsection: `nda/mutual-nda.lgd` (§17.1) with `attachments/confidential-categories.lgd`,
-`notice/termination-notice.lgd` (§17.2), `policy/remote-work-policy.lgd` (§17.3), and
-`amendment/first-amendment.lgd` (§17.4). Relative paths shown in the frontmatter below — such as the
-amendment's `amends.file` — resolve against that layout. Further examples covering the full feature
-surface are in `examples/advanced/`.
+These examples exist as real files in the repository's `examples/simple/` directory, one per subsection: `nda/mutual-nda.lgd` (§17.1) with `attachments/confidential-categories.lgd`, `notice/termination-notice.lgd` (§17.2), `policy/remote-work-policy.lgd` (§17.3), and `amendment/first-amendment.lgd` (§17.4). Relative paths shown in the frontmatter below — such as the amendment's `amends.file` — resolve against that layout. Further examples covering the full feature surface are in `examples/advanced/`.
 
 ### 17.1 Contract Example
 
@@ -2073,9 +2062,7 @@ The Issuer may issue equipment and security requirements needed to support
 
 ### 17.4 Amendment Example
 
-This example amends the contract of §17.1. Because `amends.file` points to a LegalDown file, that
-document's definitions are imported (§7.5): `{{term: agreement}}` and `{{term: confidential-info}}`
-resolve against the original without being redeclared here.
+This example amends the contract of §17.1. Because `amends.file` points to a LegalDown file, that document's definitions are imported (§7.5): `{{term: agreement}}` and `{{term: confidential-info}}` resolve against the original without being redeclared here.
 
 ```markdown
 ---

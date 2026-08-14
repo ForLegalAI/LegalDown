@@ -50,10 +50,13 @@ governing_law: Delaware
 language: en
 ---
 
+<!-- `amends.file` points to a LegalDown document, so the original's definitions are imported
+     under §7.5: this amendment uses {{term: agreement}} and {{term: services}} without
+     redeclaring them, and so avoids the §15.8 override Warning. -->
+
 The parties hereby amend the Master Service Agreement dated {{date: 2026-03-01}} (the
-{{term: agreement}}) as follows. Capitalised terms not defined here have the meaning given in the
-{{term: agreement}} — its definitions are imported under §7.5 because `amends.file` points to a
-LegalDown document, so this amendment neither repeats nor overrides them.
+{{term: agreement}}) as follows. Capitalised terms not defined in this amendment have the meaning
+given in the {{term: agreement}}.
 
 # Payment Terms {#amend-payment}
 
@@ -61,7 +64,8 @@ LegalDown document, so this amendment neither repeats nor overrides them.
      1 Definitions, 2 Scope of Work, 3 Payment Terms, 4 Service Levels, 5 Intellectual Property,
      6 Limitation of Liability, 7 Term and Termination, 8 Governing Law, 9 Notices. -->
 
-The first paragraph of Article 3 (Payment Terms) of the Agreement is amended to read as follows:
+The first paragraph of Article 3 (Payment Terms) of the {{term: agreement}} is amended to read as
+follows:
 
 > Each Client shall pay the fees within {{duration: 15, unit=D}} of the date of the relevant
 > invoice. Late payments bear interest at {{money: 250, currency=USD, note=Fixed daily charge}}
@@ -69,7 +73,8 @@ The first paragraph of Article 3 (Payment Terms) of the Agreement is amended to 
 
 # Data Protection {#amend-data-protection}
 
-The following new Article is added after Article 6 (Limitation of Liability) of the Agreement:
+The following new Article is added after Article 6 (Limitation of Liability) of the
+{{term: agreement}}:
 
 "Personal Data" {{def: personal-data}} means any information relating to an identified or
 identifiable natural person that the Provider processes in performing the {{term: services}}.
@@ -79,9 +84,9 @@ protection laws and only on documented instructions from the relevant Client.
 
 # Service Levels {#amend-service-levels}
 
-In the severity table in Article 4 (Service Levels) of the Agreement, the restoration target for
-Minor defects is reduced from {{duration: 2, unit=W}} to {{duration: 1, unit=W}}.
+In the severity table in Article 4 (Service Levels) of the {{term: agreement}}, the restoration
+target for Minor defects is reduced from {{duration: 2, unit=W}} to {{duration: 1, unit=W}}.
 
 # Unchanged Provisions {#amend-unchanged}
 
-All other terms and conditions of the Agreement remain in full force and effect.
+All other terms and conditions of the {{term: agreement}} remain in full force and effect.

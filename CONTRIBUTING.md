@@ -60,6 +60,9 @@ A specification change usually touches more than the specification. Before openi
 - [ ] **[`README.md`](README.md)** — if the change affects the introductory material or examples
 - [ ] **[`examples/`](examples)** — if the change adds a feature, add or extend an example, and
       update the feature-coverage table in [`examples/README.md`](examples/README.md)
+- [ ] **§17 ↔ `examples/simple/` stay byte-identical** — three documents claim the specification's
+      §17 fenced blocks and the files in `examples/simple/` are the same text. If you edit either,
+      edit both
 - [ ] **[`CHANGELOG.md`](CHANGELOG.md)** — a dated entry under `[Unreleased]` (format below)
 - [ ] **The spec's `Revision:` date** — bump it when `spec/legaldown-spec.md` changes
 - [ ] Cross-references still resolve — section numbers shift when sections are added

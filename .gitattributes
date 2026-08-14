@@ -1,10 +1,24 @@
-# Binary assets — never line-ending converted
+# Let Git detect text vs binary by default, rather than relying on the
+# extension list below being exhaustive. Without this, a NUL-free binary
+# (such as the small placeholder PDFs in examples/) is classified as text
+# and corrupted by line-ending conversion on checkout.
+* text=auto
+
+# Binary assets — never line-ending converted, whatever the heuristic decides
 *.pdf   binary
 *.png   binary
 *.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.zip   binary
+*.woff  binary
+*.woff2 binary
 *.docx  binary
+*.xlsx  binary
 
 # LegalDown sources and docs — normalize to LF (spec §2.1 prefers LF)
 *.lgd        text eol=lf
 *.legaldown  text eol=lf
+*.legal.md   text eol=lf
 *.md         text eol=lf
