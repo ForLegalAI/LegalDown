@@ -1,0 +1,9 @@
+---
+title: Fixture
+field_types:
+  Invoice_ID: Invoice identifier
+---
+
+# Scope {#scope}
+
+See {{field: INV-1, type=invoice-id}}.

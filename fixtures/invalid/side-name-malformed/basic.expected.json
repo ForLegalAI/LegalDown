@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "side-name-malformed",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "The side directive value does not match the lowercase identifier format; renders as [INVALID SIDE: 9bad]. Frontmatter name format is the separate rule side-party-name-format."
+}

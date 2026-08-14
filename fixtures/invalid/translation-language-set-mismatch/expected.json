@@ -1,0 +1,15 @@
+{
+  "entry": "doc-en.lgd",
+  "diagnostics": [
+    {
+      "rule": "translation-language-set-mismatch",
+      "level": "error",
+      "file": "doc-fr.lgd",
+      "line": 6
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.7",
+  "note": "Linked files declare different language sets: {en, fr} versus {fr, de}."
+}

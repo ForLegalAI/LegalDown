@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "supersedes-title-empty",
+      "level": "error",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "The object form of supersedes requires a non-empty title."
+}

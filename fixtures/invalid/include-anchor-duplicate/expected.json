@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "include-anchor-duplicate",
+      "level": "error",
+      "file": "part.lgd",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.11",
+  "note": "Identifiers must be unique across the combined document after inclusion."
+}

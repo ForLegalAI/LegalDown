@@ -1,0 +1,16 @@
+{
+  "diagnostics": [
+    {
+      "rule": "path-outside-root",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Path escapes the configured document root. The check runs only when a root is configured (spec 2.3): requires_config asks the runner to set the document root to this fixture directory; runners that cannot configure a root skip the case and report it as skipped.",
+  "requires_config": {
+    "document_root": "."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "frontmatter-absent",
+      "level": "warning",
+      "line": 1
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "Document has no frontmatter block."
+}

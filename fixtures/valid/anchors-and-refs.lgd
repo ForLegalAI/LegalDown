@@ -1,0 +1,33 @@
+---
+title: Fixture
+document_type: contract
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# Suspension {#suspension}
+
+Provider may suspend if:
+
+- payment is overdue by more than thirty days {#suspension-overdue}
+- the Client breaches confidentiality {#suspension-breach}
+  - and the breach is material {#suspension-material}
+
+This paragraph carries its own anchor. {#suspension-note}
+
+# Consequences {#consequences}
+
+Suspension under Section {{ref: suspension-overdue}} does not waive payment.
+Section {{ref: suspension-material}} governs material breach, and Section
+{{ref: suspension-note}} is a numbered paragraph reference.

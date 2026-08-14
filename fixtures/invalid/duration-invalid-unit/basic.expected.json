@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "duration-invalid-unit",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "Bare M is rejected; MIN denotes minutes and MO denotes months."
+}

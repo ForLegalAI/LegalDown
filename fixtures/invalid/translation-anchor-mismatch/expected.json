@@ -1,0 +1,15 @@
+{
+  "entry": "doc-en.lgd",
+  "diagnostics": [
+    {
+      "rule": "translation-anchor-mismatch",
+      "level": "error",
+      "file": "doc-fr.lgd",
+      "line": 9
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.7",
+  "note": "Linked translations must use identical section identifiers."
+}

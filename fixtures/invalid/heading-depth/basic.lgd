@@ -1,0 +1,29 @@
+---
+title: Fixture
+document_type: contract
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# A {#a}
+
+## B {#b}
+
+### C {#c}
+
+#### D {#d}
+
+##### E {#e}
+
+###### F {#f}

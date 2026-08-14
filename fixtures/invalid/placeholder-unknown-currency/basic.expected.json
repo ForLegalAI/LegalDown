@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "placeholder-unknown-currency",
+      "level": "warning",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "Unrecognized ISO 4217 code on a money placeholder."
+}

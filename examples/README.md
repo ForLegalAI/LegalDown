@@ -2,9 +2,9 @@
 
 Working LegalDown documents, kept as real files so they can be validated and rendered by tooling —
 not just read. Every document here is intended to be **valid** under
-[the specification](../spec/legaldown-spec.md). Deliberately invalid documents will live in the
-validation fixtures corpus, which is planned before the v0.1 tag and does not exist yet — see the
-[project status](../README.md#project-status-).
+[the specification](../spec/legaldown-spec.md). Deliberately invalid documents live in
+[`fixtures/`](../fixtures), the conformance corpus, where each is paired with the diagnostic a
+conforming validator must produce.
 
 Two tiers:
 

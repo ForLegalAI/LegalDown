@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "amends-title-empty",
+      "level": "error",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.8",
+  "note": "amends requires a non-empty title."
+}

@@ -1,0 +1,11 @@
+---
+title: Agreement
+language: en
+authoritative: en
+translations:
+  fr: doc-fr.lgd
+---
+
+# Definitions {#definitions}
+
+"Services" {{def: services}} means x. See {{term: services}}.

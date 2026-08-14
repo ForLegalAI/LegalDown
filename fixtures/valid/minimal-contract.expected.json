@@ -1,0 +1,7 @@
+{
+  "diagnostics": [],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15",
+  "note": "Smallest well-formed contract: frontmatter, two sides, one provision."
+}

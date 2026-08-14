@@ -1,0 +1,15 @@
+---
+title: Fixture
+document_type: contract
+sides:
+  - name: providers
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# Scope {#scope}

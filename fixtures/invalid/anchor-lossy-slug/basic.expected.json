@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "anchor-lossy-slug",
+      "level": "warning",
+      "line": 19
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Heading is entirely non-transliterable, so the auto-generated id loses all letters."
+}

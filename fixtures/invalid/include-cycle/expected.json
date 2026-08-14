@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "include-cycle",
+      "level": "error",
+      "file": "part-b.lgd",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.11",
+  "note": "part-a includes part-b which includes part-a; detection must span the whole chain."
+}

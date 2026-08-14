@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "raw-html",
+      "level": "warning",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Raw HTML other than comments is ignored for output."
+}

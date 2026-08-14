@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "amend-term-unresolvable",
+      "level": "info",
+      "file": "main.lgd",
+      "line": 10
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.8",
+  "note": "Original is not LegalDown, so definitions cannot be imported and the term is Info, not Error."
+}

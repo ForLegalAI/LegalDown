@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "def-lossy-slug",
+      "level": "warning",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.4",
+  "note": "Auto-derived definition id loses every character of a non-transliterable term."
+}

@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "definition-used-before-declaration",
+      "level": "info",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.3",
+  "note": "Term used before its declaration point."
+}

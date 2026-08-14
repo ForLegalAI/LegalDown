@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "amend-def-override",
+      "level": "warning",
+      "file": "main.lgd",
+      "line": 10
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.8",
+  "note": "Amendment redeclares a definition id that exists in the imported original."
+}

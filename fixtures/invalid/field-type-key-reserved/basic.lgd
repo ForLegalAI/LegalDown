@@ -1,0 +1,9 @@
+---
+title: Fixture
+field_types:
+  money: A custom money type
+---
+
+# Scope {#scope}
+
+See {{field: 5, type=money}}.

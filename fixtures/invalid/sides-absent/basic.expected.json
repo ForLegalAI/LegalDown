@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "sides-absent",
+      "level": "warning",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "Frontmatter present but no sides, so document_type constraints cannot be verified."
+}

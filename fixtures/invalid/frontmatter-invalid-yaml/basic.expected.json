@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "frontmatter-invalid-yaml",
+      "level": "error",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "Frontmatter does not parse as YAML."
+}

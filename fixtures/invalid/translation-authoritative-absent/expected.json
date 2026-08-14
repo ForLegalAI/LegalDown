@@ -1,0 +1,15 @@
+{
+  "entry": "doc-en.lgd",
+  "diagnostics": [
+    {
+      "rule": "translation-authoritative-absent",
+      "level": "warning",
+      "file": "doc-en.lgd",
+      "line": 8
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.7",
+  "note": "No authoritative declared, so the primary cannot be determined and auto-generated ids are warned about."
+}

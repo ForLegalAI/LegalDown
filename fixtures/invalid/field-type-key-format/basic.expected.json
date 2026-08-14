@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "field-type-key-format",
+      "level": "error",
+      "line": 4
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "field_types keys must match the lowercase identifier format."
+}

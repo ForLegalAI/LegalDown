@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "attachment-title-empty",
+      "level": "error",
+      "file": "main.lgd",
+      "line": 5
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.10",
+  "note": "Attachment title must be non-empty; it is rendered verbatim as the heading."
+}

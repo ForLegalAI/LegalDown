@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "sides-minimum",
+      "level": "error",
+      "line": 4
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "A contract requires at least two distinct sides."
+}

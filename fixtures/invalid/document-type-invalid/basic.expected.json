@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "document-type-invalid",
+      "level": "error",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "Valid values are contract, unilateral_act, and collective_act."
+}

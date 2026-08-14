@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "placeholder-type-inconsistent",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "The same placeholder id is used with two different effective types."
+}

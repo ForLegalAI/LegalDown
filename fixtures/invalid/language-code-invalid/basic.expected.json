@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "language-code-invalid",
+      "level": "warning",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "language must be an ISO 639-1 code."
+}

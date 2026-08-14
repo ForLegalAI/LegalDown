@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "parties-minimum",
+      "level": "error",
+      "line": 6
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "Every side requires a non-empty parties array; a unilateral act needs at least one party."
+}

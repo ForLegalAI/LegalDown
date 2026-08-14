@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "side-unknown",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.5",
+  "note": "The side name matches no declared side."
+}

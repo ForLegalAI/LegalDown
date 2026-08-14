@@ -1,0 +1,14 @@
+---
+title: Fixture
+sides:
+  - name: providers
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        representatives:
+          - name: ""
+            title: Chief Executive Officer
+---
+
+# Scope {#scope}

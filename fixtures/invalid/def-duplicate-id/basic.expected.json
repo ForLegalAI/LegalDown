@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "def-duplicate-id",
+      "level": "error",
+      "line": 23
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.4",
+  "note": "Two definitions share an identifier."
+}

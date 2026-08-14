@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "heading-depth",
+      "level": "error",
+      "line": 29
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Level 6 heading; the maximum depth is 5."
+}

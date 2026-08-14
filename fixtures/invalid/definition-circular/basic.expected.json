@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "definition-circular",
+      "level": "warning",
+      "line": 23
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.3",
+  "note": "Each definition paragraph references the other term."
+}

@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "party-name-duplicate",
+      "level": "error",
+      "line": 10
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "Party names must be unique across the entire document, not per side."
+}

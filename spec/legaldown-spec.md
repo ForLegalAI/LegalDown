@@ -1647,7 +1647,7 @@ Violations are Errors; the per-rule severities are defined in §15.7.
 
 ## 15. Validation
 
-### 15.1 Validation Levels
+### 15.1 Validation Levels and Rule Identifiers
 
 Validators MUST categorize issues at three levels:
 
@@ -1655,167 +1655,178 @@ Validators MUST categorize issues at three levels:
 - **Warning** — Potential issue that should be reviewed (SHOULD be reported)
 - **Info** — Suggestion for improvement (MAY be reported)
 
+**Rule identifiers.** Every check in §15.2–§15.11 carries a **rule id** — a stable, lowercase identifier in the same format as every other LegalDown identifier, `[a-z][a-z0-9-]*` (§5.2). Rule ids identify a check independently of where it sits in this document, so that section renumbering never invalidates a reference to a rule.
+
+- Implementations SHOULD include the rule id in their diagnostic output (§15.9), enabling users to suppress, escalate, or filter a specific check consistently across tools
+- Rule ids are **stable**: once assigned, an id is not renamed or reused for a different check. A check that is removed retires its id permanently
+- This specification defines the meaning, severity, and conformance level of each rule, but **not** the wording of any diagnostic message — message text is an implementation concern
+- Implementations MAY define additional checks of their own. Ids for such checks MUST be namespaced with a prefix ending in a hyphen (for example `acme-house-style`) to avoid collision with ids this specification may assign later
+
 ### 15.2 Structure Validation
 
-| Check | Level |
-|---|---|
-| Heading levels do not skip | Error |
-| Heading depth does not exceed level 5 | Error |
-| Explicit anchors (section identifiers, item and paragraph anchors) are unique within the anchor namespace | Error |
-| `{#id}`-like marker outside an anchor position (likely misplaced anchor, §5.7; not raised inside code spans, code blocks, or comments, §11.4) | Warning |
-| Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
-| Auto-generated identifier lost non-transliterable letters or digits (§5.3 — explicit identifier recommended) | Warning |
-| Section identifiers follow naming rules | Error |
-| Headings do not contain hardcoded numbering | Warning |
-| Directives are well-formed per the §11.2 grammar (including quoted-value termination and escapes, §11.3) | Error |
-| Directive contains the same named parameter more than once | Error |
-| Directive name is defined by this specification (unknown names render as `[UNKNOWN DIRECTIVE: name]`; Warning instead under §11.5's permissive mode or a newer declared `legaldown` version) | Error |
-| Named parameter not defined for the directive (ignored for rendering) | Warning |
-| Unescaped `{{` in body text that does not begin a well-formed directive | Warning |
-| Unquoted directive value begins with a typographic quotation mark (possible auto-curled quote) | Warning |
-| File-reference paths are relative and carry no URI scheme (§2.3) | Error |
-| File-reference paths resolve within the document root, when one is configured (§2.3) | Error |
-| Raw HTML other than comments present (§8.7 — fires whether or not an extension processes it) | Warning |
+| ID | Check | Level |
+|---|---|---|
+| `heading-skip` | Heading levels do not skip | Error |
+| `heading-depth` | Heading depth does not exceed level 5 | Error |
+| `anchor-duplicate` | Explicit anchors (section identifiers, item and paragraph anchors) are unique within the anchor namespace | Error |
+| `anchor-misplaced` | `{#id}`-like marker outside an anchor position (likely misplaced anchor, §5.7; not raised inside code spans, code blocks, or comments, §11.4) | Warning |
+| `anchor-autogen-collision` | Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
+| `anchor-lossy-slug` | Auto-generated identifier lost non-transliterable letters or digits (§5.3 — explicit identifier recommended) | Warning |
+| `anchor-format` | Section identifiers follow naming rules | Error |
+| `heading-hardcoded-number` | Headings do not contain hardcoded numbering | Warning |
+| `directive-malformed` | Directives are well-formed per the §11.2 grammar (including quoted-value termination and escapes, §11.3) | Error |
+| `directive-duplicate-param` | Directive contains the same named parameter more than once | Error |
+| `directive-unknown` | Directive name is defined by this specification (unknown names render as `[UNKNOWN DIRECTIVE: name]`; Warning instead under §11.5's permissive mode or a newer declared `legaldown` version) | Error |
+| `directive-unknown-param` | Named parameter not defined for the directive (ignored for rendering) | Warning |
+| `brace-stray` | Unescaped `{{` in body text that does not begin a well-formed directive | Warning |
+| `value-curly-quote` | Unquoted directive value begins with a typographic quotation mark (possible auto-curled quote) | Warning |
+| `path-not-relative` | File-reference paths are relative and carry no URI scheme (§2.3) | Error |
+| `path-outside-root` | File-reference paths resolve within the document root, when one is configured (§2.3) | Error |
+| `raw-html` | Raw HTML other than comments present (§8.7 — fires whether or not an extension processes it) | Warning |
 
 ### 15.3 Reference Validation
 
-| Check | Level |
-|---|---|
-| All `{{ref: id}}` point to existing sections | Error |
-| `{{ref: id}}` targets an attachment id — attachments are referenced with `{{attach:}}` (§5.6) | Error |
-| `{{ref: id}}` targets an item or paragraph anchor whose containing list or paragraphs the active template does not enumerate (renders as the containing section number; template-dependent — evaluated from the Rendering level, §16.3) | Warning |
-| All `{{term: id}}` point to declared definitions | Error |
-| Circular definitions detected (scoped to each definition's containing paragraph, see §7.2) | Warning |
-| Definitions used before declaration | Info |
+| ID | Check | Level |
+|---|---|---|
+| `ref-broken` | All `{{ref: id}}` point to existing sections | Error |
+| `ref-targets-attachment` | `{{ref: id}}` targets an attachment id — attachments are referenced with `{{attach:}}` (§5.6) | Error |
+| `ref-not-enumerated` | `{{ref: id}}` targets an item or paragraph anchor whose containing list or paragraphs the active template does not enumerate (renders as the containing section number; template-dependent — evaluated from the Rendering level, §16.3) | Warning |
+| `term-undefined` | All `{{term: id}}` point to declared definitions | Error |
+| `definition-circular` | Circular definitions detected (scoped to each definition's containing paragraph, see §7.2) | Warning |
+| `definition-used-before-declaration` | Definitions used before declaration | Info |
 
 ### 15.4 Definition Validation
 
-| Check | Level |
-|---|---|
-| All `{{def: id}}` identifiers are unique among definitions (§5.6) | Error |
-| `{{def:}}` is immediately preceded by a recognized quoted span | Error |
-| Two definitions auto-generate the same identifier (omitted ids) | Error |
-| Auto-derived definition identifier lost non-transliterable letters or digits (§5.3 — explicit id recommended) | Warning |
-| Defined term wrapped in emphasis markers (`**`, `__`) in source | Warning |
-| Single-quoted term ambiguous with an apostrophe (U+2019) | Warning |
-| Declared definitions never referenced with `{{term:}}` (may yield false positives when §7.4 automatic term recognition is enabled) | Warning |
+| ID | Check | Level |
+|---|---|---|
+| `def-duplicate-id` | All `{{def: id}}` identifiers are unique among definitions (§5.6) | Error |
+| `def-no-quoted-span` | `{{def:}}` is immediately preceded by a recognized quoted span | Error |
+| `def-autogen-collision` | Two definitions auto-generate the same identifier (omitted ids) | Error |
+| `def-lossy-slug` | Auto-derived definition identifier lost non-transliterable letters or digits (§5.3 — explicit id recommended) | Warning |
+| `def-emphasis` | Defined term wrapped in emphasis markers (`**`, `__`) in source | Warning |
+| `def-single-quote-ambiguous` | Single-quoted term ambiguous with an apostrophe (U+2019) | Warning |
+| `def-unreferenced` | Declared definitions never referenced with `{{term:}}` (may yield false positives when §7.4 automatic term recognition is enabled) | Warning |
 
 ### 15.5 Field Spec Validation
 
-| Check | Level |
-|---|---|
-| `{{date:}}` value is valid ISO 8601 date | Error |
-| `{{money:}}` amount is a valid, non-negative numeric value | Error |
-| `{{money:}}` `currency` parameter is a recognized ISO 4217 code | Warning |
-| `{{money:}}` used without `currency` parameter and no default configured | Warning |
-| `{{party:}}` `party-name` value is non-empty and matches identifier format | Error |
-| `{{party:}}` `party-name` references a party declared in frontmatter `sides[].parties[]` | Error |
-| `{{side:}}` `side-name` value is non-empty and matches identifier format | Error |
-| `{{side:}}` `side-name` references a side declared in frontmatter `sides[]` | Error |
-| `{{duration:}}` value is a positive numeric value | Error |
-| `{{duration:}}` `unit` parameter is one of `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y` (bare `M` rejected with a `MIN`/`MO` hint) | Error |
-| `field_types` keys follow the identifier format `[a-z][a-z0-9-]*` | Error |
-| `field_types` keys do not collide with the reserved value-type names `date`, `money`, `duration`, `party`, `text` | Error |
-| `{{field:}}` `type` parameter is present and matches identifier format | Error |
-| `{{field:}}` uses a type declared in `field_types` when `field_types` is present | Warning |
-| `{{placeholder:}}` `placeholder-id` value is non-empty and matches identifier format | Error |
-| `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, or `money` | Error |
-| Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type` | Error |
-| `{{placeholder:}}` `currency` parameter for `type=money` is a recognized ISO 4217 code | Warning |
-| `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure) | Error |
-| Field spec `note` parameter is plain text and satisfies the value rules in §11.3 (unquoted: no commas or closing braces) | Error |
+| ID | Check | Level |
+|---|---|---|
+| `date-invalid` | `{{date:}}` value is valid ISO 8601 date | Error |
+| `money-invalid-amount` | `{{money:}}` amount is a valid, non-negative numeric value | Error |
+| `money-unknown-currency` | `{{money:}}` `currency` parameter is a recognized ISO 4217 code | Warning |
+| `money-missing-currency` | `{{money:}}` used without `currency` parameter and no default configured | Warning |
+| `party-name-malformed` | `{{party:}}` `party-name` value is non-empty and matches identifier format | Error |
+| `party-unknown` | `{{party:}}` `party-name` references a party declared in frontmatter `sides[].parties[]` | Error |
+| `side-name-malformed` | `{{side:}}` `side-name` value is non-empty and matches identifier format | Error |
+| `side-unknown` | `{{side:}}` `side-name` references a side declared in frontmatter `sides[]` | Error |
+| `duration-invalid-value` | `{{duration:}}` value is a positive numeric value | Error |
+| `duration-invalid-unit` | `{{duration:}}` `unit` parameter is one of `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y` (bare `M` rejected with a `MIN`/`MO` hint) | Error |
+| `field-type-key-format` | `field_types` keys follow the identifier format `[a-z][a-z0-9-]*` | Error |
+| `field-type-key-reserved` | `field_types` keys do not collide with the reserved value-type names `date`, `money`, `duration`, `party`, `text` | Error |
+| `field-type-missing` | `{{field:}}` `type` parameter is present and matches identifier format | Error |
+| `field-type-undeclared` | `{{field:}}` uses a type declared in `field_types` when `field_types` is present | Warning |
+| `placeholder-id-malformed` | `{{placeholder:}}` `placeholder-id` value is non-empty and matches identifier format | Error |
+| `placeholder-type-invalid` | `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, or `money` | Error |
+| `placeholder-type-inconsistent` | Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type` | Error |
+| `placeholder-unknown-currency` | `{{placeholder:}}` `currency` parameter for `type=money` is a recognized ISO 4217 code | Warning |
+| `placeholder-in-structural-field` | `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure) | Error |
+| `note-invalid` | Field spec `note` parameter is plain text and satisfies the value rules in §11.3 (unquoted: no commas or closing braces) | Error |
 
 ### 15.6 Document Metadata Validation
 
 If `document_type` is omitted, validators MUST treat it as `contract` when applying the following checks:
 
-| Rule | `contract` | `unilateral_act` | `collective_act` |
-|---|---|---|---|
-| Minimum distinct sides | ≥ 2 | ≥ 1 | ≥ 1 |
-| Side named `issuer` required | No | Yes | Yes |
-| Minimum total parties | ≥ 2 | ≥ 1 | ≥ 1 |
-| `document_type` is valid value | Error if not | Error if not | Error if not |
+| ID | Rule | `contract` | `unilateral_act` | `collective_act` |
+|---|---|---|---|---|
+| `sides-minimum` | Minimum distinct sides | ≥ 2 | ≥ 1 | ≥ 1 |
+| `issuer-side-required` | Side named `issuer` required | No | Yes | Yes |
+| `parties-minimum` | Minimum total parties | ≥ 2 | ≥ 1 | ≥ 1 |
+| `document-type-invalid` | `document_type` is valid value | Error if not | Error if not | Error if not |
 
 **Severities for the table above:** an invalid `document_type` value is always an **Error**. When `sides` is present, violations of the minimum-sides, `issuer`-side, and minimum-parties rows are **Errors**. When frontmatter is present but `sides` is absent entirely, those structural rows cannot be verified: validators MUST NOT report them as violated and MUST instead emit a single **Warning** stating that the `document_type` constraints cannot be verified without `sides` — keeping `sides` genuinely RECOMMENDED (§3.2) rather than effectively required. A document with no frontmatter at all draws only the no-frontmatter Warning (see the general metadata checks below), not this one.
 
-Violations of the following additional checks MUST be reported as **Error**:
+The Warning raised when `sides` is absent has the rule id `sides-absent`.
 
-- Every party `name` is unique across the entire document
-- Every side `name` is unique
-- All side and party `name` values follow the identifier format `[a-z][a-z0-9-]*` (a lowercase ASCII letter followed by zero or more lowercase ASCII letters, digits, or hyphens)
-- Every party `type` is `legal_entity` or `natural_person`
+**Side and party checks:**
+
+| ID | Check | Level |
+|---|---|---|
+| `party-name-duplicate` | Every party `name` is unique across the entire document | Error |
+| `side-name-duplicate` | Every side `name` is unique | Error |
+| `side-party-name-format` | All side and party `name` values follow the identifier format `[a-z][a-z0-9-]*` (a lowercase ASCII letter followed by zero or more lowercase ASCII letters, digits, or hyphens) | Error |
+| `party-type-invalid` | Every party `type` is `legal_entity` or `natural_person` | Error |
 
 **General metadata checks:**
 
-| Check | Level |
-|---|---|
-| Frontmatter, when present, parses as valid YAML | Error |
-| Document includes frontmatter (§3.1) | Warning |
-| `title` is present and non-empty when frontmatter is present | Error |
-| `effective_date` and `adoption_date`, when present, are valid ISO 8601 dates | Error |
-| Party `date_of_birth`, when present, is a valid ISO 8601 date | Error |
-| `language`, `authoritative`, and `translations` keys, when present, are valid ISO 639-1 codes | Warning |
-| `authoritative`, when present, equals the document `language` or a `translations` key | Warning |
-| `legaldown`, when present, does not declare a version newer than the implementation supports | Warning |
-| `supersedes.title` is non-empty when `supersedes` uses the object form | Error |
-| `supersedes.file` path exists when specified (Full level, §16.4) | Error |
-| Representative `name` is non-empty | Error |
+| ID | Check | Level |
+|---|---|---|
+| `frontmatter-invalid-yaml` | Frontmatter, when present, parses as valid YAML | Error |
+| `frontmatter-absent` | Document includes frontmatter (§3.1) | Warning |
+| `title-missing` | `title` is present and non-empty when frontmatter is present | Error |
+| `metadata-date-invalid` | `effective_date` and `adoption_date`, when present, are valid ISO 8601 dates | Error |
+| `date-of-birth-invalid` | Party `date_of_birth`, when present, is a valid ISO 8601 date | Error |
+| `language-code-invalid` | `language`, `authoritative`, and `translations` keys, when present, are valid ISO 639-1 codes | Warning |
+| `authoritative-not-declared` | `authoritative`, when present, equals the document `language` or a `translations` key | Warning |
+| `legaldown-version-newer` | `legaldown`, when present, does not declare a version newer than the implementation supports | Warning |
+| `supersedes-title-empty` | `supersedes.title` is non-empty when `supersedes` uses the object form | Error |
+| `supersedes-file-missing` | `supersedes.file` path exists when specified (Full level, §16.4) | Error |
+| `representative-name-empty` | Representative `name` is non-empty | Error |
 
 Where §3.10 permits a placeholder in a value field, a placeholder value satisfies that field's presence requirement and is **exempt from the field's format checks** above (for example, `effective_date: "{{placeholder: effective-date, type=date}}"` does not fail the ISO 8601 check); the placeholder's own checks (§15.5) apply instead.
 
 ### 15.7 Bilingual Validation (when translations metadata present)
 
-| Check | Level |
-|---|---|
-| Translation files exist at declared paths | Error |
-| Heading hierarchy matches between translations | Error |
-| Section identifiers match between translations | Error |
-| Definition IDs match between translations | Error |
-| Linked files declare the same set of languages (`language` + `translations` keys) | Error |
-| Every heading and `{{def:}}` in a translation file (a linked file whose `language` differs from `authoritative`) carries an explicit identifier | Error |
-| Auto-generated identifiers used in linked files when `authoritative` is absent (primary cannot be determined) | Warning |
+| ID | Check | Level |
+|---|---|---|
+| `translation-file-missing` | Translation files exist at declared paths | Error |
+| `translation-hierarchy-mismatch` | Heading hierarchy matches between translations | Error |
+| `translation-anchor-mismatch` | Section identifiers match between translations | Error |
+| `translation-def-mismatch` | Definition IDs match between translations | Error |
+| `translation-language-set-mismatch` | Linked files declare the same set of languages (`language` + `translations` keys) | Error |
+| `translation-implicit-id` | Every heading and `{{def:}}` in a translation file (a linked file whose `language` differs from `authoritative`) carries an explicit identifier | Error |
+| `translation-authoritative-absent` | Auto-generated identifiers used in linked files when `authoritative` is absent (primary cannot be determined) | Warning |
 
 ### 15.8 Amendment Validation (when amends metadata present)
 
-| Check | Level |
-|---|---|
-| `amends.title` is non-empty when `amends` is present | Error |
-| `amends.file` path exists when specified | Error |
-| `{{term:}}` references id not found in amendment or imported original (original LegalDown source available, e.g. `.lgd`, `.legaldown`, or `.legal.md`) | Error |
-| `{{term:}}` references id not found in amendment (original not available or not LegalDown source) | Info |
-| Amendment declares `{{def:}}` with same id as definition in original LegalDown source | Warning |
+| ID | Check | Level |
+|---|---|---|
+| `amends-title-empty` | `amends.title` is non-empty when `amends` is present | Error |
+| `amends-file-missing` | `amends.file` path exists when specified | Error |
+| `amend-term-undefined` | `{{term:}}` references id not found in amendment or imported original (original LegalDown source available, e.g. `.lgd`, `.legaldown`, or `.legal.md`) | Error |
+| `amend-term-unresolvable` | `{{term:}}` references id not found in amendment (original not available or not LegalDown source) | Info |
+| `amend-def-override` | Amendment declares `{{def:}}` with same id as definition in original LegalDown source | Warning |
 
 ### 15.9 Validation Output
 
-Validators MUST produce structured output indicating file, line number, identifier (if applicable), issue level, and human-readable message. Validators SHOULD support output in plain text and JSON formats for integration with tooling.
+Validators MUST produce structured output indicating file, line number, identifier (if applicable), issue level, and human-readable message. Output SHOULD also carry the **rule id** (§15.1) of the check that produced each diagnostic, since it is the only part of a diagnostic that is stable across implementations and specification revisions. Validators SHOULD support output in plain text and JSON formats for integration with tooling.
 
 ### 15.10 Attachment Validation
 
-| Check | Level |
-|---|---|
-| Attachment `id` is unique across document | Error |
-| Attachment `id` does not collide with any other anchor (section identifier or item/paragraph anchor, §5.6) | Error |
-| Attachment `title` is non-empty | Error |
-| Attachment `file` path exists | Error |
-| LegalDown attachment file contains frontmatter | Error |
-| LegalDown attachment file contains level 1 heading | Error |
-| Section identifiers in LegalDown attachment files are unique across entire combined document (main + all attachments) | Error |
-| Attachment declared but never referenced via `{{attach:}}` | Warning |
-| `{{attach:}}` references undeclared attachment id | Error |
+| ID | Check | Level |
+|---|---|---|
+| `attachment-id-duplicate` | Attachment `id` is unique across document | Error |
+| `attachment-id-collision` | Attachment `id` does not collide with any other anchor (section identifier or item/paragraph anchor, §5.6) | Error |
+| `attachment-title-empty` | Attachment `title` is non-empty | Error |
+| `attachment-file-missing` | Attachment `file` path exists | Error |
+| `attachment-has-frontmatter` | LegalDown attachment file contains frontmatter | Error |
+| `attachment-has-h1` | LegalDown attachment file contains level 1 heading | Error |
+| `attachment-anchor-duplicate` | Section identifiers in LegalDown attachment files are unique across entire combined document (main + all attachments) | Error |
+| `attachment-unreferenced` | Attachment declared but never referenced via `{{attach:}}` | Warning |
+| `attach-undeclared` | `{{attach:}}` references undeclared attachment id | Error |
 
 Non-LegalDown attachments: only file existence is checked.
 
 ### 15.11 Include Validation
 
-| Check | Level |
-|---|---|
-| Include target path exists | Error |
-| Include target is a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) | Error |
-| Circular include chain detected | Error |
-| Included fragment contains frontmatter | Error |
-| Included fragment contains a level 1 heading | Error |
-| Section identifiers in included fragments are unique across the entire combined document | Error |
-| Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) | Error |
+| ID | Check | Level |
+|---|---|---|
+| `include-file-missing` | Include target path exists | Error |
+| `include-not-legaldown` | Include target is a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) | Error |
+| `include-cycle` | Circular include chain detected | Error |
+| `include-has-frontmatter` | Included fragment contains frontmatter | Error |
+| `include-has-h1` | Included fragment contains a level 1 heading | Error |
+| `include-anchor-duplicate` | Section identifiers in included fragments are unique across the entire combined document | Error |
+| `include-heading-skip` | Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) | Error |
 
 All other §15 checks apply to the combined document after inclusion (§12.2). Include processing is a Full-level capability (§16.4); the file-extension check on the include path is determinable from the document alone and applies at Core (§16.2).
 

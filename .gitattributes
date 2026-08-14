@@ -22,3 +22,8 @@
 *.legaldown  text eol=lf
 *.legal.md   text eol=lf
 *.md         text eol=lf
+
+# Fixture data and tooling — LF too, so the corpus is byte-stable across platforms
+*.json       text eol=lf
+*.py         text eol=lf
+*.txt        text eol=lf

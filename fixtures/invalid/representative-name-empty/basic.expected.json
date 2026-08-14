@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "representative-name-empty",
+      "level": "error",
+      "line": 10
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "Representative name must be non-empty."
+}

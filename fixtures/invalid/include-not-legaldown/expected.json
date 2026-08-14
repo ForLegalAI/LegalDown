@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "include-not-legaldown",
+      "level": "error",
+      "file": "main.lgd",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.11",
+  "note": "Include targets must be LegalDown files; the extension check needs only the document."
+}

@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "directive-malformed",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "Directive opener never completes on its line."
+}

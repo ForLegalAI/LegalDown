@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "path-not-relative",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.2",
+  "note": "A URI scheme makes the path absolute; remote resources are never fetched."
+}

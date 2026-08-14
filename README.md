@@ -197,6 +197,8 @@ contains none of them.
 {{placeholder: fee, type=money, currency=EUR}} ← Typed inline blank
 {{party: acme}}                          ← Inline party reference
 {{side: clients}}                        ← Inline side (collective) reference
+{{duration: 30, unit=D}}                 ← Inline duration (S MIN H D W MO Y)
+{{attach: schedule-a}}                   ← Reference a declared attachment
 {{include: schedules/pricing.lgd}}       ← Include an external file
 ```
 
@@ -223,6 +225,10 @@ Working documents live in [`examples/`](examples) — a simple tier mirroring th
 specification's own examples, and an advanced tier exercising the full feature
 surface, with a table mapping every feature to a live example.
 
+Implementers should also see [`fixtures/`](fixtures), the conformance corpus:
+one case per validation rule, paired with the diagnostic a conforming validator
+must produce.
+
 | Version | Status | Document |
 |---------|--------|----------|
 | v0.1 | 🚧 DRAFT | [spec/legaldown-spec.md](spec/legaldown-spec.md) |
@@ -237,9 +243,9 @@ following this repository for changes.
 
 LegalDown is in early draft stage. Current priorities:
 
-- [x] Resolve the specification review findings (structure, grammar, validation, conformance)
+- [x] Complete the v0.1 specification text
 - [x] Publish reference examples for common document types
-- [ ] Publish the validation fixtures corpus (conformance test suite)
+- [x] Publish the validation fixtures corpus (conformance test suite)
 - [ ] Tag v0.1
 - [ ] Release reference parser and validator
 - [ ] Release CLI rendering tool

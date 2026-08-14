@@ -91,11 +91,22 @@ verify. When you add a feature, add or extend an example that exercises it, and
 update the feature-coverage table in [`examples/README.md`](examples/README.md) so the claim and
 the file agree.
 
-> **Fixtures corpus — not yet published.** A validation fixtures corpus (deliberately invalid
-> documents paired with their expected diagnostics, one per §15 rule) is planned before the v0.1
-> tag; see the project status in the [README](README.md#project-status-). Once it exists,
-> contributors adding a feature will also add a valid/invalid fixture pair. Until then, examples
-> are the only required artifact — please do not invent a fixture layout in the meantime.
+## Fixtures
+
+[`fixtures/`](fixtures) is the conformance corpus: one directory per §15 rule id, holding a
+document that trips that rule and the diagnostic a validator must produce. It is what lets
+independent implementations verify they agree.
+
+When you **add or change a validation rule**:
+
+- Give it a **rule id** in the §15 table (§15.1) — stable, lowercase, never renamed or reused
+- Add `fixtures/invalid/<rule-id>/` with a case that trips it, and an expectation file recording
+  rule id, level, and line — **never message text**, which §15.9 leaves to implementations
+- If the rule cannot be exercised by a document — because it depends on a style template or on the
+  implementation rather than the input — record it in `fixtures/coverage.json` under
+  `not_mechanically_testable` with a reason, rather than writing a fixture that does not test it
+- Run `python fixtures/verify.py`, which checks the corpus is self-consistent and that every rule
+  id in §15 is accounted for
 
 ---
 

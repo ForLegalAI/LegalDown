@@ -1,0 +1,7 @@
+{
+  "diagnostics": [],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "5.7",
+  "note": "Item anchors at two nesting depths and a paragraph anchor, each targeted by a reference. Under a template that disables list enumeration these references also raise ref-not-enumerated, which is why exhaustive is false."
+}

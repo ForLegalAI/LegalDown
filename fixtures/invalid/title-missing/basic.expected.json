@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "title-missing",
+      "level": "error",
+      "line": 2
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "Frontmatter is present but carries no title."
+}

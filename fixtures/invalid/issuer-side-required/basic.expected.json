@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "issuer-side-required",
+      "level": "error",
+      "line": 5
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15.6",
+  "note": "A unilateral act requires a side named issuer."
+}

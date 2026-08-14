@@ -1,0 +1,15 @@
+{
+  "entry": "doc-en.lgd",
+  "diagnostics": [
+    {
+      "rule": "translation-hierarchy-mismatch",
+      "level": "error",
+      "file": "doc-fr.lgd",
+      "line": 13
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.7",
+  "note": "Translation has a heading with no counterpart in the primary."
+}

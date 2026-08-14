@@ -1,0 +1,7 @@
+{
+  "diagnostics": [],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "15",
+  "note": "Every field spec directive in one valid document. field_types is absent, so any well-formed type is accepted without warning."
+}

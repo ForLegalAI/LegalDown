@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "include-heading-skip",
+      "level": "error",
+      "file": "part.lgd",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "15.11",
+  "note": "Content splices verbatim with no re-basing, so the combined document skips a level."
+}

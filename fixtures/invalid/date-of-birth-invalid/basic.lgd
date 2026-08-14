@@ -1,0 +1,12 @@
+---
+title: Fixture
+sides:
+  - name: clients
+    parties:
+      - name: john-novak
+        type: natural_person
+        legal_name: John Novak
+        date_of_birth: 15-03-1985
+---
+
+# Scope {#scope}
