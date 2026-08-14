@@ -1,0 +1,68 @@
+---
+legaldown: "0.1"
+title: "Consulting Agreement with {{placeholder: client-short-name}}"
+document_type: contract
+effective_date: "{{placeholder: effective-date, type=date}}"
+sides:
+  - name: consultants                    # identifier — stays concrete
+    label: Consultant
+    parties:
+      - name: acme                       # identifier — stays concrete
+        label: Acme
+        type: legal_entity               # structural — stays concrete
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: clients
+    label: Client
+    parties:
+      - name: client                     # identifier — stays concrete
+        type: legal_entity               # structural — stays concrete
+        legal_name: "{{placeholder: client-legal-name}}"
+        identification_number: "{{placeholder: client-id}}"
+        address: "{{placeholder: client-address}}"
+        representatives:
+          - name: "{{placeholder: client-signatory}}"
+            title: "{{placeholder: client-signatory-title}}"
+governing_law: "{{placeholder: governing-law}}"
+language: en
+---
+
+This Consulting Agreement (this "Agreement" {{def: agreement}}) is entered into on
+{{placeholder: effective-date, type=date}} between {{party: acme}} and {{party: client}}.
+
+# Definitions {#definitions}
+
+"Consulting Services" {{def: consulting-services}} means the advisory services described in
+Section {{ref: scope}}.
+
+# Scope of Engagement {#scope}
+
+{{party: acme, label=the Consultant}} shall provide the {{term: consulting-services}} described
+below:
+
+- {{placeholder: service-description-1}} {#scope-item-1}
+- {{placeholder: service-description-2}} {#scope-item-2}
+
+The engagement begins on {{placeholder: effective-date, type=date}} and continues for
+{{placeholder: engagement-duration}} unless terminated earlier.
+
+# Fees {#fees}
+
+The Client shall pay {{placeholder: fee-amount, type=money, currency=EUR}} for the
+{{term: consulting-services}}, payable within {{duration: 30, unit=D}} of invoice.
+
+Expenses are reimbursed only where approved in advance in writing.
+
+# Confidentiality {#confidentiality}
+
+Each party shall keep confidential all non-public information received from the other in
+connection with the {{term: agreement}}.
+
+# Governing Law {#governing-law}
+
+The {{term: agreement}} is governed by the laws of {{placeholder: governing-law}}, and the parties
+submit to the exclusive jurisdiction of the courts of {{placeholder: forum}}.

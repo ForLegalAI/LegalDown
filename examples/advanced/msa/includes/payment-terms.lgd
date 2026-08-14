@@ -1,0 +1,28 @@
+Each Client shall pay the fees set out in {{attach: schedule-b, label=Schedule B}} within
+{{duration: 30, unit=D}} of the date of the relevant invoice, for example
+{{field: INV-2026-0042, type=invoice-id}}.
+
+The minimum monthly commitment is {{money: 12500, currency=USD, note=Committed platform fee}} per
+Client. Usage above the committed volume is charged at
+{{money: 0.45, currency=USD, note=Per-unit overage rate}} per unit.
+
+## Late Payment {#payment-late}
+
+Undisputed sums not paid when due bear interest at
+{{placeholder: late-payment-rate, type=text, note=Rate agreed per Client during onboarding}} per
+annum, accruing daily from the due date until payment.
+
+The Provider shall not suspend the {{term: services}} for late payment unless:
+
+- the sum has been overdue for more than {{duration: 45, unit=D}} {#suspend-overdue}
+- the Provider has given {{duration: 10, unit=D}} written notice of its intention to suspend {#suspend-notice}
+
+Suspension under paragraph {{ref: suspend-overdue}} does not relieve the Client of its payment
+obligations.
+
+## Invoicing Disputes {#payment-disputes}
+
+A Client disputing an invoice in good faith shall notify the Provider within
+{{duration: 15, unit=D}} of receipt and shall pay all undisputed amounts when due. The parties
+shall escalate any unresolved dispute to their respective representatives within
+{{duration: 5, unit=D}} of that notice.

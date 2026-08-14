@@ -1,0 +1,66 @@
+---
+legaldown: "0.1"
+title: Service Agreement
+document_type: contract
+effective_date: 2026-07-01
+language: en
+translations:
+  fr: service-agreement-fr.lgd
+authoritative: en
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: clients
+    label: Client
+    parties:
+      - name: delta
+        label: Delta
+        type: legal_entity
+        legal_name: Delta SARL
+        identification_number: FR-99887766
+        address: 15 Rue de la Paix, 75002 Paris
+        representatives:
+          - name: Camille Laurent
+            title: Directrice Générale
+governing_law: France
+language_note: English is the authoritative version for disputes
+---
+
+This Service Agreement is entered into on {{date: 2026-07-01}} between {{party: acme}} and
+{{party: delta}}.
+
+# Definitions {#definitions}
+
+"Services" {{def: services}} means the software maintenance services described in this Agreement.
+
+"Effective Date" {{def: effective-date}} means {{date: 2026-07-01}}.
+
+# Obligations of the Provider {#provider-obligations}
+
+{{party: acme, label=the Provider}} shall perform the {{term: services}} from the
+{{term: effective-date}} with reasonable skill and care.
+
+# Fees {#fees}
+
+The Client shall pay {{money: 4500, currency=EUR}} per month, invoiced monthly in arrears and
+payable within {{duration: 30, unit=D}}.
+
+# Term {#term}
+
+This Agreement continues for {{duration: 12, unit=MO}} from the {{term: effective-date}} and
+renews automatically unless either party gives {{duration: 60, unit=D}} written notice.
+
+# Governing Language {#governing-language}
+
+This Agreement is executed in English and French. In the event of any discrepancy, the English
+version prevails.

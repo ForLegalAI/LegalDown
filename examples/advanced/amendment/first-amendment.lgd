@@ -1,0 +1,92 @@
+---
+legaldown: "0.1"
+title: First Amendment to Master Service Agreement
+document_type: contract
+amends:
+  title: Master Service Agreement
+  file: ../msa/master-service-agreement.lgd
+effective_date: 2026-09-01
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: clients
+    label: Clients
+    parties:
+      - name: beta
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
+      - name: gamma
+        label: Gamma
+        type: legal_entity
+        legal_name: Gamma Solutions Ltd.
+        identification_number: CA-11223344
+        address: 789 Pine Road, San Jose, CA 95101
+        representatives:
+          - name: Bob Johnson
+            title: Managing Director
+      - name: john-novak
+        type: natural_person
+        legal_name: John Novak
+        date_of_birth: 1985-03-15
+        identification_number: 850315/1234
+        address: 12 Maple Lane, Austin, TX 78701
+governing_law: Delaware
+language: en
+---
+
+<!-- `amends.file` points to a LegalDown document, so the original's definitions are imported
+     under §7.5: this amendment uses {{term: agreement}} and {{term: services}} without
+     redeclaring them, and so avoids the §15.8 override Warning. -->
+
+The parties hereby amend the Master Service Agreement dated {{date: 2026-03-01}} (the
+{{term: agreement}}) as follows. Capitalised terms not defined in this amendment have the meaning
+given in the {{term: agreement}}.
+
+# Payment Terms {#amend-payment}
+
+<!-- Citations reference the executed rendering of the original under the decimal scheme (§3.8):
+     1 Definitions, 2 Scope of Work, 3 Payment Terms, 4 Service Levels, 5 Intellectual Property,
+     6 Limitation of Liability, 7 Term and Termination, 8 Governing Law, 9 Notices. -->
+
+The first paragraph of Article 3 (Payment Terms) of the {{term: agreement}} is amended to read as
+follows:
+
+> Each Client shall pay the fees within {{duration: 15, unit=D}} of the date of the relevant
+> invoice. Late payments bear interest at {{money: 250, currency=USD, note=Fixed daily charge}}
+> per day of delay.
+
+# Data Protection {#amend-data-protection}
+
+The following new Article is added after Article 6 (Limitation of Liability) of the
+{{term: agreement}}:
+
+"Personal Data" {{def: personal-data}} means any information relating to an identified or
+identifiable natural person that the Provider processes in performing the {{term: services}}.
+
+The Provider shall process all {{term: personal-data}} in accordance with applicable data
+protection laws and only on documented instructions from the relevant Client.
+
+# Service Levels {#amend-service-levels}
+
+In the severity table in Article 4 (Service Levels) of the {{term: agreement}}, the restoration
+target for Minor defects is reduced from {{duration: 2, unit=W}} to {{duration: 1, unit=W}}.
+
+# Unchanged Provisions {#amend-unchanged}
+
+All other terms and conditions of the {{term: agreement}} remain in full force and effect.

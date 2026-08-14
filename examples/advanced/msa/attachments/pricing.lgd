@@ -1,0 +1,28 @@
+The fees below apply from the {{term: effective-date}} until amended under Section
+{{ref: scope-changes}}.
+
+| Service tier | Monthly volume | Unit price |
+|---|---|---:|
+| Standard | 0 – 1,000 units | {{money: 0.50, currency=USD}} |
+| Professional | 1,001 – 5,000 units | {{money: 0.40, currency=USD}} |
+| Enterprise | 5,000+ units | {{money: 0.30, currency=USD}} |
+
+## Professional Services {#pricing-professional-services}
+
+Development work outside the agreed backlog is charged at
+{{money: 185, currency=USD, note=Blended hourly rate}} per hour, estimated in advance and invoiced
+monthly in arrears.
+
+<!-- The heading below carries no explicit anchor, so its identifier is auto-generated per §5.3,
+     producing "currency-and-taxes". -->
+
+## Currency and Taxes
+
+All amounts are stated exclusive of value added tax, which is charged in addition at the rate
+applicable on the invoice date.
+
+## Annual Review {#pricing-review}
+
+The parties shall review pricing annually. Any increase takes effect no earlier than
+{{duration: 12, unit=MO}} after the {{term: effective-date}} and shall not exceed
+{{placeholder: annual-increase-cap, note=Cap negotiated per Client}}.

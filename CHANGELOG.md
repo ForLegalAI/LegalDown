@@ -10,6 +10,100 @@ without a major version bump until v1.0.
 
 ## [Unreleased]
 
+### Examples directory and contributor guide — 2026-08-13
+
+First part of the ecosystem work (review item G12). The §17 examples existed only as fenced blocks
+inside the specification — unvalidatable, and with dangling dependencies (§17.4 amended a document
+that did not exist). They are now real files, alongside a second tier that exercises every feature
+of the language.
+
+#### Added
+
+- **[`examples/`](examples)** in two tiers:
+  - **`simple/`** — the §17 examples verbatim: NDA (contract), termination notice
+    (`unilateral_act`), remote work policy (`collective_act`), and an amendment.
+  - **`advanced/`** — a Master Service Agreement exercising multi-party sides, a `natural_person`
+    party, `field_types`, `{{side:}}`, item and paragraph anchors, `{{include:}}`, LegalDown and
+    non-LegalDown attachments, recitals, tables, and the `supersedes` object form; an amendment to
+    it; an en/fr bilingual pair (primary/translation model, guillemet delimiters); and a template
+    using frontmatter placeholders.
+  - **[`examples/README.md`](examples/README.md)** — a feature-coverage table mapping every
+    specification section to a live example, so implementers can find a working case per rule.
+  - All documents validate with **no Errors**. Warnings and Info notes are configuration-dependent
+    (a Core validator warns about check categories it did not run, §16.5; the item-anchor Warning
+    of §15.3 fires under a template with list enumeration disabled), so "no Errors" is the portable
+    bar — see the notes in [`examples/README.md`](examples/README.md). Binary attachments are
+    minimal but
+    structurally valid stubs (correct PDF cross-reference table, `/Size`, and `/Length`) so that
+    file-existence checks resolve and a renderer opening one gets a parseable document.
+- **[`.gitattributes`](.gitattributes)** — sets `* text=auto` and marks binary assets explicitly, so
+  Git never applies line-ending conversion to them, and normalizes `.lgd`/`.md` sources to LF per
+  §2.1. The placeholder PDFs contain no NUL bytes, so Git's default heuristic classified them as
+  text and would have corrupted them on checkout; setting the default rather than relying on an
+  extension list keeps the next unlisted binary format from regressing the same way.
+- **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — linked from the README since the first commit, now
+  written: where to start, the standing design commitments (no hardcoded numbers, content/
+  presentation separation, determinism, minimal extensions, every rule needs a severity *and* a
+  conformance level), the PR checklist mirroring the discipline these revisions followed, changelog
+  entry conventions, and licensing.
+
+#### Changed
+
+- **§17.4 amendment example retargeted.** It amended "Master Service Agreement" at
+  `../original/msa.lgd` — a file that never existed — while referencing `{{term: confidential-info}}`,
+  a term the §17.1 NDA defines and an MSA would not. It now amends the §17.1 NDA, so the imported
+  definitions (`agreement`, `confidential-info`) actually resolve and the example demonstrates §7.5
+  definition import rather than merely asserting it. It also no longer redeclares `{{def: agreement}}`,
+  which would have tripped the §15.8 override Warning.
+- **`supersedes` object form completed.** The form was added as review item E4 without the
+  supporting rules: §2.3 now governs `supersedes.file` under the path-safety rules, §3.2 states that
+  a superseded document is never loaded (it is a historical pointer, so no definitions are imported
+  — unlike `amends`), §15.6 gains severities for `supersedes.title` (Error) and `supersedes.file`
+  existence (Error), and §16.4 lists it among the Full-level existence checks. Writing the advanced
+  example surfaced the omission; review of that example surfaced the missing severities.
+- **§13.4 no longer duplicates §7.3.** Both sections carried a verbatim copy of the `{{term:}}`
+  rendering algorithm, and the whitespace change below had to be applied to each independently.
+  §13.4 now references §7.3 as normative, removing the copy that could drift.
+- **Placeholders in representative fields (§3.10, §15.5).** §3.10 permitted placeholders everywhere
+  except side and party `name`, but the §15.5 validation row said "any `name`" — which made a
+  placeholder in a representative's `name` an Error, though a representative name is a display
+  value, not an identifier. The row now matches §3.10, and §3.10 states the permission explicitly.
+  The template example exercises it.
+- **Anchor markers in comments and code (§11.4).** The exclusion covering directives now covers
+  anchor markers too: a `{#id}` inside a code span, code block, or HTML comment is not an anchor,
+  does not enter the anchor namespace, and MUST NOT trigger the §15.2 misplaced-anchor Warning.
+- **Defined-term whitespace (§7.2, §7.3, §13.4).** The extracted term is now explicitly trimmed of
+  leading and trailing whitespace inside the quotation marks. French typography writes
+  `« Services »`, which previously extracted the term as `" Services "` — so `{{term:}}` rendered
+  with doubled spaces on a literal implementation and cleanly on a trimming one. The bilingual
+  example made the ambiguity concrete. "Whitespace" is defined as any character with the Unicode
+  `White_Space` property, since French typography uses U+00A0 and U+202F inside guillemets and a
+  rule stripping only ASCII space and tab would leave the defect in place for real documents.
+- **[`README.md`](README.md)** — the "Examples" link pointed at `llm/`; it now points at
+  `examples/`, with the LLM reference linked separately. Project status updated.
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| `supersedes.title` non-empty in the object form | — | **Added (Error, §15.6)** |
+| `supersedes.file` path exists when specified | — | **Added (Error, §15.6; Full level, carved out of Core in §16.2)** |
+| `{{placeholder:}}` in a representative `name` or `title` | Error (per §15.5's "any `name`") | **Permitted** — row narrowed to side and party names, matching §3.10 |
+| `{#id}` inside a code span, code block, or comment | (undefined — could trip the §15.2 Warning) | **Not an anchor**; no Warning (§11.4) |
+| Defined term includes whitespace inside the quotation marks | (undefined — implementation-dependent) | **Trimmed** (§7.2) |
+
+#### Files touched
+
+- New: `examples/**` (18 files), [`CONTRIBUTING.md`](CONTRIBUTING.md),
+  [`.gitattributes`](.gitattributes) — 20 new files in total.
+- [`spec/legaldown-spec.md`](spec/legaldown-spec.md) — revision date, §2.3, §3.2, §3.10, §7.2,
+  §7.3, §11.4, §13.4, §15.5, §15.6, §16.2, §16.4, §17 (intro naming the example files), §17.4.
+- [`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md) — file-reference rule (`supersedes.file`),
+  `supersedes` frontmatter note, defined-term whitespace rule.
+- [`README.md`](README.md) — navigation, specification section, project status.
+
+---
+
 ### Practical improvements (P-tier) — 2026-08-12
 
 Closes the remaining practical items from the release-readiness review (P1–P5, P7–P12). One

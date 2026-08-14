@@ -1,0 +1,59 @@
+---
+title: First Amendment to Mutual Non-Disclosure Agreement
+document_type: contract
+amends:
+  title: Mutual Non-Disclosure Agreement
+  file: ../nda/mutual-nda.lgd
+effective_date: 2026-06-01
+sides:
+  - name: disclosers
+    label: Disclosing Parties
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: recipients
+    label: Receiving Parties
+    parties:
+      - name: beta
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
+governing_law: Delaware
+language: en
+---
+
+The parties hereby agree to amend the Mutual Non-Disclosure Agreement
+dated {{date: 2026-02-01}} (the {{term: agreement}}) as follows.
+
+# Term of Confidentiality {#amend-term}
+
+Section 2 (Confidentiality Obligations) of the {{term: agreement}} is
+amended to read as follows:
+
+> Each party shall protect the {{term: confidential-info}} using at least
+> reasonable care for {{duration: 5, unit=Y}} from the date of disclosure.
+
+# Permitted Disclosures {#amend-permitted}
+
+The following new Article is added after Section 3 of the {{term: agreement}}:
+
+A party may disclose {{term: confidential-info}} where required by law,
+provided it gives the other party {{duration: 10, unit=D}} prior written
+notice where lawful to do so.
+
+# Unchanged Provisions {#amend-unchanged}
+
+All other terms and conditions of the {{term: agreement}} remain in full
+force and effect.

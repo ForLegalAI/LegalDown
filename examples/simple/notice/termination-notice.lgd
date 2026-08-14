@@ -1,0 +1,35 @@
+---
+title: Notice of Termination
+document_type: unilateral_act
+effective_date: 2026-05-01
+sides:
+  - name: issuer
+    label: Issuer
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+language: en
+---
+
+This notice is issued by {{party: acme}}.
+
+# Definitions {#definitions}
+
+"Termination Date" {{def: termination-date}} means {{date: 2026-06-01}}.
+
+# Notice {#notice}
+
+{{party: acme, label=the Issuer}} hereby terminates the Services Agreement
+effective on the {{term: termination-date}}.
+
+# Delivery {#delivery}
+
+This notice shall be delivered in accordance with the notice provisions of the
+Services Agreement.

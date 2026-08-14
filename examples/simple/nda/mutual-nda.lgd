@@ -1,0 +1,66 @@
+---
+title: Mutual Non-Disclosure Agreement
+document_type: contract
+effective_date: 2026-02-01
+sides:
+  - name: disclosers
+    label: Disclosing Parties
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Chief Executive Officer
+  - name: recipients
+    label: Receiving Parties
+    parties:
+      - name: beta
+        label: Beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+        identification_number: TX-87654321
+        address: 456 Oak Avenue, Austin, TX 78701
+        representatives:
+          - name: Jane Doe
+            title: General Counsel
+governing_law: Delaware
+language: en
+attachments:
+  - id: schedule-a
+    title: "Schedule A: Categories of Confidential Information"
+    file: attachments/confidential-categories.lgd
+  - id: exhibit-1
+    title: "Exhibit 1: Prior Agreements"
+    file: attachments/prior-agreements.pdf
+---
+
+This Mutual Non-Disclosure Agreement (this "Agreement" {{def: agreement}}) is entered into on
+{{date: 2026-02-01}} between {{party: acme}} and {{party: beta}}.
+
+# Definitions {#definitions}
+
+"Confidential Information" {{def: confidential-info}} means any non-public information disclosed by
+one side to the other in connection with evaluating a potential business relationship.
+
+# Confidentiality Obligations {#confidentiality}
+
+Each party shall protect the {{term: confidential-info}} using at least
+reasonable care.
+
+# Use Restrictions {#use}
+
+{{party: beta, label=the Receiving Party}} may use the
+{{term: confidential-info}} solely for evaluating a potential business
+relationship with {{party: acme, label=the Disclosing Party}}.
+
+Categories of {{term: confidential-info}} are described in {{attach: schedule-a}}.
+
+The {{term: agreement}} supersedes all prior agreements listed in {{attach: exhibit-1}}.
+
+# Governing Law {#governing-law}
+
+The {{term: agreement}} is governed by the laws of Delaware.

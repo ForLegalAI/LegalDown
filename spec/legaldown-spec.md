@@ -1,7 +1,7 @@
 # LegalDown Specification
 ## Version 0.1 DRAFT
 
-**Revision:** 2026-08-12 — change history in [CHANGELOG.md](../CHANGELOG.md)
+**Revision:** 2026-08-14 — change history in [CHANGELOG.md](../CHANGELOG.md)
 
 ---
 
@@ -77,7 +77,7 @@ A LegalDown document consists of two parts in order:
 
 ### 2.3 File References
 
-LegalDown documents reference external files in several places: `{{include:}}` (§12), `attachments[].file` (§3.9), `amends.file` (§3.8), `translations` (§14), and image paths (§8.7). All such paths:
+LegalDown documents reference external files in several places: `{{include:}}` (§12), `attachments[].file` (§3.9), `amends.file` (§3.8), `supersedes.file` (§3.2), `translations` (§14), and image paths (§8.7). All such paths:
 
 - MUST be relative paths. An absolute path, or any path beginning with a URI scheme (`https://`, `file://`, etc. — a scheme makes the target absolute regardless of filesystem syntax), is a validation Error. Remote resources are therefore never fetched while processing a document
 - MUST resolve to a location within the **document root** when one is configured. The document root is a boundary directory outside which no referenced file may be read; a path that escapes it (e.g., via `../` traversal) is a validation Error
@@ -175,7 +175,7 @@ Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status c
 
 If `legaldown` is present, it declares the specification version the document was authored against. The value SHOULD be written as a quoted string (unquoted, YAML would parse `0.1` as a number). Implementations SHOULD emit a Warning when the declared version is newer than the version they implement, and MUST NOT fail solely because the declared version is unknown. When the field is absent, implementations process the document under the version they implement. A newer declared version also softens unknown-directive handling — see §11.5.
 
-If `supersedes` is present, it MAY be either a plain string describing the superseded document, or an object with the same fields as `amends` (`title` REQUIRED, `file` OPTIONAL — §3.8).
+If `supersedes` is present, it MAY be either a plain string describing the superseded document, or an object with the same fields as `amends` (`title` REQUIRED, `file` OPTIONAL — §3.8). In the object form, `supersedes.file` is a file reference governed by §2.3, and its existence is checked at the Full level (§16.4). Unlike `amends`, a superseded document is never loaded: it is a historical pointer, so no definitions are imported from it.
 
 If `field_types` is present, it MUST be a YAML map where each entry is `type-name: description`.
 
@@ -417,7 +417,7 @@ effective_date: "{{placeholder: effective-date, type=date}}"
 **Rules:**
 
 - A placeholder in frontmatter MUST be written as a quoted YAML string, because an unquoted `{{` begins a YAML flow mapping and is not valid YAML
-- Placeholders MAY appear in **value** fields (for example `title`, `legal_name`, `address`, `identification_number`, `effective_date`, `governing_law`)
+- Placeholders MAY appear in **value** fields (for example `title`, `legal_name`, `address`, `identification_number`, `effective_date`, `governing_law`). A representative's `name` and `title` (§3.5) are display values, not identifiers, and MAY hold placeholders
 - Placeholders MUST NOT appear in **identifier** or **structural** fields — any side or party `name` (these must satisfy the identifier format; a party `name` is additionally referenced by `{{party:}}`), party `type`, `document_type`, `legaldown`, or the `sides`/`parties` array structure
 - Type-specific placeholders follow §10.7 (for example `"{{placeholder: effective-date, type=date}}"`)
 - A required field whose value is a placeholder satisfies that field's presence requirement; the document is treated as a template or draft with unfilled values
@@ -602,7 +602,7 @@ Provider may suspend the Services if:
 - They are **never auto-generated** — automatic generation (§5.3) applies to headings only; anchors below heading level are always explicit and opt-in
 - The anchor marker is source-only and MUST NOT appear in rendered output
 - The rendered designation of an anchored item or paragraph is produced by the renderer under the active template (§6.3, §13.2, §13.3) — the source never contains item letters or paragraph numbers
-- A `{#id}`-like marker in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor
+- A `{#id}`-like marker in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor. This Warning does **not** apply inside code spans, code blocks, or HTML comments, where anchor markers are not recognized at all (§11.4)
 
 ---
 
@@ -707,7 +707,7 @@ The Provider shall perform the marketing services described in this Article
 
 **Term extraction:**
 
-- The defined term is the text inside the quotation marks of the quoted span that immediately precedes the directive
+- The defined term is the text inside the quotation marks of the quoted span that immediately precedes the directive, with leading and trailing whitespace removed. Several languages set a space inside the marks — French typography writes `« Services »`, commonly with a narrow no-break space — so the spacing is typographic, not part of the term. Implementations MUST strip it: the term of `« Services »` is `Services`, identical to that of `"Services"`. For this rule, **whitespace** means any character with the Unicode `White_Space` property, which includes U+0020, tab, U+00A0 (no-break space), and U+202F (narrow no-break space); stripping only ASCII space and tab is not conformant
 - The directive MUST be on the same line as the quoted span; only optional spaces or tabs (no line break) may appear between the closing quotation mark and the directive. If any other character intervenes, the directive is not attached to that span
 - A `{{def:}}` not immediately preceded by a recognized quoted span is an error
 - Defined terms MUST NOT carry emphasis markers in source (e.g., `**bold**`); how a defined term is displayed (bold, underline, small caps) is determined at render time by the style template (§13.7)
@@ -783,7 +783,7 @@ Renderers MUST:
 
 1. Locate the definition by identifier
 2. If a `label` parameter is provided, use the label text as the display text
-3. Otherwise, use the defined term text — the text inside the quotation marks at the definition site, without the delimiting marks (§7.2)
+3. Otherwise, use the defined term text — the text inside the quotation marks at the definition site, without the delimiting marks and without the whitespace they may enclose (§7.2)
 4. Replace `{{term: id}}` (or `{{term: id, label=...}}`) with the display text
 5. Create a hyperlink to the definition's location (the `{{def:}}` anchor) in formats that support hyperlinking
 6. If the definition is not found, insert `[UNDEFINED: id]` and emit a validation error
@@ -1276,7 +1276,7 @@ Directives are **not** recognized inside:
 - Fenced or indented code blocks
 - HTML comments (`<!-- -->`) — their content is stripped from output regardless (§8.6)
 
-In those contexts, directive-like text is literal text.
+In those contexts, directive-like text is literal text. The same exclusion applies to anchor markers (`{#id}`, §5.2 and §5.7): a `{#id}` appearing inside a code span, code block, or comment is not an anchor, does not enter the anchor namespace, and MUST NOT trigger the misplaced-anchor Warning of §15.2.
 
 **Escaping a literal `{{`:** LegalDown inherits CommonMark backslash escapes for punctuation, so escaping the first brace (`\{`) prevents the sequence from forming a directive opener — `\{{ref: x}}` renders as the literal text `{{ref: x}}`.
 
@@ -1460,13 +1460,7 @@ For targets that are item or paragraph anchors (§5.7), render the containing se
 
 ### 13.4 Definition Resolution
 
-When rendering `{{term: id}}` or `{{term: id, label=text}}`:
-
-1. Locate definition by identifier
-2. If a `label` parameter is provided, use the label text as the display text
-3. Otherwise, use the defined term — the text inside the quotation marks at the definition site, without the delimiting marks (§7.2)
-4. Replace directive with the display text and hyperlink it to the definition's location (the `{{def:}}` anchor)
-5. If definition not found, insert `[UNDEFINED: id]` and emit validation error
+`{{term: id}}` and `{{term: id, label=text}}` render according to the algorithm in §7.3, which is normative: locate the definition, use the `label` when present and otherwise the defined term itself, hyperlink the result to the `{{def:}}` anchor, and insert `[UNDEFINED: id]` with a validation Error when the definition is not found. Failure markers take precedence over any `label` (§11.5).
 
 ### 13.5 Field Spec Resolution
 
@@ -1668,7 +1662,7 @@ Validators MUST categorize issues at three levels:
 | Heading levels do not skip | Error |
 | Heading depth does not exceed level 5 | Error |
 | Explicit anchors (section identifiers, item and paragraph anchors) are unique within the anchor namespace | Error |
-| `{#id}`-like marker outside an anchor position (likely misplaced anchor, §5.7) | Warning |
+| `{#id}`-like marker outside an anchor position (likely misplaced anchor, §5.7; not raised inside code spans, code blocks, or comments, §11.4) | Warning |
 | Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
 | Auto-generated identifier lost non-transliterable letters or digits (§5.3 — explicit identifier recommended) | Warning |
 | Section identifiers follow naming rules | Error |
@@ -1728,7 +1722,7 @@ Validators MUST categorize issues at three levels:
 | `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, or `money` | Error |
 | Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type` | Error |
 | `{{placeholder:}}` `currency` parameter for `type=money` is a recognized ISO 4217 code | Warning |
-| `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure) | Error |
+| `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure) | Error |
 | Field spec `note` parameter is plain text and satisfies the value rules in §11.3 (unquoted: no commas or closing braces) | Error |
 
 ### 15.6 Document Metadata Validation
@@ -1763,6 +1757,8 @@ Violations of the following additional checks MUST be reported as **Error**:
 | `language`, `authoritative`, and `translations` keys, when present, are valid ISO 639-1 codes | Warning |
 | `authoritative`, when present, equals the document `language` or a `translations` key | Warning |
 | `legaldown`, when present, does not declare a version newer than the implementation supports | Warning |
+| `supersedes.title` is non-empty when `supersedes` uses the object form | Error |
+| `supersedes.file` path exists when specified (Full level, §16.4) | Error |
 | Representative `name` is non-empty | Error |
 
 Where §3.10 permits a placeholder in a value field, a placeholder value satisfies that field's presence requirement and is **exempt from the field's format checks** above (for example, `effective_date: "{{placeholder: effective-date, type=date}}"` does not fail the ISO 8601 check); the placeholder's own checks (§15.5) apply instead.
@@ -1851,7 +1847,7 @@ Scope: everything that can be determined from the document file alone. A Core im
 - Document structure (§4) and identifiers (§5), including automatic identifier generation (§5.3) and item/paragraph anchors (§5.7)
 - Recognition and validation of all directives in §11.1: cross-references (§6), definitions and term references (§7), field specs (§10), and attachment references (§6.4)
 - Standard text formatting (§8) and tables (§9)
-- Validation (§15): §15.1–§15.6 and §15.9 in full — excluding the template-dependent §15.3 row on refs to non-enumerated item/paragraph anchors, which is evaluated from the Rendering level (§16.3) — plus the rows of §15.7, §15.8, §15.10, and §15.11 that need only the document itself:
+- Validation (§15): §15.1–§15.6 and §15.9 in full, with two rows excluded — the §15.3 row on refs to non-enumerated item/paragraph anchors, which depends on the active style template and is therefore evaluated from the Rendering level (§16.3), and the §15.6 `supersedes.file` existence row, which requires opening another file and is therefore Full (§16.4) — plus the rows of §15.7, §15.8, §15.10, and §15.11 that need only the document itself:
   - §15.7 — the single-file translation rows: every heading and `{{def:}}` carries an explicit identifier when the document itself is a translation (its `language` differs from its declared `authoritative`), and the auto-generated-identifier Warning when the document declares `translations` without `authoritative`
   - §15.8 — `amends.title` is non-empty; unresolved `{{term:}}` references are handled per §7.5's "original not available" rules (a Core implementation never loads the original, so that branch always applies)
   - §15.10 — attachment `id` uniqueness, attachment `id` collisions with other anchors (§5.6), attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
@@ -1879,7 +1875,7 @@ Everything in Rendering, plus all processing that reads files beyond the documen
 - Attachment file processing: content rules (§12.4), attachment rendering (§13.8), and the remaining §15.10 checks (attachment file exists, contains no frontmatter and no level 1 heading, identifier uniqueness across the combined document)
 - Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §15.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
 - Bilingual documents: Section 14 and the remaining §15.7 checks (cross-file structure, identifier, and language-set matching)
-- Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `translations`) and for image paths (§8.7)
+- Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `supersedes.file`, `translations`) and for image paths (§8.7)
 
 ### 16.5 Constructs Beyond the Claimed Level
 
@@ -1891,6 +1887,8 @@ An implementation that encounters a construct whose processing lies beyond its c
 ---
 
 ## 17. Complete Examples
+
+These examples exist as real files in the repository's `examples/simple/` directory, one per subsection: `nda/mutual-nda.lgd` (§17.1) with `attachments/confidential-categories.lgd`, `notice/termination-notice.lgd` (§17.2), `policy/remote-work-policy.lgd` (§17.3), and `amendment/first-amendment.lgd` (§17.4). Relative paths shown in the frontmatter below — such as the amendment's `amends.file` — resolve against that layout. Further examples covering the full feature surface are in `examples/advanced/`.
 
 ### 17.1 Contract Example
 
@@ -2064,18 +2062,21 @@ The Issuer may issue equipment and security requirements needed to support
 
 ### 17.4 Amendment Example
 
+This example amends the contract of §17.1. Because `amends.file` points to a LegalDown file, that document's definitions are imported (§7.5): `{{term: agreement}}` and `{{term: confidential-info}}` resolve against the original without being redeclared here.
+
 ```markdown
 ---
-title: First Amendment to Master Service Agreement
+title: First Amendment to Mutual Non-Disclosure Agreement
+document_type: contract
 amends:
-  title: Master Service Agreement
-  file: ../original/msa.lgd
+  title: Mutual Non-Disclosure Agreement
+  file: ../nda/mutual-nda.lgd
 effective_date: 2026-06-01
 sides:
-  - name: providers
-    label: Providers
+  - name: disclosers
+    label: Disclosing Parties
     parties:
-      - name: acme-corporation
+      - name: acme
         label: Acme
         type: legal_entity
         legal_name: Acme Corporation
@@ -2084,10 +2085,10 @@ sides:
         representatives:
           - name: John Smith
             title: Chief Executive Officer
-  - name: clients
-    label: Clients
+  - name: recipients
+    label: Receiving Parties
     parties:
-      - name: beta-industries
+      - name: beta
         label: Beta
         type: legal_entity
         legal_name: Beta Industries Inc.
@@ -2100,25 +2101,26 @@ governing_law: Delaware
 language: en
 ---
 
-The parties hereby agree to amend the Master Service Agreement
-dated {{date: 2025-01-15}} (the "Agreement" {{def: agreement}}) as follows:
+The parties hereby agree to amend the Mutual Non-Disclosure Agreement
+dated {{date: 2026-02-01}} (the {{term: agreement}}) as follows.
 
-# Payment Terms {#payment-terms}
+# Term of Confidentiality {#amend-term}
 
-Section 5.1 of the {{term: agreement}} is amended to read as follows:
+Section 2 (Confidentiality Obligations) of the {{term: agreement}} is
+amended to read as follows:
 
-Client shall pay Provider within fifteen (15) days of invoice
-date. Late payments shall bear interest at {{money: 500, currency=USD}}
-per day of delay.
+> Each party shall protect the {{term: confidential-info}} using at least
+> reasonable care for {{duration: 5, unit=Y}} from the date of disclosure.
 
-# Data Protection {#data-protection}
+# Permitted Disclosures {#amend-permitted}
 
-The following new section is added after Section 8 of the {{term: agreement}}:
+The following new Article is added after Section 3 of the {{term: agreement}}:
 
-Provider shall process all {{term: confidential-info}} in
-accordance with applicable data protection laws.
+A party may disclose {{term: confidential-info}} where required by law,
+provided it gives the other party {{duration: 10, unit=D}} prior written
+notice where lawful to do so.
 
-# Unchanged Provisions {#unchanged}
+# Unchanged Provisions {#amend-unchanged}
 
 All other terms and conditions of the {{term: agreement}} remain in full
 force and effect.

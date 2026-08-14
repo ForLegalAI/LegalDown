@@ -1,0 +1,43 @@
+The Provider shall deliver the following {{term: services}} to each Client:
+
+- Platform hosting, monitoring, and capacity management
+- Application development against an agreed backlog
+- Technical support during {{term: business-hours}}
+- Monthly performance reporting, delivered within {{duration: 5, unit=D}} of month end
+
+## Environments {#service-environments}
+
+The Provider shall maintain a production environment and at least one non-production environment
+for each Client. The reference topology is shown below.
+
+![Reference platform topology](diagrams/topology.png)
+
+Each {{term: deliverable}} is promoted to production only after the commissioning Client has
+accepted it in the non-production environment. {#service-promotion}
+
+### Promotion Procedure {#service-promotion-procedure}
+
+Promotion follows these steps in order:
+
+1. The Provider deploys the {{term: deliverable}} to the non-production environment
+2. The Client tests it and records acceptance or defects within {{duration: 10, unit=D}}
+3. On acceptance, the Provider schedules the production release
+4. The Provider confirms completion and updates the release log
+
+#### Rollback {#service-rollback}
+
+If a production release fails acceptance testing, the Provider shall roll back to the previous
+release within {{duration: 4, unit=H}} and report the cause to the Client.
+
+The Provider publishes its current platform status at
+[status.acme.example](https://status.acme.example).
+
+## Service Availability {#service-availability}
+
+The Provider shall maintain production availability of 99.9% measured monthly, excluding scheduled
+maintenance notified at least {{duration: 7, unit=D}} in advance.
+
+Availability is measured by an automated health check issued every {{duration: 30, unit=S}} from
+at least two independent monitoring locations.
+
+Scheduled maintenance shall be performed outside {{term: business-hours}} wherever practicable.

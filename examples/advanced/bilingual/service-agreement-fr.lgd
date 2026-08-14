@@ -1,0 +1,68 @@
+---
+legaldown: "0.1"
+title: Contrat de prestation de services
+document_type: contract
+effective_date: 2026-07-01
+language: fr
+translations:
+  en: service-agreement-en.lgd
+authoritative: en
+sides:
+  - name: providers
+    label: Prestataire
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+        identification_number: DE-12345678
+        address: 123 Main Street, Dover, DE 19901
+        representatives:
+          - name: John Smith
+            title: Président-Directeur Général
+  - name: clients
+    label: Client
+    parties:
+      - name: delta
+        label: Delta
+        type: legal_entity
+        legal_name: Delta SARL
+        identification_number: FR-99887766
+        address: 15 Rue de la Paix, 75002 Paris
+        representatives:
+          - name: Camille Laurent
+            title: Directrice Générale
+governing_law: France
+language_note: La version anglaise fait foi en cas de litige
+---
+
+Le présent contrat de prestation de services est conclu le {{date: 2026-07-01}} entre
+{{party: acme}} et {{party: delta}}.
+
+# Définitions {#definitions}
+
+« Services » {{def: services}} désigne les services de maintenance logicielle décrits au présent
+contrat.
+
+« Date d'effet » {{def: effective-date}} désigne le {{date: 2026-07-01}}.
+
+# Obligations du prestataire {#provider-obligations}
+
+{{party: acme, label=le Prestataire}} exécute les {{term: services}} à compter de la
+{{term: effective-date}} avec le soin et la compétence raisonnables.
+
+# Rémunération {#fees}
+
+Le Client verse {{money: 4500, currency=EUR}} par mois, facturés mensuellement à terme échu et
+payables sous {{duration: 30, unit=D}}.
+
+# Durée {#term}
+
+Le présent contrat est conclu pour une durée de {{duration: 12, unit=MO}} à compter de la
+{{term: effective-date}} et se renouvelle par tacite reconduction sauf préavis écrit de
+{{duration: 60, unit=D}} donné par l'une des parties.
+
+# Langue du contrat {#governing-language}
+
+Le présent contrat est établi en langue anglaise et en langue française. En cas de divergence, la
+version anglaise prévaut.
