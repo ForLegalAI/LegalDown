@@ -247,9 +247,11 @@ LegalDown is in early draft stage. Current priorities:
 - [x] Publish reference examples for common document types
 - [x] Publish the validation fixtures corpus (conformance test suite)
 - [x] Tag v0.1
-- [ ] Release reference parser and validator
-- [ ] Release CLI rendering tool
 - [ ] Gather community feedback and publish v0.2
+
+The reference parser and validator are developed in a separate repository —
+this repository holds the specification, examples, and conformance fixtures
+only. Implementations verify themselves against [`fixtures/`](fixtures).
 
 Watch this repository and follow [Discussions](../../discussions) to stay
 informed.
