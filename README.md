@@ -231,7 +231,7 @@ must produce.
 
 | Version | Status | Document |
 |---------|--------|----------|
-| v0.1 | 🚧 DRAFT | [spec/legaldown-spec.md](spec/legaldown-spec.md) |
+| [v0.1](../../releases/tag/v0.1) | 🚧 DRAFT | [spec/legaldown-spec.md](spec/legaldown-spec.md) |
 
 The specification is in early draft. It is not yet stable and may change
 before v1.0. Do not build production tooling against a draft version without
@@ -246,7 +246,7 @@ LegalDown is in early draft stage. Current priorities:
 - [x] Complete the v0.1 specification text
 - [x] Publish reference examples for common document types
 - [x] Publish the validation fixtures corpus (conformance test suite)
-- [ ] Tag v0.1
+- [x] Tag v0.1
 - [ ] Release reference parser and validator
 - [ ] Release CLI rendering tool
 - [ ] Gather community feedback and publish v0.2
