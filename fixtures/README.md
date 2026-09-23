@@ -30,7 +30,9 @@ fixtures/
     <case>/                    one template assembly (§15.7)
       template.lgd             a template that MUST produce no Errors
       answers.yaml             the answers set
-      expected.lgd             the exact bytes assembly MUST produce
+      expected.lgd             the exact bytes assembly MUST produce — or, when assembly writes
+      expected/                  several files, a tree of every output file: template.lgd plus
+                                 each fragment and LegalDown attachment file at its relative path
 ```
 
 Directory names are **rule ids** as defined in §16.1 — stable identifiers that survive section
@@ -80,13 +82,16 @@ runner must:
    matching on rule id and level (and line, where given). With `exhaustive: true`, assert nothing
    else is reported.
 3. For each `assembly/` case — validate `template.lgd` and assert no Error-level diagnostics, then
-   assemble it with `answers.yaml` and assert the output is **byte-identical** to `expected.lgd`.
-   These cases need the Assembly capability (§17.6).
+   assemble it with `answers.yaml` and assert the output is **byte-identical** to `expected.lgd`
+   — or, for a case with an `expected/` tree, that the set of output files is exactly the files in
+   that tree (a file absent there must not be written; an empty file there is written as zero
+   bytes) and each is byte-identical. These cases need the Assembly capability (§17.6); a case with
+   include fragments or LegalDown attachment files also needs Full.
 4. Skip any case whose `requires_level` exceeds the implementation's claimed conformance level, or
    that needs a capability or configuration the implementation lacks, and report it as skipped
    rather than passed — §17.5 forbids reporting checks that were not run.
 
-The four `assembly/` cases:
+The five `assembly/` cases:
 
 | Case | Exercises |
 |---|---|
@@ -95,7 +100,7 @@ The four `assembly/` cases:
 | `escaping` | §15.7.3 escaping: `{`, emphasis and link characters, `&` before a letter, a heading marker at the start of a list item, and an ordered-list number completed by template text |
 | `frontmatter-and-defaults` | Removing an attachment and a remaining attachment's `when` entry; deleting an empty `{when=}` marker; a `duration` blank filled from a `default`; single- and double-quoted YAML escaping; escaped `{{choose:}}` phrases; deleting a line left blank by an empty phrase |
 
-Conditional includes and assembly of attachment files are not yet covered by a case.
+| `multi-file` | A kept fragment filled with a blank and a `{{choose:}}`; a removed conditional include (its fragment not written); a conditional attachment file emptied by a removed section (written as zero bytes); a non-LegalDown attachment left out of the output |
 
 ## Coverage
 

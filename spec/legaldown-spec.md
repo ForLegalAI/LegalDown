@@ -1330,8 +1330,8 @@ Include targets use the same file model as LegalDown attachment files (§12.4): 
 - The included fragment MUST NOT contain a level 1 heading (`#`) — the author writes the surrounding heading in the including document, as in the §12.1 example
 - Include paths MUST be relative to the including document
 - Content is spliced verbatim at the directive position; heading levels are **not** re-based. The combined document MUST satisfy the heading hierarchy rules (§4.1) — a fragment whose headings would skip a level at its insertion point is invalid
-- A fragment MAY itself contain `{{include:}}` directives; circular includes MUST be detected across the entire include chain and rejected with an error
-- In a template, a paragraph consisting of a single `{{include:}}` MAY carry a condition that includes or omits the whole fragment (§15.3)
+- A fragment MAY itself contain `{{include:}}` directives; circular includes MUST be detected across the entire include chain and rejected with an error — except in a template, where `{{include:}}` appears only in the template's own body (§15.3)
+- In a template, a paragraph consisting of a single `{{include:}}` MAY carry a condition that includes or omits the whole fragment (§15.3); a template's fragments are further restricted by §15.3 (included once, no nested includes, conditions, or drafting notes, explicit heading identifiers)
 - A `{{def:}}` inside an included fragment registers a document-wide term, exactly as in attachment files (§7.2, §12.4)
 - Section identifiers in included fragments MUST be unique across the entire combined document, except between alternatives in a template (§15.4)
 - Validation of the combined document (including all inclusions) is REQUIRED (§16.11)
@@ -1636,7 +1636,7 @@ authoritative: en
 - Linked translation files MUST have identical heading hierarchy
 - Linked translation files MUST use identical section identifiers
 - Validators MUST check structural consistency between linked files
-- Linked templates (§15) MUST declare the same question ids, types, choice value ids, and `default` values — except that a `text` question's default is translated, so linked templates need only agree on whether it has one — use the same placeholder ids with the same effective types and fixed `currency` or `unit`, carry identical conditions on corresponding units, and list the same parameter names in corresponding `{{choose:}}` directives; only `prompt`, choice labels, `text` defaults, drafting notes, and `{{choose:}}` phrases are translated. One answers set therefore assembles every language version, to the same state — draft or final — in each
+- Linked templates (§15) MUST declare the same question ids, types, choice value ids, and `default` values — except that a `text` question's default is translated, so linked templates need only agree on whether it has one — use the same placeholder ids with the same effective types and fixed `currency` or `unit`, carry identical conditions on corresponding units — sections matched by identifier, list items and top-level paragraphs (including `{{include:}}` paragraphs) matched by their explicit anchors, which every conditional item and paragraph in a linked template MUST therefore carry, conditional preamble paragraphs matched in order, and attachments matched by id — and list the same parameter names in corresponding `{{choose:}}` directives; only `prompt`, choice labels, `text` defaults, drafting notes, and `{{choose:}}` phrases are translated. One answers set therefore assembles every language version, to the same state — draft or final — in each
 - Cross-references resolve to section numbers (same in both versions)
 
 **Primary and translations:**
@@ -1787,15 +1787,16 @@ A marker holding `when=` in any other position is not a condition; it is literal
 
 **Presence.** The **presence condition** of a unit is the set of conditions that must all be true for it to appear in an assembled document: its own condition, if any, together with the conditions of every unit enclosing it **in the file where it is written** — its ancestor sections and the list items it is nested in — and, for content of an include fragment, the presence condition of the paragraph holding its `{{include:}}` directive, or, for content of an attachment file, the attachment's condition. For this purpose a section extends to the next heading of the same or a higher level in its own file, or to the end of that file, and an `{{include:}}` paragraph counts as one paragraph of the including file, whatever its fragment contains. A unit with an empty presence condition is always present. Directives and definitions are present when the unit containing them is present.
 
-**Includes in a template.** A template keeps includes simple, so that every fragment has exactly one place and one presence condition:
+**Includes and attachment files in a template.** A template keeps includes and attachment files simple, so that every fragment and every LegalDown attachment file has exactly one place and one presence condition:
 
 - `{{include:}}` MAY appear only in the template's own body — not inside an include fragment, a LegalDown attachment file, or a drafting note
 - Each fragment file MUST be included at most once
+- Each LegalDown attachment file MUST be declared by at most one `attachments` entry, and MUST NOT also be included as a fragment
 - A fragment MAY contain placeholders and `{{choose:}}` directives, but MUST NOT contain conditions or drafting notes, and every heading in it MUST carry an explicit identifier (§5.2), so that assembly never has to change a fragment's structure or headings
 
-To make a fragment conditional, put the condition on its `{{include:}}` paragraph, or on a section that contains that paragraph. Violations are reported as `template-fragment-invalid` (§16.12).
+To make a fragment conditional, put the condition on its `{{include:}}` paragraph, or on a section that contains that paragraph; to make an attachment conditional, use its `when` field. Violations are reported as `template-fragment-invalid` (§16.12).
 
-**Heading hierarchy.** Because a conditional section always takes its subsections with it — and, measured in its own file, any `{{include:}}` paragraph it contains — removing any combination of conditional sections, items, and paragraphs never breaks §4.1: the heading that follows a removed section is at the same level as the removed heading or higher, so it cannot skip a level relative to the heading before. The heading hierarchy therefore needs to be validated only once, on the template. A conditional include is the one exception, because its fragment's headings need not form whole sections: the combined document MUST satisfy §4.1 both with and without each conditional fragment, which `include-heading-skip` (§16.11) checks.
+**Heading hierarchy.** Because a conditional section always takes its subsections with it — and, measured in its own file, any `{{include:}}` paragraph it contains — removing any combination of conditional sections, items, and paragraphs never breaks §4.1: the heading that follows a removed section is at the same level as the removed heading or higher, so it cannot skip a level relative to the heading before. The heading hierarchy therefore needs to be validated only once, on the template. Conditional includes are the one exception, because a fragment's headings need not form whole sections: the combined document MUST satisfy §4.1 under every combination of answers to the questions named in the presence conditions of `{{include:}}` paragraphs — checked, as in §15.4, by trying each such combination, with every include present or absent as that combination decides — which `include-heading-skip` (§16.11) reports.
 
 ### 15.4 Alternatives and Reference Safety
 
@@ -1864,7 +1865,7 @@ For {{duration: 12, unit=MO}} after the engagement ends, neither party shall sol
 
 - A drafting note is written in the document's `language` and MAY contain several paragraphs and inline formatting. Its extent is its block quote as CommonMark parses it, including lazy continuation lines
 - A block quote whose first line looks like an alert marker — `[!` followed by letters and `]` — but is not `[!DRAFTING]` is an ordinary quote; validators MUST emit a Warning (`drafting-note-unrecognized`), since a mistyped marker would otherwise leak guidance into the finished document
-- Drafting notes MAY appear in templates and drafts. Assembly removes them first, before resolving anything else (§15.7.2); the final check rejects any that remain (§15.9)
+- Drafting notes MAY appear in templates and drafts — in a template, anywhere except inside an include fragment (§15.3). Assembly removes them first, before resolving anything else (§15.7.2); the final check rejects any that remain (§15.9)
 - Directives inside a drafting note are recognized and validated, so that a `{{ref:}}` in a note cannot go stale unnoticed. A `{{def:}}` MUST NOT appear inside a drafting note, because assembly would remove the definition
 - Drafting notes are not conditional units, carry no anchors, and are never numbered
 - `[!DRAFTING]` is a fixed keyword, like a directive name, and is never rendered as written: renderers label the note using text from the style template (§13.7), so the label follows the document's language
@@ -2111,7 +2112,7 @@ Where §3.10 permits a placeholder in a value field, a placeholder value satisfi
 | `translation-anchor-mismatch` | Section identifiers match between translations | Error |
 | `translation-def-mismatch` | Definition IDs match between translations | Error |
 | `translation-language-set-mismatch` | Linked files declare the same set of languages (`language` + `translations` keys) | Error |
-| `translation-template-mismatch` | Linked templates declare the same question ids, types, choice value ids, and defaults (for `text` questions, the same presence of a default), the same placeholder ids with the same effective types and fixed currency or unit, identical conditions on corresponding units, and the same `{{choose:}}` parameter names (§14.2) | Error |
+| `translation-template-mismatch` | Linked templates declare the same question ids, types, choice value ids, and defaults (for `text` questions, the same presence of a default), the same placeholder ids with the same effective types and fixed currency or unit, identical conditions on corresponding units (every conditional item and paragraph carrying an explicit anchor to match by), and the same `{{choose:}}` parameter names (§14.2) | Error |
 | `translation-implicit-id` | Every heading and `{{def:}}` in a translation file (a linked file whose `language` differs from `authoritative`) carries an explicit identifier | Error |
 | `translation-authoritative-absent` | Auto-generated identifiers used in linked files when `authoritative` is absent (primary cannot be determined) | Warning |
 
@@ -2155,7 +2156,7 @@ Non-LegalDown attachments: only file existence is checked.
 | `include-has-frontmatter` | Included fragment contains frontmatter | Error |
 | `include-has-h1` | Included fragment contains a level 1 heading | Error |
 | `include-anchor-duplicate` | Section identifiers in included fragments are unique across the entire combined document (alternatives in a template excepted, §15.4) | Error |
-| `include-heading-skip` | Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) — in a template, both with and without each conditional fragment (§15.3) | Error |
+| `include-heading-skip` | Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) — in a template, under every combination of answers that decides which conditional includes are present (§15.3) | Error |
 
 All other §16 checks apply to the combined document after inclusion (§12.2). Include processing is a Full-level capability (§17.4); the file-extension check on the include path is determinable from the document alone and applies at Core (§17.2).
 
@@ -2173,7 +2174,7 @@ Template checks (§15) — these rows are Core (§17.2) within the document itse
 | `condition-reference-unsafe` | Each `{{ref:}}`, `{{term:}}`, and `{{attach:}}` outside drafting notes resolves under every combination of answers in which it is present (§15.4) | Error |
 | `choose-invalid` | Each `{{choose:}}` names a declared decision question, lists exactly its possible answers, each once, and appears outside headings and frontmatter (§15.5) | Error |
 | `drafting-note-def` | No `{{def:}}` appears inside a drafting note (§15.6) | Error |
-| `template-fragment-invalid` | In a template, `{{include:}}` appears only in the template's own body (not in a fragment, an attachment file, or a drafting note); each fragment is included at most once; and a fragment holds no conditions or drafting notes and gives every heading an explicit identifier (§15.3) — Full where it reads a fragment or attachment file | Error |
+| `template-fragment-invalid` | In a template, `{{include:}}` appears only in the template's own body (not in a fragment, an attachment file, or a drafting note); each fragment is included at most once; each LegalDown attachment file is declared by at most one entry and is not also a fragment; and a fragment holds no conditions or drafting notes and gives every heading an explicit identifier (§15.3) — Full where it reads a fragment or attachment file | Error |
 | `drafting-note-unrecognized` | A block quote whose first line looks like an alert marker (`[!` letters `]`) but is not `[!DRAFTING]` (§15.6) | Warning |
 
 Assembly checks — reported by implementations of the Assembly capability (§17.6) when assembling a template with an answers set:

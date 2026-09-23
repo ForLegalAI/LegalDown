@@ -21,7 +21,7 @@ REPO = os.path.dirname(ROOT)
 LEVELS = {'error', 'warning', 'info'}
 TIERS = {'core', 'rendering', 'full'}
 CAPABILITIES = {'assembly'}
-ASSEMBLY_FILES = ('template.lgd', 'answers.yaml', 'expected.lgd')
+ASSEMBLY_INPUTS = ('template.lgd', 'answers.yaml')
 # Template constructs that must not survive assembly. Body patterns ignore escaped text
 # (assembly escapes every inserted "{", so a literal "\{when=" in expected output is correct);
 # the attachment "when:" entry is looked for in frontmatter only.
@@ -127,25 +127,49 @@ def check():
         d = os.path.join(assembly, case)
         if not os.path.isdir(d):
             continue
-        for f in ASSEMBLY_FILES:
+        for f in ASSEMBLY_INPUTS:
             if not os.path.exists(os.path.join(d, f)):
                 problems.append('assembly/%s: missing %s' % (case, f))
-        out = os.path.join(d, 'expected.lgd')
-        if os.path.exists(out):
-            text = open(out, encoding='utf-8').read()
+        # Output is either a single expected.lgd, or an expected/ tree holding every output file
+        # (template.lgd plus fragments and LegalDown attachment files at their relative paths).
+        single = os.path.join(d, 'expected.lgd')
+        tree = os.path.join(d, 'expected')
+        if os.path.isdir(tree):
+            if os.path.exists(single):
+                problems.append('assembly/%s: has both expected.lgd and expected/' % case)
+            if not os.path.exists(os.path.join(tree, 'template.lgd')):
+                problems.append('assembly/%s: expected/ has no template.lgd' % case)
+            outputs = []
+            for root, _, files in os.walk(tree):
+                for f in files:
+                    path = os.path.join(root, f)
+                    rel = os.path.relpath(path, tree)
+                    outputs.append((rel, path))
+                    if rel != 'template.lgd' and not os.path.exists(os.path.join(d, rel)):
+                        problems.append('assembly/%s: expected/%s has no input file %s'
+                                        % (case, rel, rel))
+        elif os.path.exists(single):
+            outputs = [('template.lgd', single)]
+        else:
+            problems.append('assembly/%s: missing expected.lgd or expected/' % case)
+            outputs = []
+        for rel, path in sorted(outputs):
+            text = open(path, encoding='utf-8').read()
+            if text == '':
+                continue  # an emptied file is written as zero bytes (§15.7.2 step 8)
             front, body = '', text
             if text.startswith('---\n') and '\n---\n' in text[4:]:
                 end = text.index('\n---\n', 4)
                 front, body = text[4:end + 1], text[end + 5:]
             for label, pattern in BODY_MARKERS:
                 if pattern.search(body):
-                    problems.append('assembly/%s: expected.lgd still contains %s' % (case, label))
+                    problems.append('assembly/%s: %s still contains %s' % (case, rel, label))
             for label, pattern in FRONTMATTER_MARKERS:
                 if pattern.search(front):
-                    problems.append('assembly/%s: expected.lgd still contains %s' % (case, label))
+                    problems.append('assembly/%s: %s still contains %s' % (case, rel, label))
             if not text.endswith('\n') or text.endswith('\n\n'):
-                problems.append('assembly/%s: expected.lgd must end with exactly one line break'
-                                % case)
+                problems.append('assembly/%s: %s must end with exactly one line break'
+                                % (case, rel))
 
     manifest_path = os.path.join(ROOT, 'coverage.json')
     if os.path.exists(manifest_path):

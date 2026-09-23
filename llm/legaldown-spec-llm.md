@@ -328,7 +328,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{include: schedules/pricing.lgd}}
 ```
 
-Path is relative to the including document. The target is a **body-only LegalDown fragment** — the same file model as attachment files: must be `.lgd`/`.legaldown`/`.legal.md`, no frontmatter, no level 1 heading (write the surrounding heading in the including document). Content splices verbatim at the directive position with no heading re-basing — the combined document must not skip heading levels. A `{{def:}}` in a fragment registers a document-wide term; section ids must be unique across the combined document. Fragments may nest further `{{include:}}`s; circular chains are invalid. In a template, a paragraph holding only the `{{include:}}` may end with `{when=...}` to include or omit the whole fragment; the combined document must then keep a valid heading hierarchy both with and without it.
+Path is relative to the including document. The target is a **body-only LegalDown fragment** — the same file model as attachment files: must be `.lgd`/`.legaldown`/`.legal.md`, no frontmatter, no level 1 heading (write the surrounding heading in the including document). Content splices verbatim at the directive position with no heading re-basing — the combined document must not skip heading levels. A `{{def:}}` in a fragment registers a document-wide term; section ids must be unique across the combined document. Fragments may nest further `{{include:}}`s (not in templates — see Templates); circular chains are invalid. In a template, a paragraph holding only the `{{include:}}` may end with `{when=...}` to include or omit the whole fragment; the combined document must then keep a valid heading hierarchy both with and without it.
 
 ### Attachment Reference
 
@@ -378,7 +378,7 @@ A conditional paragraph. {when=!fixed-term}                 ← boolean is false
 
 - Only whole units are conditional: a section (with all its subsections), a list item, a top-level or preamble paragraph (preamble: `when=` only, no `#id`), a paragraph holding only `{{include:}}`, and an attachment (`attachments[].when`)
 - Nested conditional units need **both** conditions — there is no `and`/`or`. Nesting is read in the file where a unit is written; fragment content inherits the condition of its `{{include:}}` paragraph
-- **Includes in a template:** `{{include:}}` only in the template's own body (not in fragments, attachment files, or drafting notes), each fragment included at most once; a fragment may hold placeholders and `{{choose:}}` but **no conditions or drafting notes**, and every heading in it needs an explicit `{#id}`. Make a fragment conditional on its `{{include:}}` line or on a section around it
+- **Includes in a template:** `{{include:}}` only in the template's own body (not in fragments, attachment files, or drafting notes), each fragment included at most once, each LegalDown attachment file used by one `attachments` entry only and never also as a fragment; a fragment may hold placeholders and `{{choose:}}` but **no conditions or drafting notes**, and every heading in it needs an explicit `{#id}`. Make a fragment conditional on its `{{include:}}` line or on a section around it
 - All occurrences of one placeholder id that fix a `currency` or `unit` must fix the same one (in any document, not only templates)
 - **Alternatives:** units whose conditions can never both hold MAY share an id; `{{ref:}}` resolves to whichever survives. Two `# Dispute Resolution {#disputes when=forum:...}` sections, one per choice value, make an unconditional `{{ref: disputes}}` valid
 - Every `{{ref:}}`/`{{term:}}`/`{{attach:}}` must resolve under every combination of answers where it is present (Error otherwise); references inside drafting notes are exempt, since notes never reach the output
@@ -403,7 +403,7 @@ Phrases are plain text — no directives or formatting inside. Not allowed in he
 
 **Assembly** first removes drafting notes, then removes absent units and strips `when=`, resolves `{{choose:}}`, turns answered placeholders into `{{date:}}`/`{{money:}}`/`{{duration:}}` or escaped text (every `{` and Markdown-significant character in inserted text is backslash-escaped, including block markers when the text starts a line or list item), removes `questions`, keeps identifiers stable, and collapses blank lines — byte-identical across implementations. Removal works file by file: a section ends at the next heading of the same or a higher level in its own file, and an `{{include:}}` paragraph is one paragraph whatever its fragment holds. Include fragments and LegalDown attachment files are assembled with the same answers; each one whose include line or attachment entry remains is written (as an empty file if nothing is left), and non-LegalDown attachments are left untouched. Templates with includes or LegalDown attachments need a Full implementation. A question's `default` must itself be a valid answer. The optional **final** validation option (offered by validators and renderers as a job setting) rejects any remaining placeholder, drafting note, or template construct.
 
-**Bilingual templates:** linked files share question ids, types, choice value ids, defaults (a `text` default is translated, but must be present in every language or in none), placeholder ids with their types and fixed currency/unit, conditions, and `{{choose:}}` parameter names; only prompts, labels, `text` defaults, notes, and phrases are translated. One answers set assembles every language.
+**Bilingual templates:** every conditional list item and paragraph needs an explicit `{#id}` so it can be matched across languages (sections match by id, attachments by id, conditional preamble paragraphs in order); linked files share question ids, types, choice value ids, defaults (a `text` default is translated, but must be present in every language or in none), placeholder ids with their types and fixed currency/unit, conditions, and `{{choose:}}` parameter names; only prompts, labels, `text` defaults, notes, and phrases are translated. One answers set assembles every language.
 
 ## Not in the language
 
@@ -452,7 +452,7 @@ Every check in the specification carries a stable **rule id** (`heading-skip`, `
 - Empty attachment `title` or representative `name`
 - Include target missing, not a LegalDown file, or part of a circular include chain
 - Included fragment contains frontmatter or a level 1 heading
-- Section identifiers in included fragments not unique across the combined document, or the combined document skips heading levels (in a template: with or without each conditional include)
+- Section identifiers in included fragments not unique across the combined document, or the combined document skips heading levels (in a template: under any combination of answers deciding which conditional includes are present)
 - Mismatched bilingual structure (heading hierarchy, section ids, definition ids, or declared language sets)
 - `amends.title` is empty or missing when `amends` is present
 - `amends.file` path does not exist when specified
@@ -472,8 +472,8 @@ Every check in the specification carries a stable **rule id** (`heading-skip`, `
 - `{{ref:}}`/`{{term:}}`/`{{attach:}}` that may point to an absent unit where the reference is present
 - `{{choose:}}` on a non-decision question, not listing exactly every possible answer, or placed in a heading or frontmatter
 - `{{def:}}` inside a drafting note
-- Linked templates with different questions, non-text defaults, placeholder types/currencies/units, or conditions
-- In a template: `{{include:}}` outside the template's own body, a fragment included twice, or a fragment holding a condition, a drafting note, or a heading without an explicit id
+- Linked templates with different questions, non-text defaults, a `text` default present in one language but not another, placeholder types/currencies/units, conditions, or `{{choose:}}` parameter names — or a conditional item or paragraph without an explicit anchor to match it by
+- In a template: `{{include:}}` outside the template's own body, a fragment included twice, an attachment file used by two entries or also as a fragment, or a fragment holding a condition, a drafting note, or a heading without an explicit id
 - Assembly: a needed decision with no answer and no default; an answer of the wrong form, disagreeing with a currency/unit fixed by its placeholder, or a text answer with `{{` used in frontmatter
 - Under the final option: a remaining placeholder, `questions` key, condition, `{{choose:}}`, or drafting note
 
