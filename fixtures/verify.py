@@ -22,12 +22,17 @@ LEVELS = {'error', 'warning', 'info'}
 TIERS = {'core', 'rendering', 'full'}
 CAPABILITIES = {'assembly'}
 ASSEMBLY_FILES = ('template.lgd', 'answers.yaml', 'expected.lgd')
-TEMPLATE_MARKERS = (
-    ('a when= condition', re.compile(r'when=')),
-    ('a {{choose:}} directive', re.compile(r'\{\{choose:')),
-    ('a drafting note', re.compile(r'^\s*>\s*\[!drafting\]', re.I | re.M)),
+# Template constructs that must not survive assembly. Body patterns ignore escaped text
+# (assembly escapes every inserted "{", so a literal "\{when=" in expected output is correct);
+# the attachment "when:" entry is looked for in frontmatter only.
+BODY_MARKERS = (
+    ('a when= condition', re.compile(r'(?<!\\)\{[^{}\n]*\bwhen=')),
+    ('a {{choose:}} directive', re.compile(r'(?<!\\)\{\{choose:')),
+    ('a drafting note', re.compile(r'^[ \t]*>[ \t]*\[!drafting\]', re.I | re.M)),
+)
+FRONTMATTER_MARKERS = (
     ('a questions entry', re.compile(r'^questions:', re.M)),
-    ('an attachment when entry', re.compile(r'^\s+when:', re.M)),
+    ('an attachment when entry', re.compile(r'^[ \t]+when:', re.M)),
 )
 
 
@@ -76,6 +81,9 @@ def check():
             if cap == 'assembly' and not answers:
                 problems.append('%s/%s: an assembly case must name its answers set in '
                                 'requires_config.answers' % (rule, name))
+            if answers and cap != 'assembly':
+                problems.append('%s/%s: a case with an answers set must declare '
+                                'requires_capability: "assembly"' % (rule, name))
             if answers and not os.path.exists(os.path.join(d, answers)):
                 problems.append('%s/%s: answers set %s does not exist' % (rule, name, answers))
             if 'final' in config and config['final'] is not True:
@@ -125,8 +133,15 @@ def check():
         out = os.path.join(d, 'expected.lgd')
         if os.path.exists(out):
             text = open(out, encoding='utf-8').read()
-            for label, pattern in TEMPLATE_MARKERS:
-                if pattern.search(text):
+            front, body = '', text
+            if text.startswith('---\n') and '\n---\n' in text[4:]:
+                end = text.index('\n---\n', 4)
+                front, body = text[4:end + 1], text[end + 5:]
+            for label, pattern in BODY_MARKERS:
+                if pattern.search(body):
+                    problems.append('assembly/%s: expected.lgd still contains %s' % (case, label))
+            for label, pattern in FRONTMATTER_MARKERS:
+                if pattern.search(front):
                     problems.append('assembly/%s: expected.lgd still contains %s' % (case, label))
             if not text.endswith('\n') or text.endswith('\n\n'):
                 problems.append('assembly/%s: expected.lgd must end with exactly one line break'

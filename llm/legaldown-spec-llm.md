@@ -79,7 +79,7 @@ questions:                               # OPTIONAL, templates only: block style
     choices:                             # REQUIRED for choice: value id → label, at least two; ids — like question ids and undeclared placeholder ids — must not be yes/no/on/off/true/false/y/n/null
       courts: State courts
       arbitration: ICC arbitration
-    default: courts                      # OPTIONAL
+    default: courts                      # OPTIONAL; must be a valid answer (see Templates)
 tags: [tag1, tag2]                      # OPTIONAL
 ---
 ```
@@ -97,7 +97,7 @@ Frontmatter is optional as a block but recommended: without it the document is v
 - Unknown party fields are allowed and must be ignored by implementations
 - Display fallback: side `label` → `name` with hyphens replaced by spaces and each word capitalized (`disclosing-parties` → "Disclosing Parties"; no pluralization — provide a `label`); party `label` → `legal_name`
 - `identification_number` is the reserved field for a registration/national ID — RECOMMENDED for `legal_entity`, OPTIONAL for `natural_person` (not every individual has one); prefer it over a custom field when present
-- Template/draft frontmatter MAY use `{{placeholder:}}` as a **quoted** string in value fields (e.g. `legal_name: "{{placeholder: client-name}}"`), but NOT in identifier/structural fields (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure, anything inside `questions`); same id in frontmatter and body means the same blank; in a date field (`effective_date`, `adoption_date`, `date_of_birth`) the placeholder must be the whole value and of type `date`
+- Template/draft frontmatter MAY use `{{placeholder:}}` as a **quoted** string in value fields (e.g. `legal_name: "{{placeholder: client-name}}"`), but NOT in identifier/structural fields (any `name`, `type`, `document_type`, `legaldown`, `sides`/`parties` structure, anything inside `questions`); same id in frontmatter and body means the same blank; in a date field (`effective_date`, `adoption_date`, `date_of_birth`) the placeholder must be the whole value and of type `date`; never in file paths (`attachments[].file`, `amends.file`, `supersedes.file`, `translations`), attachment `id`/`when`, language codes, or `field_types`
 
 ### Amendments
 
@@ -379,7 +379,7 @@ A conditional paragraph. {when=!fixed-term}                 ← boolean is false
 - Only whole units are conditional: a section (with all its subsections), a list item, a top-level or preamble paragraph (preamble: `when=` only, no `#id`), a paragraph holding only `{{include:}}`, and an attachment (`attachments[].when`)
 - Nested conditional units need **both** conditions — there is no `and`/`or`
 - **Alternatives:** units whose conditions can never both hold MAY share an id; `{{ref:}}` resolves to whichever survives. Two `# Dispute Resolution {#disputes when=forum:...}` sections, one per choice value, make an unconditional `{{ref: disputes}}` valid
-- Every `{{ref:}}`/`{{term:}}`/`{{attach:}}` must resolve under every combination of answers where it is present (Error otherwise)
+- Every `{{ref:}}`/`{{term:}}`/`{{attach:}}` must resolve under every combination of answers where it is present (Error otherwise); references inside drafting notes are exempt, since notes never reach the output
 
 **Inline choice** — a plain-text phrase chosen by a decision; every possible answer must be listed (`""` = no text):
 
@@ -399,9 +399,9 @@ Phrases are plain text — no directives or formatting inside. Not allowed in he
 
 **Answers set** — a flat YAML/JSON map: `text` single-line string with no leading/trailing spaces; `date` `YYYY-MM-DD`; `money` `{amount: "48000.00", currency: EUR}` (or the amount string when every placeholder for it fixes the same `currency`); `duration` `{value, unit}` (or the value when every placeholder fixes the same `unit`); `boolean` `true`/`false`; `choice` a value id. Unanswered questions take their `default`; blanks with neither stay as placeholders (the result is a draft). An undeclared placeholder is answered by its id like a declared one. Only decisions actually reached need an answer — one asked only inside an absent section or a drafting note does not.
 
-**Assembly** removes absent units, strips `when=`, resolves `{{choose:}}`, turns answered placeholders into `{{date:}}`/`{{money:}}`/`{{duration:}}` or escaped text (every `{` and Markdown-significant character in inserted text is backslash-escaped, including block markers when the text starts a line or list item), removes drafting notes and `questions`, keeps identifiers stable, and collapses blank lines — byte-identical across implementations. Include fragments and LegalDown attachment files are assembled with the same answers. The optional **final** validation option (offered by validators and renderers as a job setting) rejects any remaining placeholder, drafting note, or template construct.
+**Assembly** removes absent units, strips `when=`, resolves `{{choose:}}`, turns answered placeholders into `{{date:}}`/`{{money:}}`/`{{duration:}}` or escaped text (every `{` and Markdown-significant character in inserted text is backslash-escaped, including block markers when the text starts a line or list item), removes drafting notes and `questions`, keeps identifiers stable, and collapses blank lines — byte-identical across implementations. Assembly works on the combined document (template + include fragments + LegalDown attachment files), so sections and identifiers behave as they do after inclusion, and writes each line back to its own file; drafting notes are removed first. A question's `default` must itself be a valid answer. The optional **final** validation option (offered by validators and renderers as a job setting) rejects any remaining placeholder, drafting note, or template construct.
 
-**Bilingual templates:** linked files share question ids, types, choice value ids, conditions, and `{{choose:}}` parameter names; only prompts, labels, notes, and phrases are translated. One answers set assembles every language.
+**Bilingual templates:** linked files share question ids, types, choice value ids, defaults, placeholder ids with their types and fixed currency/unit, conditions, and `{{choose:}}` parameter names; only prompts, labels, notes, and phrases are translated. One answers set assembles every language.
 
 ## Not in the language
 
@@ -443,7 +443,7 @@ Every check in the specification carries a stable **rule id** (`heading-skip`, `
 - `field_types` keys that are malformed or collide with the reserved value-type names (`date`, `money`, `duration`, `party`, `text`)
 - Missing or malformed `type` on `{{field:}}`
 - Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
-- `{{placeholder:}}` in a frontmatter identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure, anything inside `questions`) — a representative's `name` and `title` are display values and MAY hold placeholders
+- `{{placeholder:}}` in a frontmatter identifier, structural, or format-checked field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure, anything inside `questions`, file paths, attachment `id`/`when`, language codes, `field_types`) — a representative's `name` and `title` are display values and MAY hold placeholders
 - Frontmatter present but not valid YAML
 - Missing or empty `title` when frontmatter is present
 - Invalid `effective_date`, `adoption_date`, or `date_of_birth` (not a valid ISO 8601 date; placeholders exempt)
@@ -464,13 +464,13 @@ Every check in the specification carries a stable **rule id** (`heading-skip`, `
 - LegalDown attachment file contains level 1 heading
 - Section identifiers in attachment files are not unique across entire combined document
 - `{{attach:}}` references undeclared attachment id
-- Malformed `questions` entry (bad id, unknown type, `choice` with fewer than two choices, a question, choice value, or undeclared placeholder id that YAML reads as a boolean/null, invalid `default`, `questions` or a template's `attachments` not in block style)
+- Malformed `questions` entry (bad id, unknown type, `choice` with fewer than two choices, a question, choice value, or undeclared placeholder id that YAML reads as a boolean/null, a `default` that would not be a valid answer, `questions` or a template's `attachments` not in block style)
 - Placeholder type contradicting its declared question, or a placeholder using a `boolean`/`choice` question
 - `when=` naming an undeclared question, the wrong form for its type, or an undeclared value
 - `{{ref:}}`/`{{term:}}`/`{{attach:}}` that may point to an absent unit where the reference is present
 - `{{choose:}}` on a non-decision question, not listing exactly every possible answer, or placed in a heading or frontmatter
 - `{{def:}}` inside a drafting note
-- Linked templates with different questions or conditions
+- Linked templates with different questions, defaults, placeholder types/currencies/units, or conditions
 - Assembly: a needed decision with no answer and no default; an answer of the wrong form, disagreeing with a currency/unit fixed by its placeholder, or a text answer with `{{` used in frontmatter
 - Under the final option: a remaining placeholder, `questions` key, condition, `{{choose:}}`, or drafting note
 

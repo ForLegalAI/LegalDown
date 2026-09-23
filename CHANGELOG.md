@@ -41,7 +41,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 - **Assembly (§15.7).** A byte-deterministic transformation of a template and an answers set into
   an ordinary LegalDown document, with defined answer forms, escaping of inserted text, and
   identifier preservation. A template without Errors assembles without Errors for every valid
-  answers set. Include fragments and attachment files are assembled with the same answers.
+  answers set. Assembly works on the combined document (template, include fragments, LegalDown
+  attachment files) and writes each line back to its own file.
 - **Template view (§15.8)** and the **final check (§15.9)**.
 - **`duration` placeholder type (§10.7).**
 - **Assembly capability (§17.6)**, claimable alongside any conformance level.
@@ -63,7 +64,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   §15.3), so every YAML parser reads them the same way. Question ids and undeclared placeholder ids
   in a template avoid the same words.
 - A placeholder in a frontmatter date field must be the whole value and of type `date` (§3.10);
-  otherwise the field's date check applies (§16.6).
+  otherwise the field's date check applies (§16.6). Placeholders are not allowed in file paths,
+  attachment `id`/`when`, language codes, or `field_types`, which a filled-in value could break.
 - `questions` joins the structural frontmatter fields that must not hold placeholders (§3.10).
 - "Template" now means a document template (§15); every place that meant presentation settings
   says **style template** (§5.7, §6.2–§6.3, §7.2, §10, §13, §16.3, §19).
@@ -82,7 +84,7 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 | `translation-template-mismatch` | — | Error (Full) |
 | `anchor-duplicate`, `def-duplicate-id`, `def-autogen-collision`, `attachment-id-duplicate`, `attachment-id-collision`, `attachment-anchor-duplicate`, `include-anchor-duplicate` | Any duplicate | Duplicates between declarations that can appear together |
 | `anchor-autogen-collision` | Suffixes in document order | Headings that can never appear together do not collide; suffixes skip only identifiers of headings that can (§5.5) |
-| `placeholder-in-structural-field` | Side/party names, `type`, `document_type`, `legaldown`, structure | adds anything inside `questions` |
+| `placeholder-in-structural-field` | Side/party names, `type`, `document_type`, `legaldown`, structure | adds anything inside `questions`, file paths, attachment `id`/`when`, language codes, `field_types` |
 | `metadata-date-invalid`, `date-of-birth-invalid` | Any placeholder exempt | Exempt only when the placeholder is the whole value and of type `date` |
 | `placeholder-type-invalid` | `text`, `date`, `money` | adds `duration` |
 | `duration-invalid-unit` | `{{duration:}}` only | also a `type=duration` placeholder's `unit` |
