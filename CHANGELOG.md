@@ -68,9 +68,9 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 - Repeated occurrences of one placeholder id that fix a `currency` or `unit` must fix the same one,
   in every document (§10.7) — previously only a SHOULD. A document that gave one blank two
   currencies now draws `placeholder-type-inconsistent` (Error): pick one currency, or use two ids.
-- `{when=...}` markers outside a condition position, markers repeating an attribute, and an
-  anchor on a paragraph holding only an `{{include:}}` (§12.2, in any document) draw
-  `anchor-misplaced`; a `{when=}`-only marker is allowed at the end of a preamble paragraph (§5.7).
+- `{when=...}` markers outside a condition position and markers repeating an attribute draw
+  `anchor-misplaced`. An `#id` on a paragraph holding only an `{{include:}}` (§12.2, in any
+  document) is ignored with that Warning — move the anchor to a heading inside the fragment; a `{when=}`-only marker is allowed at the end of a preamble paragraph (§5.7).
 - In a template, `questions` and `attachments` are written in YAML block style, a `when` value
   starting with `!` is quoted, and choice value ids avoid the YAML 1.1 boolean/null words (§15.2,
   §15.3), so every YAML parser reads them the same way. Question ids and undeclared placeholder ids
@@ -104,7 +104,7 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 | `placeholder-type-invalid` | `text`, `date`, `money` | adds `duration` |
 | `duration-invalid-unit` | `{{duration:}}` only | also a `type=duration` placeholder's `unit` |
 | `include-heading-skip` | Combined document | Combined document under every combination of answers deciding which conditional includes are present, with the units each combination removes removed |
-| `anchor-misplaced` | Misplaced `{#id}` | Misplaced `{#id}` or `{when=...}` |
+| `anchor-misplaced` | Misplaced `{#id}` | Misplaced `{#id}` or `{when=...}`; also an `#id` on a paragraph holding only an `{{include:}}` (ignored — a 0.1 document that anchored an include line and referenced it now also draws `ref-broken`) |
 
 #### Files touched
 

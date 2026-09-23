@@ -30,8 +30,9 @@ fixtures/
     <case>/                    one template assembly (§15.7)
       template.lgd             a template that MUST produce no Errors
       answers.yaml             the answers set
-      case.json                optional: {"requires_level": "full"} when the case has include
-                                 fragments or LegalDown attachment files (default "core")
+      case.json                {"requires_level": "full"} — required when the template has include
+                                 fragments or LegalDown attachment files; otherwise optional
+                                 (default "core")
       expected.lgd             the exact bytes assembly MUST produce — or, when assembly writes
       expected/                  several files, a tree of every output file: template.lgd plus
                                  each fragment and LegalDown attachment file at its relative path

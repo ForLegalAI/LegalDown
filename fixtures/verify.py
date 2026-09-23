@@ -159,14 +159,20 @@ def check():
                     if rel != 'template.lgd' and not os.path.exists(os.path.join(d, rel)):
                         problems.append('assembly/%s: expected/%s has no input file %s'
                                         % (case, rel, rel))
-            if len(outputs) > 1 and level != 'full':
-                problems.append('assembly/%s: writes fragment or attachment files, so case.json '
-                                'must set requires_level "full" (§17.6)' % case)
         elif os.path.exists(single):
             outputs = [('template.lgd', single)]
         else:
             problems.append('assembly/%s: missing expected.lgd or expected/' % case)
             outputs = []
+        template_path = os.path.join(d, 'template.lgd')
+        if os.path.exists(template_path):
+            source = open(template_path, encoding='utf-8').read()
+            reads_files = bool(re.search(r'\{\{include:', source)) or bool(
+                re.search(r'^\s+file:\s*"?[^"\n]*\.(lgd|legaldown|legal\.md)"?\s*$', source, re.M))
+            if reads_files and level != 'full':
+                problems.append('assembly/%s: the template has include fragments or LegalDown '
+                                'attachment files, so case.json must set requires_level "full" '
+                                '(§17.6)' % case)
         for rel, path in sorted(outputs):
             text = open(path, encoding='utf-8').read()
             if text == '':
