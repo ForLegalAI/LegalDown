@@ -1,0 +1,35 @@
+---
+title: "Notice to O'Brien \"Holdings\" Ltd."
+document_type: unilateral_act
+sides:
+  - name: issuer
+    label: Issuer
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: addressees
+    label: Addressee
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: 'O''Brien "Holdings" Ltd.'
+language: en
+attachments:
+  - id: contacts
+    title: "Schedule 2: Contacts"
+    file: contacts.pdf
+---
+
+This notice is issued by {{party: acme}} to O'Brien "Holdings" Ltd. as addressee.
+
+# Notice {#notice}
+
+The notice period is {{duration: 30, unit=D}}.
+
+The contacts listed in {{attach: contacts}} remain responsible for the assets.
+
+Delivery is made by e-mail \[only\].
+
+The notice takes effect immediately
+upon delivery.

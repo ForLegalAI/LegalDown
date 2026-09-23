@@ -1,0 +1,25 @@
+---
+title: Fixture
+document_type: contract
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+questions:
+  fee:
+    type: money
+    prompt: Fixed fee
+---
+
+# Fees {#fees}
+
+The Client shall pay {{placeholder: fee, type=date}} for the services.

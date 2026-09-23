@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "drafting-note-def",
+      "level": "error",
+      "line": 22
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "A definition inside a drafting note would disappear on assembly."
+}

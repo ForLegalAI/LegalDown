@@ -1,0 +1,56 @@
+---
+title: "Consulting Agreement with Northwind Trading s.r.o."
+document_type: contract
+effective_date: "2026-10-01"
+sides:
+  - name: consultants
+    label: Consultant
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: client
+        type: legal_entity
+        legal_name: "Northwind Trading s.r.o."
+governing_law: "{{placeholder: governing-law}}"
+language: en
+---
+
+This Consulting Agreement (this "Agreement" {{def: agreement}}) is entered into on
+{{date: 2026-10-01}} between {{party: acme}} and {{party: client}}.
+
+# Definitions {#definitions}
+
+"Services" {{def: services}} means the advisory services described in Section {{ref: scope}}.
+
+# Scope {#scope}
+
+The Consultant shall provide the {{term: services}}, comprising:
+
+- a review of the Client's operations {#scope-review}
+- a written recommendations report {#scope-report}
+
+# Fees {#fees}
+
+The Client shall pay {{money: 48000.00, currency=EUR, note=Fixed fee}} for the
+{{term: services}}.
+
+# Non-Solicitation {#non-solicit}
+
+For {{duration: 12, unit=MO}} after the engagement ends, neither party shall solicit any
+employee of the other who was involved in the {{term: services}}.
+
+# Dispute Resolution {#disputes}
+
+Disputes are finally settled under the ICC Rules by a sole arbitrator seated in
+Vienna.
+
+# Governing Law {#governing-law}
+
+The {{term: agreement}} is governed by the laws of {{placeholder: governing-law}}. Nothing in
+Section {{ref: disputes}} prevents interim relief from
+a competent court or an emergency arbitrator.

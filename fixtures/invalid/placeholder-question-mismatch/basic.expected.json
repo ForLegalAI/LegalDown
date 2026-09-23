@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "placeholder-question-mismatch",
+      "level": "error",
+      "line": 25
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "The inline type contradicts the declared question type."
+}

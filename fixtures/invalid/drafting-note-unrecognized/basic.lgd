@@ -1,0 +1,24 @@
+---
+title: Fixture
+document_type: contract
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# Fees {#fees}
+
+> [!DRAFT]
+> Confirm the payment term with the finance team.
+
+The Client shall pay the fee within thirty days of invoice.

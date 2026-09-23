@@ -1,0 +1,32 @@
+---
+title: Services Agreement
+document_type: contract
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+attachments:
+  - id: data
+    title: "Schedule 1: Data Processing"
+    file: schedules/data.lgd
+  - id: prices
+    title: "Schedule 2: Prices"
+    file: schedules/prices.pdf
+---
+
+# Services {#services}
+
+The Provider shall provide the services described below. Prices are set out in {{attach: prices}}.
+
+Personal data is processed as set out in {{attach: data}}.
+
+{{include: parts/core.lgd}}

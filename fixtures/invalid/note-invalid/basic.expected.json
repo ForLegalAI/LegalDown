@@ -8,6 +8,6 @@
   ],
   "exhaustive": false,
   "requires_level": "core",
-  "spec": "15.5",
+  "spec": "16.5",
   "note": "The note value contains Markdown emphasis, but notes must be plain text. An unquoted comma would instead be a grammar violation (directive-malformed), so this case uses formatting to trip the note rule in isolation."
 }

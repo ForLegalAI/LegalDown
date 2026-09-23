@@ -165,6 +165,15 @@ paragraph text.
 `{{placeholder: fee, type=money, currency=EUR}}` directly in the text when a
 document needs a fillable blank. No frontmatter declaration is required.
 
+**Templates carry their own logic.** A template declares the questions it asks
+under `questions` in frontmatter, marks optional or alternative clauses with a
+condition on the anchor — `# Non-Solicitation {#non-solicit when=non-solicit}`
+— varies a phrase inline with `{{choose:}}`, and leaves guidance for the
+drafter in `> [!DRAFTING]` notes. Assembly with a set of answers produces an
+ordinary LegalDown document, byte for byte the same in every tool. A template
+that validates is guaranteed to assemble into a valid document for every valid
+set of answers.
+
 **Custom fields stay structured.** Declare reusable custom value types in
 frontmatter under `field_types`, then reference them inline with
 `{{field: value, type=type-name}}`. Renderers pass the value through as-is.
@@ -193,8 +202,11 @@ contains none of them.
 {{date: 2026-06-01}}                     ← Inline date value
 {{money: 10000, currency=CZK}}          ← Inline monetary amount
 {{field: INV-2026-0042, type=invoice-id}} ← Inline custom typed value
-{{placeholder: governing-law}}          ← Inline fillable blank (`type=text` by default)
+{{placeholder: governing-law}}          ← Inline fillable blank (type from its declared question, else `text`)
 {{placeholder: fee, type=money, currency=EUR}} ← Typed inline blank
+# Clause {#id when=question}             ← Optional clause in a template (also q:value, !q)
+{{choose: forum, courts=..., arbitration=...}} ← Inline phrase chosen by a template answer
+> [!DRAFTING]                            ← Drafting note: guidance, removed on assembly
 {{party: acme}}                          ← Inline party reference
 {{side: clients}}                        ← Inline side (collective) reference
 {{duration: 30, unit=D}}                 ← Inline duration (S MIN H D W MO Y)
@@ -218,8 +230,8 @@ encoded.
 The full specification is in [`spec/legaldown-spec.md`](spec/legaldown-spec.md).
 
 It covers document structure, frontmatter format, all directive syntax,
-validation rules, rendering requirements, bilingual support, and conformance
-levels in detail.
+validation rules, rendering requirements, bilingual support, templates and
+assembly, and conformance levels in detail.
 
 Working documents live in [`examples/`](examples) — a simple tier mirroring the
 specification's own examples, and an advanced tier exercising the full feature
@@ -227,11 +239,13 @@ surface, with a table mapping every feature to a live example.
 
 Implementers should also see [`fixtures/`](fixtures), the conformance corpus:
 one case per validation rule, paired with the diagnostic a conforming validator
-must produce.
+must produce, plus template assembly cases pinning the exact output a conforming
+assembler must generate.
 
 | Version | Status | Document |
 |---------|--------|----------|
-| [v0.1](../../releases/tag/v0.1) | 🚧 DRAFT | [spec/legaldown-spec.md](spec/legaldown-spec.md) |
+| [v0.2](../../releases/tag/v0.2) | 🚧 DRAFT — current: adds templates (§15) | [spec/legaldown-spec.md](spec/legaldown-spec.md) |
+| [v0.1](../../releases/tag/v0.1) | Previous draft | [spec/legaldown-spec.md @ v0.1](../../blob/v0.1/spec/legaldown-spec.md) |
 
 The specification is in early draft. It is not yet stable and may change
 before v1.0. Do not build production tooling against a draft version without
@@ -247,7 +261,10 @@ LegalDown is in early draft stage. Current priorities:
 - [x] Publish reference examples for common document types
 - [x] Publish the validation fixtures corpus (conformance test suite)
 - [x] Tag v0.1
-- [ ] Gather community feedback and publish v0.2
+- [x] Specify the template language — questions, conditions, inline choices, drafting notes, assembly (§15)
+- [x] Publish template assembly cases in the conformance corpus
+- [ ] Tag v0.2
+- [ ] Gather community feedback on v0.2, especially template assembly (§15.7)
 
 The reference parser and validator are developed in a separate repository —
 this repository holds the specification, examples, and conformance fixtures

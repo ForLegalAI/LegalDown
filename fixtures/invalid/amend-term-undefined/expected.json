@@ -10,6 +10,6 @@
   ],
   "exhaustive": false,
   "requires_level": "full",
-  "spec": "15.8",
+  "spec": "16.8",
   "note": "Original is LegalDown and its definitions are imported, so an unresolved term is an Error."
 }

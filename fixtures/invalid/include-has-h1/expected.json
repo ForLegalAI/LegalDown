@@ -10,6 +10,6 @@
   ],
   "exhaustive": false,
   "requires_level": "full",
-  "spec": "15.11",
+  "spec": "16.11",
   "note": "Include fragments must not contain a level 1 heading."
 }

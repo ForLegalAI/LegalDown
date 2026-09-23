@@ -1,0 +1,56 @@
+---
+title: "Notice to {{placeholder: recipient}}"
+document_type: unilateral_act
+questions:
+  recipient:
+    type: text
+    prompt: Full name of the addressee
+  notice-period:
+    type: duration
+    prompt: Notice period
+    default:
+      value: 30
+      unit: D
+  schedule:
+    type: boolean
+    prompt: Attach the schedule of assets?
+sides:
+  - name: issuer
+    label: Issuer
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: addressees
+    label: Addressee
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: '{{placeholder: recipient}}'
+language: en
+attachments:
+  - id: assets
+    title: "Schedule 1: Assets"
+    file: assets.pdf
+    when: schedule
+  - id: contacts
+    title: "Schedule 2: Contacts"
+    file: contacts.pdf
+    when: "!schedule"
+---
+
+This notice is issued by {{party: acme}} to {{placeholder: recipient}} as addressee.
+
+# Notice {#notice}
+
+The notice period is {{placeholder: notice-period}}.
+
+The assets listed in {{attach: assets}} are covered by this notice. {when=schedule}
+
+The contacts listed in {{attach: contacts}} remain responsible for the assets. {when=!schedule}
+
+Delivery is made {{choose: schedule, true="by courier *and* e-mail", false="by e-mail [only]"}}.
+
+The notice takes effect immediately
+{{choose: schedule, true=", subject to the schedule,", false=""}}
+upon delivery.

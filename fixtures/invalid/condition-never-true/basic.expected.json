@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "condition-never-true",
+      "level": "warning",
+      "line": 32
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "The item requires forum:courts inside a section that requires forum:arbitration, so it can never appear."
+}

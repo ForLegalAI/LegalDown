@@ -1,11 +1,11 @@
 # LegalDown Validation Fixtures
 
 A conformance test corpus for LegalDown validators. Each fixture is a document engineered to
-exercise one validation rule from [specification §15](../spec/legaldown-spec.md), paired with the
+exercise one validation rule from [specification §16](../spec/legaldown-spec.md), paired with the
 diagnostic a conforming validator must produce.
 
 This corpus is part of the **specification**, not of any implementation: it is the operational
-definition of what the §15 rules mean, so every implementation can verify against neutral ground.
+definition of what the §16 rules mean, so every implementation can verify against neutral ground.
 It is licensed under [CC BY 4.0](../LICENSE) like the rest of this repository, and may be used by
 implementations under any license.
 
@@ -19,16 +19,26 @@ fixtures/
     <case>.lgd
     <case>.expected.json
   invalid/
-    <rule-id>/                 one directory per §15 rule id
+    <rule-id>/                 one directory per §16 rule id
       <case>.lgd               single-file case
       <case>.expected.json
     <rule-id>/                 multi-file case
       main.lgd                 entry point named by "entry"
       <supporting files>
       expected.json
+  assembly/
+    <case>/                    one template assembly (§15.7)
+      template.lgd             a template that MUST produce no Errors
+      answers.yaml             the answers set
+      case.json                {"requires_level": "full"} — required when the template has include
+                                 fragments, LegalDown attachment files, or translations;
+                                 otherwise optional (default "core")
+      expected.lgd             the exact bytes assembly MUST produce — or, when assembly writes
+      expected/                  several files, a tree of every output file: template.lgd plus
+                                 each fragment and LegalDown attachment file at its relative path
 ```
 
-Directory names are **rule ids** as defined in §15.1 — stable identifiers that survive section
+Directory names are **rule ids** as defined in §16.1 — stable identifiers that survive section
 renumbering.
 
 ## Expectation format
@@ -41,7 +51,7 @@ renumbering.
   ],
   "exhaustive": false,
   "requires_level": "core",
-  "spec": "§15.2",
+  "spec": "16.2",
   "note": "Level 1 followed by level 3 with no intervening level 2."
 }
 ```
@@ -51,12 +61,13 @@ renumbering.
 | `entry` | File the validator is pointed at. Optional for single-file cases (defaults to the sibling `.lgd`) |
 | `diagnostics` | Diagnostics that MUST appear. Matching is on `rule` + `level` (+ `line` when given) |
 | `exhaustive` | When `true`, the listed diagnostics are the **only** ones permitted. Default `false` |
-| `requires_level` | Lowest conformance level (§16) that can evaluate the case: `core`, `rendering`, or `full` |
-| `requires_config` | Optional. Configuration the case depends on, e.g. `{"document_root": "."}` (paths relative to the case directory). Runners that cannot supply it skip the case and report it as skipped |
+| `requires_level` | Lowest conformance level (§17) that can evaluate the case: `core`, `rendering`, or `full` |
+| `requires_capability` | Optional. A named capability the case needs beyond its level — currently only `assembly` (§17.6) |
+| `requires_config` | Optional. Configuration the case depends on, e.g. `{"document_root": "."}` (paths relative to the case directory), `{"answers": "answers.yaml"}` (assemble with this answers set, §15.7), or `{"final": true}` (validate under the final option, §15.9). Runners that cannot supply it skip the case and report it as skipped |
 | `spec` | Section the rule is defined in — informational |
 | `note` | Why the case trips the rule — informational |
 
-**Message text is never asserted.** §15.9 leaves diagnostic wording to implementations; a fixture
+**Message text is never asserted.** §16.9 leaves diagnostic wording to implementations; a fixture
 that pinned message strings would fail conformant validators. Only rule id, severity, and location
 are normative.
 
@@ -73,35 +84,56 @@ runner must:
 2. For each `invalid/` case — validate `entry` and assert every listed diagnostic is present,
    matching on rule id and level (and line, where given). With `exhaustive: true`, assert nothing
    else is reported.
-3. Skip any case whose `requires_level` exceeds the implementation's claimed conformance level, and
-   report it as skipped rather than passed — §16.5 forbids reporting checks that were not run.
+3. For each `assembly/` case — validate `template.lgd` and assert no Error-level diagnostics, then
+   assemble it with `answers.yaml` and assert the output is **byte-identical** to `expected.lgd`
+   — or, for a case with an `expected/` tree, that the set of output files is exactly the files in
+   that tree (a file absent there must not be written; an empty file there is written as zero
+   bytes) and each is byte-identical. These cases need the Assembly capability (§17.6), and the level
+   named in the case's `case.json` (`core` when there is none).
+4. Skip any case whose `requires_level` (in its expectation file, or an assembly case's
+   `case.json`) exceeds the implementation's claimed conformance level, or that needs a capability
+   or configuration the implementation lacks, and report it as skipped
+   rather than passed — §17.5 forbids reporting checks that were not run.
+
+The six `assembly/` cases:
+
+| Case | Exercises |
+|---|---|
+| `consulting` | Removing conditional sections, an alternative, an item, and a paragraph; stripping `when=` from anchors; `{{choose:}}` for a boolean and a choice; `text`, `date`, and `money` blanks (with `note`) in body and double-quoted frontmatter; decision defaults; removing drafting notes and `questions`; an unanswered blank left in place; blank-line collapse |
+| `identifier-preservation` | A heading whose auto-generated identifier would change is given it explicitly (step 7) |
+| `escaping` | §15.7.3 escaping: `{`, emphasis and link characters, `&` before a letter, a heading marker at the start of a list item, and an ordered-list number completed by template text |
+| `frontmatter-and-defaults` | Removing an attachment and a remaining attachment's `when` entry; deleting an empty `{when=}` marker; a `duration` blank filled from a `default`; single- and double-quoted YAML escaping; escaped `{{choose:}}` phrases; deleting a line left blank by an empty phrase |
+| `draft-and-line-starts` | An unanswered declared blank keeps its type inline (a draft); an empty `{{choose:}}` at a line start leaves `2.` that is escaped; a deleted choice line makes the next line a list start, which is escaped; trailing spaces of a phrase that ends a line are trimmed |
+| `multi-file` | A kept fragment filled with a blank and a `{{choose:}}`; a removed conditional include (its fragment not written); a conditional attachment file emptied by a removed section (written as zero bytes); a non-LegalDown attachment left out of the output |
 
 ## Coverage
 
-**95 of the 98 rules in §15 have fixtures.** The remaining three are recorded in
+**113 of the 116 rules in §16 have fixtures.** The remaining three are recorded in
 [`coverage.json`](coverage.json) with a reason, so the corpus never implies coverage it does not
 have:
 
 | Rule | Why there is no fixture |
 |---|---|
-| `ref-not-enumerated` | Depends on the active style template rather than the document; evaluated from the Rendering level (§16.3) |
+| `ref-not-enumerated` | Depends on the active style template rather than the document; evaluated from the Rendering level (§17.3) |
 | `anchor-autogen-collision` | Implementations resolve it silently by appending numeric suffixes, so it is observable through generated identifiers rather than a diagnostic on a document |
 | `legaldown-version-newer` | Depends on which specification version the implementation supports, not on the document |
 
-`coverage.json` is the machine-readable form, and every rule id in §15 appears in exactly one of its
+`coverage.json` is the machine-readable form, and every rule id in §16 appears in exactly one of its
 three lists.
 
 ## Checking the corpus itself
 
 [`verify.py`](verify.py) checks that the corpus is well-formed and honest — that every directory
-names a real §15 rule id, every expectation has the required fields and legal values, every
-referenced file exists, every asserted line is in range and not blank, and `coverage.json` matches
-what is on disk. It does **not** validate LegalDown documents; that is an implementation's job.
+names a real §16 rule id, every expectation has the required fields and legal values, every
+referenced file exists, every asserted line is in range and not blank, every assembly case has its
+template, answers set, a valid optional `case.json`, and either `expected.lgd` or an `expected/`
+tree whose files all correspond to input files and are free of template constructs, and `coverage.json` matches what is
+on disk — including its total rule count against §16. It does **not** validate or assemble LegalDown documents; that is an implementation's job.
 
 ```
 $ python fixtures/verify.py
 OK — corpus is self-consistent
 ```
 
-Run it after editing fixtures, and after any change to the §15 tables — it will catch a rule id
+Run it after editing fixtures, and after any change to the §16 tables — it will catch a rule id
 that was renamed out from under a fixture directory.

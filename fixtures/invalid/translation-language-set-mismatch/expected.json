@@ -10,6 +10,6 @@
   ],
   "exhaustive": false,
   "requires_level": "full",
-  "spec": "15.7",
+  "spec": "16.7",
   "note": "Linked files declare different language sets: {en, fr} versus {fr, de}."
 }

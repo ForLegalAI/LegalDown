@@ -1,5 +1,5 @@
 ---
-legaldown: "0.1"
+legaldown: "0.2"
 title: First Amendment to Master Service Agreement
 document_type: contract
 amends:
@@ -52,7 +52,7 @@ language: en
 
 <!-- `amends.file` points to a LegalDown document, so the original's definitions are imported
      under §7.5: this amendment uses {{term: agreement}} and {{term: services}} without
-     redeclaring them, and so avoids the §15.8 override Warning. -->
+     redeclaring them, and so avoids the §16.8 override Warning. -->
 
 The parties hereby amend the Master Service Agreement dated {{date: 2026-03-01}} (the
 {{term: agreement}}) as follows. Capitalised terms not defined in this amendment have the meaning

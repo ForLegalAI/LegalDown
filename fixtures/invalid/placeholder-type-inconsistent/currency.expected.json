@@ -1,0 +1,12 @@
+{
+  "diagnostics": [
+    {
+      "rule": "placeholder-type-inconsistent",
+      "level": "error"
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "10.7",
+  "note": "The same placeholder id fixes two different currencies, so no single answer can fill both occurrences. The diagnostic may point at either occurrence, so no line is asserted."
+}

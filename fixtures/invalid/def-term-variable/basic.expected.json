@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "def-term-variable",
+      "level": "error",
+      "line": 23
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "The defined term would change with the answer, and so would anything derived from it."
+}

@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "condition-reference-unsafe",
+      "level": "error",
+      "line": 29
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "The reference is unconditional but its target exists only when non-solicit is true."
+}

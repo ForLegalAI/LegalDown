@@ -10,6 +10,6 @@
   ],
   "exhaustive": false,
   "requires_level": "full",
-  "spec": "15.7",
+  "spec": "16.7",
   "note": "Definition ids must match between linked translations."
 }

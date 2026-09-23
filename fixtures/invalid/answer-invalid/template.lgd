@@ -1,0 +1,32 @@
+---
+title: Fixture
+document_type: contract
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+questions:
+  forum:
+    type: choice
+    prompt: How are disputes resolved?
+    choices:
+      courts: State courts
+      arbitration: ICC arbitration
+---
+
+# Dispute Resolution {#disputes when=forum:courts}
+
+Disputes are resolved by the courts of {{placeholder: forum-city}}.
+
+# Dispute Resolution {#disputes when=forum:arbitration}
+
+Disputes are settled under the ICC Rules.

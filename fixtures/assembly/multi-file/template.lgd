@@ -1,0 +1,45 @@
+---
+title: Services Agreement
+document_type: contract
+questions:
+  extended:
+    type: boolean
+    prompt: Include extended services?
+  data-processing:
+    type: boolean
+    prompt: Attach the data processing schedule?
+  hours:
+    type: text
+    prompt: When is support available?
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+attachments:
+  - id: data
+    title: "Schedule 1: Data Processing"
+    file: schedules/data.lgd
+    when: data-processing
+  - id: prices
+    title: "Schedule 2: Prices"
+    file: schedules/prices.pdf
+---
+
+# Services {#services}
+
+The Provider shall provide the services described below. Prices are set out in {{attach: prices}}.
+
+Personal data is processed as set out in {{attach: data}}. {when=data-processing}
+
+{{include: parts/core.lgd}}
+
+{{include: parts/extended.lgd}} {when=extended}

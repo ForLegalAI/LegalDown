@@ -1,0 +1,19 @@
+{
+  "entry": "template.lgd",
+  "diagnostics": [
+    {
+      "rule": "answer-invalid",
+      "level": "error",
+      "file": "answers.yaml",
+      "line": 1
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "requires_capability": "assembly",
+  "requires_config": {
+    "answers": "answers.yaml"
+  },
+  "spec": "16.12",
+  "note": "mediation is not a declared value of the forum question."
+}

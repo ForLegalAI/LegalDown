@@ -10,6 +10,6 @@
   ],
   "exhaustive": false,
   "requires_level": "core",
-  "spec": "15.11",
+  "spec": "16.11",
   "note": "Include targets must be LegalDown files; the extension check needs only the document."
 }

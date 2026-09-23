@@ -1,0 +1,43 @@
+---
+title: Fixture
+document_type: contract
+questions:
+  client-name:
+    type: text
+    prompt: Client's name as it should appear in the notice
+  reference:
+    type: text
+    prompt: Internal file reference
+  first-channel:
+    type: text
+    prompt: First notice channel
+  year:
+    type: text
+    prompt: Year of the framework agreement
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# Notices {#notices}
+
+Notices to the Client are addressed to {{placeholder: client-name}}.
+
+{{placeholder: reference}} is the internal file reference.
+
+Notices are delivered through:
+
+- {{placeholder: first-channel}}
+- registered post
+
+{{placeholder: year}}. The parties confirm the framework agreement of that year.
