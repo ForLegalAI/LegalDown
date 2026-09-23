@@ -125,6 +125,7 @@ When `attachments` is present in frontmatter, the document has attached files (s
 - Attachments are rendered in declared order after the main body
 - LegalDown attachment files inherit the parent document's context (definitions, field types, metadata)
 - Section identifiers in attachment files must be unique across the entire combined document
+- In a template, `when: <condition>` on an attachment entry makes the whole attachment conditional (see Templates)
 
 ## Heading Hierarchy
 
@@ -139,9 +140,9 @@ When `attachments` is present in frontmatter, the document has attached files (s
 **Rules:**
 - Heading levels must not skip (no `#` → `###` without `##`)
 - Maximum depth is 5 (`#####`); `######` is an Error. Setext headings (`===`/`---` underlines) are valid and map to levels 1–2; ATX `#` style recommended
-- Heading text must be plain text only — no numbering, no directives, no Markdown formatting
+- Heading text must be plain text only — no numbering, no directives (including `{{choose:}}`), no Markdown formatting; only a trailing `{#id}` / `{#id when=...}` marker may follow it
 - All section numbering is generated at render time — never write numbers in headings
-- Content before the first heading is a valid, unnumbered **preamble** — all directives allowed there (including `{{def:}}`), but no anchors and not referenceable
+- Content before the first heading is a valid, unnumbered **preamble** — all directives allowed there (including `{{def:}}`), but no anchors and not referenceable; in a template, a preamble paragraph may end with a `{when=...}` condition (no `#id`)
 
 ## Section Identifiers
 
@@ -154,17 +155,18 @@ Explicit identifier syntax appended to headings:
 **Identifier rules:**
 - Lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens only
 - Must start with a lowercase ASCII letter
-- Must be unique within the document
+- Must be unique within the document (template alternatives excepted — see Templates)
 - Auto-generated if omitted, via a **fully deterministic** algorithm (identical output across implementations): Unicode NFKD + strip combining marks (`é`→`e`, `ř`→`r`) → apply the fixed transliteration table (`ß`→`ss`, `æ`→`ae`, `œ`→`oe`, `ø`→`o`, `đ`/`ð`→`d`, `þ`→`th`, `ł`→`l`, `ħ`→`h`, `ı`→`i` — exhaustive, no other mappings) → remove remaining non-ASCII (Cyrillic/Greek/CJK are removed, **not** romanized) → lowercase → spaces/tabs/underscores to hyphens → remove other characters → collapse hyphen runs → trim hyphens → truncate to 64 chars → trim trailing hyphen → use `section` if empty → prefix `section-` if not starting with a lowercase letter (prefix exempt from the 64-char cap — no re-truncation)
 - If the removal step dropped letters or digits (non-transliterable script), validators warn and recommend an explicit identifier; removed punctuation and symbols (em dashes, curly apostrophes) do not warn. The same applies to auto-derived definition ids
-- Duplicate-collision suffixes (`-2`, `-3`) are appended after the algorithm, in document order, exempt from the 64-char cap
+- Duplicate-collision suffixes (`-2`, `-3`) are appended after the algorithm, in document order, exempt from the 64-char cap; in a template, headings whose conditions can never both hold never collide
+- The trailing marker (`{#id}`, `{when=...}`) is not part of the heading text the algorithm reads
 
 **Identifier scope:**
-- Each section identifier must be unique within the document
+- Each section identifier must be unique within the document (template alternatives excepted)
 - Cross-references resolve the exact identifier directly
 - Dot-separated hierarchical paths are not used
 
-**Item and paragraph anchors:** `{#id}` may also be placed at the very end of a list item's first paragraph (any list depth, but not in lists inside block quotes/tables) or at the very end of a top-level paragraph directly inside a section (not before the first heading). Explicit only — never auto-generated. Same format/uniqueness rules; they join the anchor namespace and are targeted with plain `{{ref:}}`. Rendered designation = containing section number + item enumeration path or paragraph number (`3.1(a)`, `3.1(b)(ii)`, `5.2`); if the template doesn't enumerate that list or number paragraphs, the ref falls back to the section number alone (Warning). Templates may render first-level items or top-level paragraphs as section-qualified decimals (5.1, 5.2) for continental numbered-paragraph drafting. A `{#id}`-like marker anywhere else is literal text (Warning — likely misplaced).
+**Item and paragraph anchors:** `{#id}` may also be placed at the very end of a list item's first paragraph (any list depth, but not in lists inside block quotes/tables) or at the very end of a top-level paragraph directly inside a section (not before the first heading). Explicit only — never auto-generated. Same format/uniqueness rules; they join the anchor namespace and are targeted with plain `{{ref:}}`. Rendered designation = containing section number + item enumeration path or paragraph number (`3.1(a)`, `3.1(b)(ii)`, `5.2`); if the style template doesn't enumerate that list or number paragraphs, the ref falls back to the section number alone (Warning). Style templates may render first-level items or top-level paragraphs as section-qualified decimals (5.1, 5.2) for continental numbered-paragraph drafting. A `{#id}`-like or `{when=...}` marker anywhere else is literal text (Warning — likely misplaced). In templates the same marker also carries conditions: `{#id when=q}` (see Templates).
 
 **Identifier namespaces:** all identifiers share one format but live in separate namespaces — each directive resolves only against its own:
 - **Anchor:** section identifiers + item/paragraph anchors + attachment ids share one namespace (collisions are Errors); `{{ref:}}` resolves section identifiers and item/paragraph anchors, `{{attach:}}` only attachment ids — a `{{ref:}}` targeting an attachment id is an Error (use `{{attach:}}`)
@@ -180,7 +182,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 
 **Shared syntax rules (all directives):**
 
-- Form: `{{name: positional, param=value, ...}}` — at most one positional value, always first; named parameters are order-insensitive; the same parameter must not appear twice (Error); a parameter unknown to the directive is ignored with a Warning
+- Form: `{{name: positional, param=value, ...}}` — at most one positional value, always first; named parameters are order-insensitive; the same parameter must not appear twice (Error); a parameter unknown to the directive is ignored with a Warning (except `{{choose:}}`, where it is an Error)
 - No whitespace between `{{` and the name or between the name and `:`; whitespace after `:`, around commas, and before `}}` is syntax, not value content
 - **Quoting:** any value may be wrapped in straight double quotes (`"`, U+0022) to include commas or `}}`: `label="Smith, Jones & Co."`, `{{field: "Smith, Jones & Co. v. Doe", type=case-name}}`. Inside quotes, `\"` = literal quote, `\\` = literal backslash. Unquoted values must not contain `,`, `}}`, or line breaks (leading/trailing whitespace trimmed); quoted and unquoted spellings parse to the same value. Straight quotes only — typographic quotes (`“ ” „ « »`) do not delimit values (validators warn when an unquoted value starts with one)
 - Directives are recognized in body text (paragraphs, lists, table cells, block quotes) and in frontmatter only as quoted placeholder strings; they are **not** recognized inside code spans, code blocks, or HTML comments
@@ -196,7 +198,7 @@ All directives use `{{directive: argument}}` syntax. Case-sensitive, always lowe
 ```
 
 Resolves to the section number (e.g., "3.2"). Links to the target section.
-Broken references render as `[BROKEN REF: identifier]`. Only section identifiers and item/paragraph anchors are valid targets — referencing an attachment id with `{{ref:}}` is an Error (use `{{attach:}}`). Under a template with no section numbering ("None" scheme), refs render the target's heading text (for item/paragraph anchors: heading text + enumeration path, "Termination (a)"); refs crossing attachment numbering restarts are qualified with the **target's** scope — the attachment title ("Schedule A: …, Section 2"), or the document title when the target is in the main body ("Master Service Agreement, Section 5").
+Broken references render as `[BROKEN REF: identifier]`. Only section identifiers and item/paragraph anchors are valid targets — referencing an attachment id with `{{ref:}}` is an Error (use `{{attach:}}`). Under a style template with no section numbering ("None" scheme), refs render the target's heading text (for item/paragraph anchors: heading text + enumeration path, "Termination (a)"); refs crossing attachment numbering restarts are qualified with the **target's** scope — the attachment title ("Schedule A: …, Section 2"), or the document title when the target is in the main body ("Master Service Agreement, Section 5").
 
 ### Definitions
 
@@ -248,7 +250,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{money: 500, currency=EUR, note=Base monthly service fee}}
 ```
 
-- Amount: non-negative numeric (period decimal separator), no grouping separators or symbols; renderers never round or alter the value (display separators/symbol/minor-unit padding come from the locale/template)
+- Amount: non-negative numeric (period decimal separator), no grouping separators or symbols; renderers never round or alter the value (display separators/symbol/minor-unit padding come from the locale/style template)
 - `currency`: optional, ISO 4217 code
 - `note`: optional plain-text explanation for automation
 
@@ -311,7 +313,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{placeholder: fee, type=money, currency=EUR, note=Base monthly fee}}
 ```
 
-- No separate declaration needed; appears in document text, and MAY also appear as a quoted string value in frontmatter value fields (not identifier/structural fields) for templates and drafts
+- No separate declaration needed (a `questions` entry with the same id is optional and adds a prompt and default — see Templates); appears in document text, and MAY also appear as a quoted string value in frontmatter value fields (not identifier/structural fields) for templates and drafts
 - `type`: optional; defaults to the type of the matching `questions` entry, else `text`. If both are given they must agree
 - Supported types: `text` | `date` | `money` | `duration` (`{{placeholder: term, type=duration, unit=MO}}`, `unit` optional)
 - A placeholder must not use a `boolean` or `choice` question's id — those are decisions (see Templates)
@@ -326,7 +328,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 {{include: schedules/pricing.lgd}}
 ```
 
-Path is relative to the including document. The target is a **body-only LegalDown fragment** — the same file model as attachment files: must be `.lgd`/`.legaldown`/`.legal.md`, no frontmatter, no level 1 heading (write the surrounding heading in the including document). Content splices verbatim at the directive position with no heading re-basing — the combined document must not skip heading levels. A `{{def:}}` in a fragment registers a document-wide term; section ids must be unique across the combined document. Fragments may nest further `{{include:}}`s; circular chains are invalid.
+Path is relative to the including document. The target is a **body-only LegalDown fragment** — the same file model as attachment files: must be `.lgd`/`.legaldown`/`.legal.md`, no frontmatter, no level 1 heading (write the surrounding heading in the including document). Content splices verbatim at the directive position with no heading re-basing — the combined document must not skip heading levels. A `{{def:}}` in a fragment registers a document-wide term; section ids must be unique across the combined document. Fragments may nest further `{{include:}}`s; circular chains are invalid. In a template, a paragraph holding only the `{{include:}}` may end with `{when=...}` to include or omit the whole fragment; the combined document must then keep a valid heading hierarchy both with and without it.
 
 ### Attachment Reference
 
@@ -350,7 +352,7 @@ Standard CommonMark:
 - HTML comments `<!-- ... -->` — stripped from rendered output
 - Horizontal rules `---` — for major document divisions
 - Raw HTML other than comments: ignored for output + Warning
-- Links `[text](url)` and autolinks: rendered as hyperlinks (print templates may show the URL visibly)
+- Links `[text](url)` and autolinks: rendered as hyperlinks (print style templates may show the URL visibly)
 - Images `![alt](path)`: allowed; relative path under the document-root rule; alt text where the format has no images
 
 ## Bilingual Documents
@@ -395,7 +397,7 @@ Phrases are plain text — no directives or formatting inside. Not allowed in he
 > Twelve months is the firm's standard. Do not extend beyond twenty-four.
 ```
 
-**Answers set** — a flat YAML/JSON map: `text` string; `date` `YYYY-MM-DD`; `money` `{amount: "48000.00", currency: EUR}` (or the amount string when the placeholder fixes `currency`); `duration` `{value, unit}` (or the value when the placeholder fixes `unit`); `boolean` `true`/`false`; `choice` a value id. Unanswered decisions take their `default`; unanswered blanks stay as placeholders.
+**Answers set** — a flat YAML/JSON map: `text` string; `date` `YYYY-MM-DD`; `money` `{amount: "48000.00", currency: EUR}` (or the amount string when the placeholder fixes `currency`); `duration` `{value, unit}` (or the value when the placeholder fixes `unit`); `boolean` `true`/`false`; `choice` a value id. Unanswered questions take their `default`; blanks with neither stay as placeholders (the result is a draft).
 
 **Assembly** removes absent units, strips `when=`, resolves `{{choose:}}`, turns answered placeholders into `{{date:}}`/`{{money:}}`/`{{duration:}}` or escaped text, removes drafting notes and `questions`, keeps identifiers stable, and collapses blank lines — byte-identical across implementations. The **final** validation option rejects any remaining placeholder, drafting note, or template construct.
 
@@ -435,7 +437,7 @@ Every check in the specification carries a stable **rule id** (`heading-skip`, `
 - Too few sides or parties for the selected `document_type` (checked only when `sides` is present)
 - Missing `issuer` side for `unilateral_act` or `collective_act` (checked only when `sides` is present)
 - Heading or `{{def:}}` without an explicit identifier in a translation file (non-authoritative linked file)
-- Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values
+- Invalid `{{date:}}`, `{{money:}}`, or `{{duration:}}` values, or an invalid `unit` on a `type=duration` placeholder
 - `{{party:}}` `party-name` is empty, malformed, or does not match any party declared in frontmatter
 - `{{side:}}` `side-name` is empty, malformed, or does not match any side declared in frontmatter
 - `field_types` keys that are malformed or collide with the reserved value-type names (`date`, `money`, `duration`, `party`, `text`)
@@ -448,7 +450,7 @@ Every check in the specification carries a stable **rule id** (`heading-skip`, `
 - Empty attachment `title` or representative `name`
 - Include target missing, not a LegalDown file, or part of a circular include chain
 - Included fragment contains frontmatter or a level 1 heading
-- Section identifiers in included fragments not unique across the combined document, or the combined document skips heading levels
+- Section identifiers in included fragments not unique across the combined document, or the combined document skips heading levels (in a template: with or without each conditional include)
 - Mismatched bilingual structure (heading hierarchy, section ids, definition ids, or declared language sets)
 - `amends.title` is empty or missing when `amends` is present
 - `amends.file` path does not exist when specified
@@ -480,7 +482,7 @@ Every check in the specification carries a stable **rule id** (`heading-skip`, `
 - Stray `{{` in body text that does not begin a well-formed directive
 - Unquoted directive value beginning with a typographic quotation mark (auto-curled quote)
 - `{#id}`-like marker outside an anchor position (likely misplaced anchor)
-- `{{ref:}}` to an item/paragraph anchor the active template does not enumerate (falls back to section number)
+- `{{ref:}}` to an item/paragraph anchor the active style template does not enumerate (falls back to section number)
 - Duplicate auto-generated section identifiers (implementations append `-2`, `-3` suffixes for rendering)
 - Auto-generated section or definition identifier lost non-transliterable letters or digits (removed punctuation does not warn; explicit id recommended)
 - Defined term wrapped in emphasis markers (`**`, `__`) in source

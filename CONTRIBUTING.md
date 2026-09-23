@@ -45,7 +45,7 @@ argument:
   (§17). Roughly: a check needing only the document file is **Core**; one needing the active style
   template or rendered output is **Rendering**; one needing another file is **Full**; one needing
   an answers set belongs to the **Assembly** capability (§17.6). Where a rule sits in a §16 table
-  whose level differs, §17.2 carves it out by name — as it does for the template-dependent §16.3
+  whose level differs, §17.2 carves it out by name — as it does for the style-template-dependent §16.3
   row and the `supersedes.file` existence row.
 
 ---
@@ -66,6 +66,8 @@ A specification change usually touches more than the specification. Before openi
       edit both
 - [ ] **[`CHANGELOG.md`](CHANGELOG.md)** — a dated entry under `[Unreleased]` (format below)
 - [ ] **The spec's `Revision:` date** — bump it when `spec/legaldown-spec.md` changes
+- [ ] **[`fixtures/`](fixtures)** — a fixture per new or changed rule (see below); if the change
+      touches template assembly (§15.7), add or update a byte-exact case in `fixtures/assembly/`
 - [ ] Cross-references still resolve — section numbers shift when sections are added
 
 If you deliberately skip one of these, say why in the PR description. Reviewers check for this.
@@ -106,8 +108,15 @@ When you **add or change a validation rule**:
 - If the rule cannot be exercised by a document — because it depends on a style template or on the
   implementation rather than the input — record it in `fixtures/coverage.json` under
   `not_mechanically_testable` with a reason, rather than writing a fixture that does not test it
+- If the rule is checked only when assembling a template, or only under the final option (§15.9),
+  say so in the expectation with `requires_capability: "assembly"` and `requires_config`
+  (`{"answers": "answers.yaml"}` or `{"final": true}`)
 - Run `python fixtures/verify.py`, which checks the corpus is self-consistent and that every rule
   id in §16 is accounted for
+
+When you **change how assembly works** (§15.7), add or update a case in `fixtures/assembly/` — a
+template, an answers set, and the exact output a conforming assembler must produce. Assembly is
+specified to be byte-identical across implementations, so these cases are compared byte for byte.
 
 ---
 

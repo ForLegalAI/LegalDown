@@ -314,7 +314,7 @@ The `amends` object has the following fields:
 - The original file MAY be a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
 - The amendment document itself follows the same structure rules as any other LegalDown document — all existing features (headings, section identifiers, cross-references, definitions, field specs, etc.) work unchanged
 - An amendment MAY declare its own definitions using `{{def:}}` for new terms introduced by the amendment
-- **Referencing the original's provisions:** `{{ref:}}` resolves only within the amendment itself (§6); references to the original's sections are written as literal text (e.g., "Section 5.1 of the Agreement"), citing the original's **executed rendering**. Because rendered numbers depend on the numbering scheme active at render time (§13.1), parties SHOULD pin the numbering scheme used for the executed original — for example in repository or template configuration — so such citations remain accurate. Qualified cross-document references are a Roadmap candidate (§19)
+- **Referencing the original's provisions:** `{{ref:}}` resolves only within the amendment itself (§6); references to the original's sections are written as literal text (e.g., "Section 5.1 of the Agreement"), citing the original's **executed rendering**. Because rendered numbers depend on the numbering scheme active at render time (§13.1), parties SHOULD pin the numbering scheme used for the executed original — for example in repository or style template configuration — so such citations remain accurate. Qualified cross-document references are a Roadmap candidate (§19)
 
 **Example:**
 
@@ -372,7 +372,8 @@ Each attachment object has the following fields:
 
 - `attachments` is an OPTIONAL array in frontmatter
 - Attachment ids MUST be unique within the document, except between alternatives in a template (§15.4)
-- Attachment ids share the anchor namespace with section identifiers (§5.6) — collisions are not allowed
+- Attachment ids share the anchor namespace with section identifiers (§5.6) — collisions are not allowed, except between alternatives in a template (§15.4)
+- In a template, `when` makes the attachment conditional (§15.3)
 - The `title` is author-written and rendered verbatim — the renderer does not generate labels such as "Schedule" or "Annex" (to remain language-agnostic)
 - The `file` path MAY point to a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
 
@@ -460,7 +461,7 @@ Heading text MUST be plain text only. Heading text MUST NOT contain:
 - Inline directives (`{{ref:}}`, `{{term:}}` etc.)
 - Markdown formatting (`**bold**`, `*italic*`)
 
-Section identifiers (anchors) in `{#id}` syntax are permitted after heading text (see Section 5).
+Section identifiers (anchors) in `{#id}` syntax are permitted after heading text (see Section 5); in a template, the same marker MAY carry a condition, `{#id when=...}` (§15.3). The marker is not part of the heading text.
 
 ### 4.3 Body Text
 
@@ -496,6 +497,7 @@ Any heading MAY include an explicit identifier:
 **Rules for identifiers:**
 
 - Specified using `{#identifier}` syntax placed immediately after heading text, separated by one or more spaces or tabs
+- In a template, the marker MAY also carry a condition — `{#identifier when=...}`, or `{when=...}` alone — per the marker grammar of §15.3
 - MUST be unique within the document, except between alternatives in a template (§15.4)
 - MUST contain only lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens (`-`)
 - MUST start with a lowercase ASCII letter
@@ -505,7 +507,7 @@ Any heading MAY include an explicit identifier:
 
 If no explicit identifier is provided, implementations MUST auto-generate one using the following algorithm. The algorithm is **fully deterministic**: two conformant implementations MUST produce the identical identifier for the same input text. It is used for section identifiers and, via §7.2, for auto-derived definition identifiers.
 
-1. Take the heading text
+1. Take the heading text, without its trailing marker (`{#id}`, `{when=...}`, §15.3)
 2. Apply Unicode NFKD normalization, then remove all combining marks (Unicode general category `Mn`). This reduces accented Latin letters to their ASCII base letter (e.g., `é` → `e`, `ř` → `r`, `ü` → `u`)
 3. Replace each occurrence of a character in the **transliteration table** below with its ASCII replacement (running after normalization, so that decomposed forms such as `ǿ` → `ø` are caught by the table)
 4. Remove every remaining non-ASCII character. No other transliteration or romanization is applied — text in scripts without an ASCII decomposition (Cyrillic, Greek, CJK, etc.) is removed, not romanized (see the warning rule below)
@@ -578,7 +580,7 @@ All LegalDown identifiers share one format (§5.2) but live in separate **namesp
 
 **Rules:**
 
-- Section identifiers, item and paragraph anchors (§5.7), and attachment ids share the anchor namespace because all are link targets in rendered output; collisions are Errors (§16.2, §16.10). Within the shared namespace, the directives remain type-specific: `{{ref:}}` MUST resolve only against section identifiers and item/paragraph anchors, and `{{attach:}}` only against attachment ids. A `{{ref:}}` whose target is an attachment id is a broken reference (§6.3); the validator SHOULD suggest `{{attach:}}` in its diagnostic message
+- Section identifiers, item and paragraph anchors (§5.7), and attachment ids share the anchor namespace because all are link targets in rendered output; collisions are Errors (§16.2, §16.10). In a template, uniqueness in the anchor and definition namespaces applies only between declarations that can appear together (§15.4). Within the shared namespace, the directives remain type-specific: `{{ref:}}` MUST resolve only against section identifiers and item/paragraph anchors, and `{{attach:}}` only against attachment ids. A `{{ref:}}` whose target is an attachment id is a broken reference (§6.3); the validator SHOULD suggest `{{attach:}}` in its diagnostic message
 - Definition identifiers are unique **among definitions only**. A definition identifier MAY equal a section identifier — this is common and benign (a "Services" section and a defined term "Services" both auto-generate `services`) and is not a collision
 - Placeholder ids form their own namespace; a placeholder id MAY coincide with any other identifier without relation. Repeated use of the same placeholder id denotes the same logical blank (§10.7)
 - Side names, party names, and field type names are frontmatter namespaces with their own uniqueness rules (§3.3, §3.4, §3.2); they are unrelated to body identifiers
@@ -586,7 +588,7 @@ All LegalDown identifiers share one format (§5.2) but live in separate **namesp
 
 ### 5.7 Item and Paragraph Anchors
 
-An explicit identifier MAY also be attached below heading level:
+An explicit identifier MAY also be attached below heading level (in a template, the same positions MAY carry a condition, §15.3):
 
 - To a **list item** — placed at the very end of the item's first paragraph, before any nested blocks. Permitted at any list nesting depth, but not in lists inside block quotes or tables
 - To a **top-level paragraph** — a paragraph directly inside a section (not inside a list, block quote, or table, and not before the first heading), placed at the very end of the paragraph
@@ -606,7 +608,7 @@ Provider may suspend the Services if:
 - Item and paragraph anchors follow the identifier format and uniqueness rules of §5.2 and join the anchor namespace (§5.6); `{{ref:}}` resolves them like any other anchor
 - They are **never auto-generated** — automatic generation (§5.3) applies to headings only; anchors below heading level are always explicit and opt-in
 - The anchor marker is source-only and MUST NOT appear in rendered output
-- The rendered designation of an anchored item or paragraph is produced by the renderer under the active template (§6.3, §13.2, §13.3) — the source never contains item letters or paragraph numbers
+- The rendered designation of an anchored item or paragraph is produced by the renderer under the active style template (§6.3, §13.2, §13.3) — the source never contains item letters or paragraph numbers
 - A `{#id}`-like marker — or a marker holding a condition, `{when=...}` (§15.3) — in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor. This Warning does **not** apply inside code spans, code blocks, or HTML comments, where anchor markers are not recognized at all (§11.4)
 
 ---
@@ -637,7 +639,7 @@ The payment schedule in Article {{ref: payment-schedule}} applies from the Effec
 
 - The identifier MUST be a section identifier or an item/paragraph anchor (§5.7). `{{ref:}}` resolves against those members of the anchor namespace (§5.6); attachments are referenced with `{{attach:}}` (§6.4). A `{{ref:}}` targeting an attachment id is a broken reference, and validators SHOULD suggest `{{attach:}}` in the diagnostic message
 
-> **Note:** The word before a reference ("Section", "Article", "Clause") is ordinary body text chosen by the author, while the number comes from the render-time numbering scheme (§13.1). Changing the scheme can make the author's word read unconventionally — e.g., "Section I.A" under the legal outline scheme, where "Article I.A" is customary. Authors SHOULD choose wording compatible with the schemes the document will render under; a template-supplied reference label is a Roadmap candidate (§19).
+> **Note:** The word before a reference ("Section", "Article", "Clause") is ordinary body text chosen by the author, while the number comes from the render-time numbering scheme (§13.1). Changing the scheme can make the author's word read unconventionally — e.g., "Section I.A" under the legal outline scheme, where "Article I.A" is customary. Authors SHOULD choose wording compatible with the schemes the document will render under; a style-template-supplied reference label is a Roadmap candidate (§19).
 
 ### 6.3 Reference Rendering
 
@@ -649,7 +651,7 @@ Renderers MUST:
 4. Create a hyperlink to the target section in formats that support hyperlinking (HTML, PDF, DOCX)
 5. If the target identifier does not exist, insert `[BROKEN REF: identifier]` in output and emit a validation error
 
-When the target is an **item or paragraph anchor** (§5.7), the rendered designation is the containing section's number followed by the item's enumeration path or the paragraph's number under the active template (e.g., "3.1(a)", "3.1(b)(ii)", "5.2" — §13.2). If the active template does not enumerate the containing list or does not number paragraphs, the renderer MUST fall back to the containing section's number alone and emit a validation Warning.
+When the target is an **item or paragraph anchor** (§5.7), the rendered designation is the containing section's number followed by the item's enumeration path or the paragraph's number under the active style template (e.g., "3.1(a)", "3.1(b)(ii)", "5.2" — §13.2). If the active style template does not enumerate the containing list or does not number paragraphs, the renderer MUST fall back to the containing section's number alone and emit a validation Warning.
 
 Rendering under the "None" numbering scheme and across attachment numbering restarts is defined in §13.3.
 
@@ -716,7 +718,7 @@ The Provider shall perform the marketing services described in this Article
 - The directive MUST be on the same line as the quoted span; only optional spaces or tabs (no line break) may appear between the closing quotation mark and the directive. If any other character intervenes, the directive is not attached to that span
 - A `{{def:}}` not immediately preceded by a recognized quoted span is an error
 - Defined terms MUST NOT carry emphasis markers in source (e.g., `**bold**`); how a defined term is displayed (bold, underline, small caps) is determined at render time by the style template (§13.7)
-- The quotation marks are a source-only delimiter: they are NOT part of the defined term and MUST NOT be rendered. At both the defining occurrence and every `{{term:}}` reference, the term is rendered as the text inside the marks, without the marks. A template marks defined terms visually through styling (e.g., bold), never by re-adding quotation marks
+- The quotation marks are a source-only delimiter: they are NOT part of the defined term and MUST NOT be rendered. At both the defining occurrence and every `{{term:}}` reference, the term is rendered as the text inside the marks, without the marks. A style template marks defined terms visually through styling (e.g., bold), never by re-adding quotation marks
 
 **Accepted quotation marks:**
 
@@ -897,7 +899,7 @@ Horizontal rules (`---`) MAY be used to visually separate major document divisio
 
 ### 8.6 Comments
 
-HTML-style comments are valid in LegalDown and MUST be stripped from all rendered output:
+HTML-style comments are valid in LegalDown and MUST be stripped from all rendered output. They are notes to whoever edits the source; guidance meant for the user of a template is written as a drafting note (§15.6), which is rendered in template views:
 
 ```markdown
 <!-- Internal note: this clause was revised on 2026-01-15 per partner review -->
@@ -949,7 +951,7 @@ Standard Markdown tables do not support merged cells or complex formatting. For 
 
 ### 10.1 Purpose
 
-Field specs are typed inline directives that represent structured values — including dates, monetary amounts, pass-through custom values, and fillable placeholders — within the document text. They enable renderers to format values consistently according to locale and template settings, and validators to verify that values are well-formed.
+Field specs are typed inline directives that represent structured values — including dates, monetary amounts, pass-through custom values, and fillable placeholders — within the document text. They enable renderers to format values consistently according to locale and style template settings, and validators to verify that values are well-formed.
 
 The **active locale** used for formatting (date order, decimal and grouping separators, etc.) is a render-time setting — part of the style template or renderer configuration (style templates list the locale among their settings, §13.7) — not a frontmatter field. LegalDown documents do not declare a formatting locale. Renderers MAY use the document `language` as a hint. The underlying value (ISO date, numeric amount) is stored canonically, so only its display varies by locale.
 
@@ -980,7 +982,7 @@ Provider shall deliver the final report no later than {{date: 2027-03-31, note=F
 
 - The date value MUST be in ISO 8601 format (`YYYY-MM-DD`)
 - The date MUST be a valid calendar date (e.g., `2026-02-30` is invalid)
-- Renderers MUST format the date according to the active locale or render template settings (e.g., "June 1, 2026", "1 June 2026", "2026-06-01")
+- Renderers MUST format the date according to the active locale or style template settings (e.g., "June 1, 2026", "1 June 2026", "2026-06-01")
 
 ### 10.3 Money Directive
 
@@ -1011,8 +1013,8 @@ The monthly fee is {{money: 500, currency=EUR, note=Base monthly service fee}}.
 - The amount MUST NOT include grouping separators, currency symbols, or whitespace
 - Renderers MUST NOT round, truncate, or otherwise alter the numeric value. Display formatting — separators, currency symbol, and padding to the currency's conventional minor units (e.g., "10000" → "$10,000.00") — follows the active locale and template settings per the formatting rule below
 - The optional `currency` parameter specifies the currency using an ISO 4217 three-letter code (e.g., `USD`, `EUR`, `CZK`, `GBP`)
-- If `currency` is omitted, the renderer MAY apply a default currency configured in the render template or renderer configuration; if none is configured, it MUST emit a validation warning. LegalDown defines no document-level default currency — currency is specified per `{{money:}}` directive
-- Renderers MUST format the amount according to the active locale or render template settings (e.g., "$10,000.00", "USD 10,000.00", "€500.00")
+- If `currency` is omitted, the renderer MAY apply a default currency configured in the style template or renderer configuration; if none is configured, it MUST emit a validation warning. LegalDown defines no document-level default currency — currency is specified per `{{money:}}` directive
+- Renderers MUST format the amount according to the active locale or style template settings (e.g., "$10,000.00", "USD 10,000.00", "€500.00")
 
 ### 10.4 Party Directive
 
@@ -1043,7 +1045,7 @@ Notices under this Agreement shall be delivered to {{party: beta-industries}}.
 - The directive MUST resolve against a party `name` in the frontmatter `sides[].parties[]` arrays
 - The optional `label` parameter specifies display text for rendering; if omitted, the renderer MUST use the party's `label` and fall back to `legal_name`
 - The `label` value is plain text — it MUST NOT contain Markdown formatting or nested directives; per §11.3, the unquoted form MUST NOT contain commas or closing braces (`}}`), while the quoted form MAY (e.g., `label="Smith, Jones & Co."`)
-- Renderers MUST format the resolved party reference according to the active locale or render template settings
+- Renderers MUST format the resolved party reference according to the active locale or style template settings
 
 ### 10.5 Duration Directive
 
@@ -1074,7 +1076,7 @@ The service level response time shall not exceed {{duration: 4, unit=H, note=Cri
 
 - The `value` MUST be a positive numeric value (integer or decimal, using period `.` as the decimal separator); zero and negative values are not allowed
 - The `unit` parameter is REQUIRED and MUST be one of: `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y`. The bare unit `M` is deliberately not defined — in ISO 8601 it denotes months while earlier drafts used it for minutes; validators MUST reject it with a diagnostic suggesting `MIN` (minutes) or `MO` (months)
-- Renderers MUST format the duration according to the active locale or render template settings (e.g., "12 months", "30 days", "4 hours", "1 year")
+- Renderers MUST format the duration according to the active locale or style template settings (e.g., "12 months", "30 days", "4 hours", "1 year")
 
 ### 10.6 Custom Field Directive
 
@@ -1120,7 +1122,7 @@ Invoice {{field: INV-2026-0042, type=invoice-id}} remains unpaid.
 
 ### 10.7 Placeholder Directive
 
-The `{{placeholder:}}` directive represents a fillable inline blank. Placeholders are declared directly where they are used and MUST NOT require any separate frontmatter declaration. They appear in document text and MAY also appear as quoted string values in frontmatter (see §3.10).
+The `{{placeholder:}}` directive represents a fillable inline blank. Placeholders are declared directly where they are used and MUST NOT require any separate frontmatter declaration; a template MAY optionally declare a placeholder's id as a question to give it a prompt and default (§15.2). They appear in document text and MAY also appear as quoted string values in frontmatter (see §3.10).
 
 **Syntax:**
 
@@ -1284,7 +1286,7 @@ Directives are **not** recognized inside:
 - Fenced or indented code blocks
 - HTML comments (`<!-- -->`) — their content is stripped from output regardless (§8.6)
 
-In those contexts, directive-like text is literal text. The same exclusion applies to anchor markers (`{#id}`, §5.2 and §5.7): a `{#id}` appearing inside a code span, code block, or comment is not an anchor, does not enter the anchor namespace, and MUST NOT trigger the misplaced-anchor Warning of §16.2.
+In those contexts, directive-like text is literal text. The same exclusion applies to anchor and condition markers (`{#id}`, `{when=...}`, §5.2, §5.7, §15.3): such a marker appearing inside a code span, code block, or comment is not an anchor or condition, does not enter the anchor namespace, and MUST NOT trigger the misplaced-anchor Warning of §16.2. Drafting notes (§15.6) are block quotes, so directives inside them are recognized.
 
 **Escaping a literal `{{`:** LegalDown inherits CommonMark backslash escapes for punctuation, so escaping the first brace (`\{`) prevents the sequence from forming a directive opener — `\{{ref: x}}` renders as the literal text `{{ref: x}}`.
 
@@ -1328,6 +1330,7 @@ Include targets use the same file model as LegalDown attachment files (§12.4): 
 - Include paths MUST be relative to the including document
 - Content is spliced verbatim at the directive position; heading levels are **not** re-based. The combined document MUST satisfy the heading hierarchy rules (§4.1) — a fragment whose headings would skip a level at its insertion point is invalid
 - A fragment MAY itself contain `{{include:}}` directives; circular includes MUST be detected across the entire include chain and rejected with an error
+- In a template, a paragraph consisting of a single `{{include:}}` MAY carry a condition that includes or omits the whole fragment (§15.3)
 - A `{{def:}}` inside an included fragment registers a document-wide term, exactly as in attachment files (§7.2, §12.4)
 - Section identifiers in included fragments MUST be unique across the entire combined document
 - Validation of the combined document (including all inclusions) is REQUIRED (§16.11)
@@ -1393,7 +1396,7 @@ Response time for critical issues shall not exceed {{duration: 4, unit=H}}.
 
 ### 13.1 Section Numbering
 
-Because LegalDown source contains no hardcoded numbers, renderers MUST generate all section numbering at render time. Numbering MUST follow the heading hierarchy (`#`, `##`, `###`, etc.).
+Because LegalDown source contains no hardcoded numbers, renderers MUST generate all section numbering at render time. Numbering MUST follow the heading hierarchy (`#`, `##`, `###`, etc.). A template is numbered after assembly (§15.7), or as the template view defines when rendered without answers (§15.8).
 
 **Supported numbering schemes:**
 
@@ -1434,7 +1437,7 @@ Numbering scheme MUST be configurable per render job and SHOULD be specifiable i
 
 ### 13.2 List Enumeration
 
-Renderers SHOULD convert Markdown lists to legal enumeration based on nesting level and the active template. The default enumeration sequence, shared by all built-in numbering schemes (§13.1), is:
+Renderers SHOULD convert Markdown lists to legal enumeration based on nesting level and the active style template. The default enumeration sequence, shared by all built-in numbering schemes (§13.1), is:
 
 | List Level | Default enumeration |
 |---|---|
@@ -1446,9 +1449,9 @@ Style templates MAY define different sequences per level (§13.7). This behavior
 
 **Ordered lists.** Renderers MUST renumber ordered list items sequentially at render time — the numbers written in source are not authoritative, consistent with §1.2 — and MAY apply the active enumeration scheme to ordered lists the same way as to unordered lists.
 
-**Section-qualified decimal items.** As an alternative to letter and roman markers, a template MAY render first-level list items as section-qualified decimal numbers (5.1, 5.2, …) — the continental drafting convention for numbered, untitled provisions.
+**Section-qualified decimal items.** As an alternative to letter and roman markers, a style template MAY render first-level list items as section-qualified decimal numbers (5.1, 5.2, …) — the continental drafting convention for numbered, untitled provisions.
 
-**Paragraph numbering.** A template MAY number the top-level paragraphs within each section (5.1, 5.2, …) for the same purpose. Paragraph numbering is off by default and is a style template setting (§13.7). Together with item and paragraph anchors (§5.7), this lets `{{ref:}}` target untitled numbered provisions ("čl. 5 odst. 2" style) without fake headings.
+**Paragraph numbering.** A style template MAY number the top-level paragraphs within each section (5.1, 5.2, …) for the same purpose. Paragraph numbering is off by default and is a style template setting (§13.7). Together with item and paragraph anchors (§5.7), this lets `{{ref:}}` target untitled numbered provisions ("čl. 5 odst. 2" style) without fake headings.
 
 ### 13.3 Reference Resolution
 
@@ -1460,11 +1463,11 @@ When rendering `{{ref: id}}`:
 4. Create hyperlink to target section in formats supporting links
 5. If target not found, insert `[BROKEN REF: id]` and emit validation error
 
-For targets that are item or paragraph anchors (§5.7), render the containing section's number plus the item enumeration path or paragraph number under the active template (e.g., "3.1(a)", "5.2"); when the template does not enumerate the containing list or number paragraphs, fall back to the containing section's number and emit a validation Warning (§6.3).
+For targets that are item or paragraph anchors (§5.7), render the containing section's number plus the item enumeration path or paragraph number under the active style template (e.g., "3.1(a)", "5.2"); when the style template does not enumerate the containing list or number paragraphs, fall back to the containing section's number and emit a validation Warning (§6.3).
 
-**Numbering scheme "None":** under the None scheme (§13.1) there is no section number; `{{ref:}}` MUST instead render the target's heading text, hyperlinked as usual. When the target is an item or paragraph anchor (§5.7), render the containing section's heading text followed by the item enumeration path or paragraph number — e.g., "Termination (a)"; if the template does not enumerate the containing list or number paragraphs, fall back to the heading text alone with the §6.3 Warning.
+**Numbering scheme "None":** under the None scheme (§13.1) there is no section number; `{{ref:}}` MUST instead render the target's heading text, hyperlinked as usual. When the target is an item or paragraph anchor (§5.7), render the containing section's heading text followed by the item enumeration path or paragraph number — e.g., "Termination (a)"; if the style template does not enumerate the containing list or number paragraphs, fall back to the heading text alone with the §6.3 Warning.
 
-**References across attachment boundaries:** when the reference and its target lie in different numbering scopes (main body vs. an attachment, or two different attachments) and the active template restarts numbering per attachment (§13.8), the renderer MUST qualify the designation with the **target's** scope: the attachment `title` when the target lies in an attachment (e.g., "Schedule A: Service Description, Section 2"), or the document `title` when the target lies in the main body (e.g., "Master Service Agreement, Section 5"). Under continuous numbering, or within the same scope, the plain designation is used.
+**References across attachment boundaries:** when the reference and its target lie in different numbering scopes (main body vs. an attachment, or two different attachments) and the active style template restarts numbering per attachment (§13.8), the renderer MUST qualify the designation with the **target's** scope: the attachment `title` when the target lies in an attachment (e.g., "Schedule A: Service Description, Section 2"), or the document `title` when the target lies in the main body (e.g., "Master Service Agreement, Section 5"). Under continuous numbering, or within the same scope, the plain designation is used.
 
 ### 13.4 Definition Resolution
 
@@ -1475,7 +1478,7 @@ For targets that are item or paragraph anchors (§5.7), render the containing se
 When rendering `{{date: value}}` or `{{date: value, note=text}}`:
 
 1. Validate the date value is a valid ISO 8601 date
-2. Format the date according to the active locale or render template
+2. Format the date according to the active locale or style template
 3. Ignore any `note` parameter for rendered output
 4. Replace the directive with the formatted date text
 5. If the date is invalid, insert `[INVALID DATE: value]` and emit a validation error
@@ -1484,7 +1487,7 @@ When rendering `{{money: amount}}`, `{{money: amount, note=text}}`, `{{money: am
 
 1. Validate the amount is a valid, non-negative numeric value
 2. If a `currency` parameter is provided, validate it is a recognized ISO 4217 code
-3. Format the amount according to the active locale or render template, including the currency symbol or code
+3. Format the amount according to the active locale or style template, including the currency symbol or code
 4. Ignore any `note` parameter for rendered output
 5. Replace the directive with the formatted monetary value
 6. If the amount is invalid, insert `[INVALID AMOUNT: amount]` and emit a validation error
@@ -1496,7 +1499,7 @@ When rendering `{{party: party-name}}`, `{{party: party-name, note=text}}`, `{{p
 2. If the `party-name` does not match any party declared in frontmatter, insert `[UNKNOWN PARTY: party-name]` and emit a validation error. Steps 1 and 2 take precedence over any `label`: a `label` never suppresses a failure marker, so an unresolved reference can never render as if it were fine
 3. If a `label` parameter is provided, use it as the display text
 4. If no `label` is provided, use the party's `label` field as the display text, falling back to `legal_name` if `label` is absent
-5. Format the display text according to the active locale or render template
+5. Format the display text according to the active locale or style template
 6. Ignore any `note` parameter for rendered output
 7. Replace the directive with the formatted party reference text
 
@@ -1506,7 +1509,7 @@ When rendering `{{side: side-name}}`, `{{side: side-name, note=text}}`, `{{side:
 2. If the `side-name` does not match any side declared in frontmatter, insert `[UNKNOWN SIDE: side-name]` and emit a validation error. Steps 1 and 2 take precedence over any `label`: a `label` never suppresses a failure marker, so an unresolved reference can never render as if it were fine
 3. If a `label` parameter is provided, use it as the display text
 4. If no `label` is provided, use the side's `label` field as the display text, falling back to the §3.6 derivation from `name` if `label` is absent
-5. Format the display text according to the active locale or render template
+5. Format the display text according to the active locale or style template
 6. Ignore any `note` parameter for rendered output
 7. Replace the directive with the formatted side reference text
 
@@ -1514,7 +1517,7 @@ When rendering `{{duration: value, unit=UNIT}}` or `{{duration: value, unit=UNIT
 
 1. Validate the value is a positive numeric value
 2. Validate the `unit` parameter is one of: `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y` (a bare `M` is rejected with a diagnostic suggesting `MIN` or `MO`, §10.5)
-3. Format the duration according to the active locale or render template (e.g., "12 months", "30 days", "1 year")
+3. Format the duration according to the active locale or style template (e.g., "12 months", "30 days", "1 year")
 4. Ignore any `note` parameter for rendered output
 5. Replace the directive with the formatted duration text
 6. If the value is invalid, insert `[INVALID DURATION: value]` and emit a validation error
@@ -1538,7 +1541,7 @@ When rendering `{{placeholder: id}}` or `{{placeholder: id, ...}}`:
 5. Replace the directive with a visible blank marker according to renderer settings, such as `[_____]`
 6. If the renderer cannot emit a visual blank, it MUST fall back to `[TBD: id]`
 7. If a type-specific parameter name is not defined for the effective `type`, implementations MUST ignore that parameter for rendered output and emit a validation warning
-8. If a type-specific parameter value is invalid, unrecognized, or a required type-specific parameter is missing, implementations MUST apply the rendering fallback and validation severity defined for that type-specific rule when such a rule exists; for example, for `type=money`, an unrecognized `currency` MUST render as `[UNKNOWN CURRENCY: CURRENCY]` and emit a validation warning, consistent with `{{money: ...}}`
+8. If a type-specific parameter value is invalid, unrecognized, or a required type-specific parameter is missing, implementations MUST apply the rendering fallback and validation severity defined for that type-specific rule when such a rule exists; for example, for `type=money`, an unrecognized `currency` MUST render as `[UNKNOWN CURRENCY: CURRENCY]` and emit a validation warning, consistent with `{{money: ...}}`; for `type=duration`, an unrecognized `unit` MUST render as `[INVALID DURATION UNIT: UNIT]` and emit a validation error, consistent with `{{duration: ...}}`
 9. If no type-specific fallback is defined for an invalid, unrecognized, or missing required type-specific parameter, insert `[INVALID PLACEHOLDER]` or `[INVALID PLACEHOLDER: id]` when the `id` can be determined, and emit a validation error
 10. If the `id` is malformed, the `type` is unsupported, or repeated occurrences use inconsistent types, insert `[INVALID PLACEHOLDER]` or `[INVALID PLACEHOLDER: id]` when the `id` can be determined, and emit a validation error
 
@@ -1548,7 +1551,7 @@ Implementations SHOULD support:
 
 | Format | Status | Notes |
 |---|---|---|
-| PDF | RECOMMENDED | Primary legal format, styled per template |
+| PDF | RECOMMENDED | Primary legal format, styled per style template |
 | DOCX | RECOMMENDED | Compatibility with law firm workflows |
 | HTML | RECOMMENDED | Web viewing with interactive hyperlinks |
 | Plain text | OPTIONAL | Stripped output for comparison |
@@ -1569,7 +1572,7 @@ Renderers SHOULD support external style templates specifying:
 - Locale for value formatting (date order, number and decimal separators, currency display)
 - Labels for template views — drafting notes and conditional units (§15.6, §15.8) — so that they follow the document's language
 
-Templates SHOULD be defined in a separate configuration file (e.g., YAML or JSON) completely independent of document content. The same LegalDown source SHOULD render correctly with any compatible template.
+Style templates SHOULD be defined in a separate configuration file (e.g., YAML or JSON) completely independent of document content. The same LegalDown source SHOULD render correctly with any compatible style template.
 
 ### 13.8 Attachment Rendering
 
@@ -1780,7 +1783,7 @@ A marker holding `when=` in any other position is not a condition; it is literal
 
 **Presence.** The **presence condition** of a unit is the set of conditions that must all be true for it to appear in an assembled document: its own condition, if any, together with the conditions of every unit enclosing it — its ancestor sections, the list items it is nested in, the include through which its content was inserted, and the attachment containing it. A unit with an empty presence condition is always present. Directives and definitions are present when the unit containing them is present.
 
-**Heading hierarchy.** Because a conditional section always takes its subsections with it, removing any combination of conditional units never breaks §4.1: the heading that follows a removed section is at the same level as the removed heading or higher, so it cannot skip a level relative to the heading before. The heading hierarchy therefore needs to be validated only once, on the template.
+**Heading hierarchy.** Because a conditional section always takes its subsections with it, removing any combination of conditional sections, items, and paragraphs never breaks §4.1: the heading that follows a removed section is at the same level as the removed heading or higher, so it cannot skip a level relative to the heading before. The heading hierarchy therefore needs to be validated only once, on the template. A conditional include is the one exception, because its fragment's headings need not form whole sections: the combined document MUST satisfy §4.1 both with and without each conditional fragment, which `include-heading-skip` (§16.11) checks.
 
 ### 15.4 Alternatives and Reference Safety
 
@@ -1890,11 +1893,11 @@ Given a template with no Errors and an answers set, an implementation MUST produ
 2. **Removal.** Evaluate the presence condition of every conditional unit and remove each unit that is absent, with everything it contains. A removed unit's lines run from its first line through its last non-blank line; for a section, through the last non-blank line before the next heading of the same or a higher level, or the end of the body. A removed attachment is deleted from `attachments` — its `- ` entry line and every following line indented more deeply than that entry. If no attachment remains, the `attachments` key line is deleted too.
 3. **Markers.** In every remaining marker, delete the `when=` attribute together with the whitespace that separated it from the other attribute. A marker left empty (`{}`) is deleted together with the spaces and tabs before it. On every remaining attachment, delete the `when` line.
 4. **Choices.** Replace each remaining `{{choose:}}` with the phrase listed for the answer, escaped as in §15.7.3.
-5. **Blanks.** Replace each remaining `{{placeholder:}}` whose question is answered:
+5. **Blanks.** Replace each remaining `{{placeholder:}}` whose question has an answer — from the answers set, or else the `default` of its declaration:
    - in the body — `text` by the answer, escaped as in §15.7.3; `date` by `{{date: YYYY-MM-DD}}`; `money` by `{{money: AMOUNT, currency=CODE}}`; `duration` by `{{duration: VALUE, unit=UNIT}}`. The currency or unit comes from the placeholder's parameter or the answer — when both give one, they MUST agree, or the answer is invalid. A `note` parameter on the placeholder is appended to the new directive exactly as written; on a `text` placeholder it is dropped
    - in frontmatter — the directive text inside the quoted scalar is replaced by the answer as plain text: `text` as written; `date` as `YYYY-MM-DD`; `money` as `AMOUNT CODE`; `duration` as `VALUE UNIT`. The result is escaped for the enclosing YAML scalar: in a double-quoted scalar, `\` and `"` become `\\` and `\"`; in a single-quoted scalar, `'` becomes `''`
 
-   Unanswered placeholders are left unchanged.
+   Placeholders with neither an answer nor a `default` are left unchanged, and the output is a draft (§15.1).
 6. **Clean-up.** Delete every drafting note (its block quote lines). Delete the `questions` entry: its key line and every following line that is blank or indented more deeply than the key.
 7. **Identifiers.** Section identifiers do not change during assembly. For every heading without an explicit identifier whose auto-generated identifier in the output (§5.3, §5.5) would differ from the one it had in the template, append ` {#id}` with the template's identifier to the heading line.
 8. **Blank lines.** Outside fenced and indented code blocks, collapse every run of consecutive blank lines in the body to a single blank line, and end the file with exactly one line break.
@@ -1918,7 +1921,7 @@ If a template has no Errors at a given conformance level, every document assembl
 
 | Could fail after assembly | Prevented by |
 |---|---|
-| Skipped heading levels (§4.1) | Conditional sections always take their subsections with them (§15.3) |
+| Skipped heading levels (§4.1) | Conditional sections always take their subsections with them; conditional includes are checked both ways (§15.3) |
 | Broken `{{ref:}}`, `{{term:}}`, `{{attach:}}` | Reference safety (§15.4) |
 | Duplicate identifiers | Uniqueness between non-exclusive declarations (§15.4) |
 | Changed auto-generated identifiers | Identifier preservation (§15.7.2 step 7) |
@@ -2027,7 +2030,7 @@ Validators MUST categorize issues at three levels:
 | `side-name-malformed` | `{{side:}}` `side-name` value is non-empty and matches identifier format | Error |
 | `side-unknown` | `{{side:}}` `side-name` references a side declared in frontmatter `sides[]` | Error |
 | `duration-invalid-value` | `{{duration:}}` value is a positive numeric value | Error |
-| `duration-invalid-unit` | `{{duration:}}` `unit` parameter is one of `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y` (bare `M` rejected with a `MIN`/`MO` hint) | Error |
+| `duration-invalid-unit` | `{{duration:}}` `unit` parameter — and the `unit` parameter of a `type=duration` placeholder, when present — is one of `S`, `MIN`, `H`, `D`, `W`, `MO`, `Y` (bare `M` rejected with a `MIN`/`MO` hint) | Error |
 | `field-type-key-format` | `field_types` keys follow the identifier format `[a-z][a-z0-9-]*` | Error |
 | `field-type-key-reserved` | `field_types` keys do not collide with the reserved value-type names `date`, `money`, `duration`, `party`, `text` | Error |
 | `field-type-missing` | `{{field:}}` `type` parameter is present and matches identifier format | Error |
@@ -2134,7 +2137,7 @@ Non-LegalDown attachments: only file existence is checked.
 | `include-has-frontmatter` | Included fragment contains frontmatter | Error |
 | `include-has-h1` | Included fragment contains a level 1 heading | Error |
 | `include-anchor-duplicate` | Section identifiers in included fragments are unique across the entire combined document | Error |
-| `include-heading-skip` | Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) | Error |
+| `include-heading-skip` | Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) — in a template, both with and without each conditional fragment (§15.3) | Error |
 
 All other §16 checks apply to the combined document after inclusion (§12.2). Include processing is a Full-level capability (§17.4); the file-extension check on the include path is determinable from the document alone and applies at Core (§17.2).
 
@@ -2210,7 +2213,7 @@ A Core implementation is not required to open any file other than the document i
 Everything in Core, plus rendering (Section 13) of a single document. A Rendering implementation MUST additionally support:
 
 - Section numbering generation (§13.1), configurable per render job
-- Resolution and rendering of all §11.1 directives except `{{include:}}` (Full, §17.4) per §6.3, §7.3, and §13.3–§13.5, including all bracketed failure markers (`[BROKEN REF: ...]`, `[UNDEFINED: ...]`, etc.); a Rendering implementation encountering `{{include:}}` follows §17.5
+- Resolution and rendering of all §11.1 directives except `{{include:}}` (Full, §17.4) per §6.3, §7.3, §13.3–§13.5, and §15.8 (for `{{choose:}}`), including all bracketed failure markers (`[BROKEN REF: ...]`, `[UNDEFINED: ...]`, etc.); a Rendering implementation encountering `{{include:}}` follows §17.5
 - Party and side display rules (§3.6)
 - At least one of the RECOMMENDED output formats in §13.6 (PDF, DOCX, or HTML)
 - Comment stripping (§8.6)
@@ -2496,9 +2499,9 @@ Candidates considered during the v0.1 draft and deliberately deferred. Their abs
 - **Qualified cross-document references for amendments** — a `{{ref: id, doc=amends}}` form resolving against the imported original (§3.8, §7.5); v0.1 instead provides authoring guidance in §3.8
 - **`{{meta:}}` field insertion** — rendering frontmatter values (e.g., `effective_date`) in body text, removing the duplication between frontmatter and `{{date:}}` directives
 - **Structured `adopted_by` / an organ party type** — so collective acts can reference their adopting body through a directive rather than plain text
-- **Template-generated attachment labels** — so attachment titles need not hardcode ordinals ("Schedule A", "Schedule B") that require manual renaming on reorder
+- **Style-template-generated attachment labels** — so attachment titles need not hardcode ordinals ("Schedule A", "Schedule B") that require manual renaming on reorder
 - **A structured signature model** — per-representative signing lines, date and place, signing capacities; signature block generation is implementation-defined in v0.1 (§2.2)
-- **Template-supplied reference label words** — e.g., `{{ref: id, style=full}}` rendering "Article I.A" with the label word chosen by the style template (§6.2 note)
+- **Style-template-supplied reference label words** — e.g., `{{ref: id, style=full}}` rendering "Article I.A" with the label word chosen by the style template (§6.2 note)
 - **Machine-readable export** — a JSON document model as a companion specification; the source file remains the canonical machine-readable representation (§10.1)
 - **Richer template logic** — combined conditions (`and`/`or`), conditions on `text`, `money`, or `date` answers, repetition over collections (one clause per property), computed values, conditional parties and table rows; v0.2 keeps conditions to a single test on whole structural units (§15.1)
 - **Directives inside `{{choose:}}` phrases** — so a phrase can vary a defined term or reference inline; v0.2 phrases are plain text (§15.5)

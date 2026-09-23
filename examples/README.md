@@ -103,7 +103,12 @@ Where to find a live example of each feature. Section numbers refer to the speci
 - **Expected diagnostics.** These documents validate with **no Errors** under any conforming
   implementation. Warnings and Info notes depend on render-time configuration and are expected in
   some setups — for example, §16.3's Warning for a `{{ref:}}` to an item anchor fires under a
-  template that disables list enumeration (§13.2), and a definition used before its declaration
+  style template that disables list enumeration (§13.2), and a definition used before its declaration
   point is an Info note. "No Errors" is the portable bar; the rest is configuration-dependent.
+- **The template** (`advanced/template/`) validates with no Errors as a template (§15). Assembling
+  it with `consulting-agreement.answers.yaml` answers every blank, so the result is a final
+  document; no assembled copy is kept here, since the byte-exact assembly cases live in
+  [`fixtures/assembly/`](../fixtures/assembly). Rendered without answers, it shows the template
+  view (§15.8): conditions marked, both `{{choose:}}` phrases, and the drafting notes.
 - **Rendering** these documents requires choosing a numbering scheme and style template (§13); none
   is included here, since presentation is deliberately outside the document.

@@ -57,6 +57,10 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 - A placeholder's omitted `type` defaults to its declared question's type before `text` (§10.7).
 - `{when=...}` markers outside a condition position draw `anchor-misplaced`.
 - `questions` joins the structural frontmatter fields that must not hold placeholders (§3.10).
+- "Template" now means a document template (§15); every place that meant presentation settings
+  says **style template** (§5.7, §6.2–§6.3, §7.2, §10, §13, §16.3, §19).
+- Anchor and condition markers are excluded from heading text for identifier generation (§4.2,
+  §5.3) and are not recognized inside code or comments (§11.4).
 
 #### Validation changes
 
@@ -70,17 +74,23 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 | `translation-template-mismatch` | — | Error (Full) |
 | `anchor-duplicate`, `def-duplicate-id`, `attachment-id-duplicate` | Any duplicate | Duplicates between declarations that can appear together |
 | `placeholder-type-invalid` | `text`, `date`, `money` | adds `duration` |
+| `duration-invalid-unit` | `{{duration:}}` only | also a `type=duration` placeholder's `unit` |
+| `include-heading-skip` | Combined document | Combined document with and without each conditional include |
+| `anchor-misplaced` | Misplaced `{#id}` | Misplaced `{#id}` or `{when=...}` |
 
 #### Files touched
 
-- `spec/legaldown-spec.md` — new §15; §1.3, §3.2, §3.9, §3.10, §4.4, §5.2, §5.4–§5.7, §7.2, §8.4,
-  §10.7, §11.1, §13.7, §14.2–§14.3, §16.1, §16.2, §16.4, §16.5, §16.7, §16.10, new §16.12, §17.2–§17.4,
-  new §17.6, §19; sections 15–18 renumbered 16–19; version 0.2 DRAFT
+- `spec/legaldown-spec.md` — new §15; §1.3, §3.2, §3.9, §3.10, §4.2, §4.4, §5.2–§5.7, §7.2,
+  §8.4, §8.6, §10.7, §11.1, §11.4, §12.2, §13.1, §13.5, §13.7, §14.2–§14.3, §16.1–§16.5, §16.7,
+  §16.10, §16.11, new §16.12, §17.2–§17.4, new §17.6, §19; "style template" wording throughout;
+  sections 15–18 renumbered 16–19; version 0.2 DRAFT
 - `fixtures/` — 14 new rule fixtures, `assembly/` cases, `verify.py`, `coverage.json`, README
 - `examples/advanced/template/` — reworked as a full template with an answers set and a
   conditional LegalDown attachment; `examples/README.md`
 - `llm/legaldown-spec-llm.md` — new Templates section, validation summary, "Not in the language"
-- `README.md`, `CONTRIBUTING.md` — templates overview, version, section numbers
+- `README.md`, `CONTRIBUTING.md` — templates overview, version, section numbers, fixture and
+  assembly-case guidance
+- `.gitattributes` — `*.yaml`/`*.yml` normalized to LF, keeping assembly cases byte-stable
 - `proposals/templates.md` — the design proposal
 
 ---

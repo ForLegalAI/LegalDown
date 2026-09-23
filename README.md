@@ -165,12 +165,14 @@ paragraph text.
 `{{placeholder: fee, type=money, currency=EUR}}` directly in the text when a
 document needs a fillable blank. No frontmatter declaration is required.
 
-**Templates carry their own logic.** A template declares the questions it asks under
-`questions` in frontmatter, marks optional or alternative clauses with a condition on the
-anchor — `# Non-Solicitation {#non-solicit when=non-solicit}` — varies a phrase inline with
-`{{choose:}}`, and leaves guidance for the drafter in `> [!DRAFTING]` notes. Assembly with a set
-of answers produces an ordinary LegalDown document, byte for byte the same in every tool. A
-template that validates is guaranteed to assemble into a valid document for every answer.
+**Templates carry their own logic.** A template declares the questions it asks
+under `questions` in frontmatter, marks optional or alternative clauses with a
+condition on the anchor — `# Non-Solicitation {#non-solicit when=non-solicit}`
+— varies a phrase inline with `{{choose:}}`, and leaves guidance for the
+drafter in `> [!DRAFTING]` notes. Assembly with a set of answers produces an
+ordinary LegalDown document, byte for byte the same in every tool. A template
+that validates is guaranteed to assemble into a valid document for every
+answer.
 
 **Custom fields stay structured.** Declare reusable custom value types in
 frontmatter under `field_types`, then reference them inline with
@@ -228,8 +230,8 @@ encoded.
 The full specification is in [`spec/legaldown-spec.md`](spec/legaldown-spec.md).
 
 It covers document structure, frontmatter format, all directive syntax,
-validation rules, rendering requirements, bilingual support, and conformance
-levels in detail.
+validation rules, rendering requirements, bilingual support, templates and
+assembly, and conformance levels in detail.
 
 Working documents live in [`examples/`](examples) — a simple tier mirroring the
 specification's own examples, and an advanced tier exercising the full feature
@@ -237,7 +239,8 @@ surface, with a table mapping every feature to a live example.
 
 Implementers should also see [`fixtures/`](fixtures), the conformance corpus:
 one case per validation rule, paired with the diagnostic a conforming validator
-must produce.
+must produce, plus template assembly cases pinning the exact output a conforming
+assembler must generate.
 
 | Version | Status | Document |
 |---------|--------|----------|
