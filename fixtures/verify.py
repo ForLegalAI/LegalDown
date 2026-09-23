@@ -22,7 +22,13 @@ LEVELS = {'error', 'warning', 'info'}
 TIERS = {'core', 'rendering', 'full'}
 CAPABILITIES = {'assembly'}
 ASSEMBLY_FILES = ('template.lgd', 'answers.yaml', 'expected.lgd')
-TEMPLATE_MARKERS = ('when=', '{{choose:', '[!DRAFTING]', '\nquestions:')
+TEMPLATE_MARKERS = (
+    ('a when= condition', re.compile(r'when=')),
+    ('a {{choose:}} directive', re.compile(r'\{\{choose:')),
+    ('a drafting note', re.compile(r'^\s*>\s*\[!drafting\]', re.I | re.M)),
+    ('a questions entry', re.compile(r'^questions:', re.M)),
+    ('an attachment when entry', re.compile(r'^\s+when:', re.M)),
+)
 
 
 def spec_rule_ids():
@@ -62,6 +68,18 @@ def check():
             if cap is not None and cap not in CAPABILITIES:
                 problems.append('%s/%s: requires_capability %r not in %s'
                                 % (rule, name, cap, sorted(CAPABILITIES)))
+            config = exp.get('requires_config', {})
+            if not isinstance(config, dict):
+                problems.append('%s/%s: requires_config must be an object' % (rule, name))
+                config = {}
+            answers = config.get('answers')
+            if cap == 'assembly' and not answers:
+                problems.append('%s/%s: an assembly case must name its answers set in '
+                                'requires_config.answers' % (rule, name))
+            if answers and not os.path.exists(os.path.join(d, answers)):
+                problems.append('%s/%s: answers set %s does not exist' % (rule, name, answers))
+            if 'final' in config and config['final'] is not True:
+                problems.append('%s/%s: requires_config.final must be true' % (rule, name))
             if not exp.get('diagnostics'):
                 problems.append('%s/%s: no diagnostics asserted' % (rule, name))
             for diag in exp.get('diagnostics', []):
@@ -107,10 +125,9 @@ def check():
         out = os.path.join(d, 'expected.lgd')
         if os.path.exists(out):
             text = open(out, encoding='utf-8').read()
-            for marker in TEMPLATE_MARKERS:
-                if marker in text:
-                    problems.append('assembly/%s: expected.lgd still contains %r'
-                                    % (case, marker.strip()))
+            for label, pattern in TEMPLATE_MARKERS:
+                if pattern.search(text):
+                    problems.append('assembly/%s: expected.lgd still contains %s' % (case, label))
             if not text.endswith('\n') or text.endswith('\n\n'):
                 problems.append('assembly/%s: expected.lgd must end with exactly one line break'
                                 % case)

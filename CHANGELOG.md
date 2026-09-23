@@ -60,7 +60,10 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   `anchor-misplaced`; a `{when=}`-only marker is allowed at the end of a preamble paragraph (§5.7).
 - In a template, `questions` and `attachments` are written in YAML block style, a `when` value
   starting with `!` is quoted, and choice value ids avoid the YAML 1.1 boolean/null words (§15.2,
-  §15.3), so every YAML parser reads them the same way.
+  §15.3), so every YAML parser reads them the same way. Question ids and undeclared placeholder ids
+  in a template avoid the same words.
+- A placeholder in a frontmatter date field must be the whole value and of type `date` (§3.10);
+  otherwise the field's date check applies (§16.6).
 - `questions` joins the structural frontmatter fields that must not hold placeholders (§3.10).
 - "Template" now means a document template (§15); every place that meant presentation settings
   says **style template** (§5.7, §6.2–§6.3, §7.2, §10, §13, §16.3, §19).
@@ -80,6 +83,7 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 | `anchor-duplicate`, `def-duplicate-id`, `def-autogen-collision`, `attachment-id-duplicate`, `attachment-id-collision`, `attachment-anchor-duplicate`, `include-anchor-duplicate` | Any duplicate | Duplicates between declarations that can appear together |
 | `anchor-autogen-collision` | Suffixes in document order | Headings that can never appear together do not collide; suffixes skip only identifiers of headings that can (§5.5) |
 | `placeholder-in-structural-field` | Side/party names, `type`, `document_type`, `legaldown`, structure | adds anything inside `questions` |
+| `metadata-date-invalid`, `date-of-birth-invalid` | Any placeholder exempt | Exempt only when the placeholder is the whole value and of type `date` |
 | `placeholder-type-invalid` | `text`, `date`, `money` | adds `duration` |
 | `duration-invalid-unit` | `{{duration:}}` only | also a `type=duration` placeholder's `unit` |
 | `include-heading-skip` | Combined document | Combined document with and without each conditional include |

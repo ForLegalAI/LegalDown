@@ -92,7 +92,7 @@ The four `assembly/` cases:
 |---|---|
 | `consulting` | Removing conditional sections, an alternative, an item, and a paragraph; stripping `when=` from anchors; `{{choose:}}` for a boolean and a choice; `text`, `date`, and `money` blanks (with `note`) in body and double-quoted frontmatter; decision defaults; removing drafting notes and `questions`; an unanswered blank left in place; blank-line collapse |
 | `identifier-preservation` | A heading whose auto-generated identifier would change is given it explicitly (step 7) |
-| `escaping` | §15.7.3 escaping, including `{`, emphasis and link characters, and a leading ordered-list number |
+| `escaping` | §15.7.3 escaping: `{`, emphasis and link characters, `&` before a letter, a heading marker at the start of a list item, and an ordered-list number completed by template text |
 | `frontmatter-and-defaults` | Removing an attachment and a remaining attachment's `when` entry; deleting an empty `{when=}` marker; a `duration` blank filled from a `default`; single- and double-quoted YAML escaping; escaped `{{choose:}}` phrases; deleting a line left blank by an empty phrase |
 
 Conditional includes and assembly of attachment files are not yet covered by a case.

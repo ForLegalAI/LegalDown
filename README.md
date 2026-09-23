@@ -202,7 +202,7 @@ contains none of them.
 {{date: 2026-06-01}}                     ← Inline date value
 {{money: 10000, currency=CZK}}          ← Inline monetary amount
 {{field: INV-2026-0042, type=invoice-id}} ← Inline custom typed value
-{{placeholder: governing-law}}          ← Inline fillable blank (`type=text` by default)
+{{placeholder: governing-law}}          ← Inline fillable blank (type from its declared question, else `text`)
 {{placeholder: fee, type=money, currency=EUR}} ← Typed inline blank
 # Clause {#id when=question}             ← Optional clause in a template (also q:value, !q)
 {{choose: forum, courts=..., arbitration=...}} ← Inline phrase chosen by a template answer

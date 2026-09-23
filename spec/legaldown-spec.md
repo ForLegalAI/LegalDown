@@ -424,6 +424,7 @@ effective_date: "{{placeholder: effective-date, type=date}}"
 - Placeholders MAY appear in **value** fields (for example `title`, `legal_name`, `address`, `identification_number`, `effective_date`, `governing_law`). A representative's `name` and `title` (§3.5) are display values, not identifiers, and MAY hold placeholders
 - Placeholders MUST NOT appear in **identifier** or **structural** fields — any side or party `name` (these must satisfy the identifier format; a party `name` is additionally referenced by `{{party:}}`), party `type`, `document_type`, `legaldown`, the `sides`/`parties` array structure, or anywhere inside `questions` (§15.2)
 - Type-specific placeholders follow §10.7 (for example `"{{placeholder: effective-date, type=date}}"`)
+- In a date field (`effective_date`, `adoption_date`, a party's `date_of_birth`), a placeholder MUST be the field's entire value and MUST have effective type `date` — written inline, or declared as a `date` question (§15.2) — so that whatever fills it is a valid date
 - A required field whose value is a placeholder satisfies that field's presence requirement; the document is treated as a template or draft with unfilled values
 - A placeholder id used in both frontmatter and body refers to the same logical blank (§10.7)
 - Renderers render frontmatter placeholders as a visible blank, consistent with §13.5 (for example `[_____]`, or `[TBD: id]` when no visual blank is available)
@@ -1723,7 +1724,7 @@ questions:
 **Rules:**
 
 - Question ids follow the identifier format (§5.2)
-- Choice value ids MUST NOT be `y`, `n`, `yes`, `no`, `on`, `off`, `true`, `false`, or `null` — YAML 1.1 parsers read these words as booleans or null, so they would not survive parsing portably
+- Question ids, choice value ids, and — in a template — the ids of undeclared placeholders MUST NOT be `y`, `n`, `yes`, `no`, `on`, `off`, `true`, `false`, or `null`. They are YAML keys or values in `questions` and in answers sets, and YAML 1.1 parsers read these words as booleans or null, so they would not survive parsing portably
 - `questions` MUST be written in YAML block style (one key per line), because assembly edits frontmatter line by line (§15.7.2). The same applies to `attachments` in a template: block style, with each entry beginning `- id:`
 - `questions` is a structural field: `{{placeholder:}}` MUST NOT appear anywhere inside it (§3.10)
 - Additional fields on a question declaration are permitted and MUST be ignored, consistent with §3.7
@@ -1878,7 +1879,7 @@ effective-date: 2026-10-01
 
 | Type | Answer |
 |---|---|
-| `text` | A non-empty string without line breaks |
+| `text` | A non-empty string without line breaks, and without leading or trailing spaces or tabs |
 | `date` | An ISO 8601 calendar date (`YYYY-MM-DD`), as a string or a YAML date |
 | `money` | A map `{amount, currency}` — `amount` a string in §10.3 format, `currency` an ISO 4217 code — or the `amount` string alone when every placeholder for the question fixes the same `currency`. Amounts are strings so that no floating-point conversion can alter them |
 | `duration` | A map `{value, unit}` — `value` per §10.5, written as an integer or a string, `unit` per §10.5 — or the `value` alone when every placeholder for the question fixes the same `unit` |
@@ -1891,9 +1892,9 @@ A `default` in a question declaration takes the same form. Answers keyed by an i
 
 Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template source. Include fragments (§12.2) and LegalDown attachment files (§12.4) are assembled with the same answers set by the same steps (those that apply to a body-only fragment), each into its own output file at the same relative path; where the output is written is implementation-defined. The fragment of a removed include and the file of a removed attachment produce no output.
 
-Two terms are used below. A **blank line** is a line that is empty or holds only spaces and tabs. A frontmatter **entry** is a line together with every following line that is blank or indented more deeply than it, excluding blank lines at its end — for example, the `questions:` line with the whole map beneath it, or one `- id:` item of `attachments` with its fields. Frontmatter edits are made entry by entry, which is why §15.2 requires `questions` and `attachments` in YAML block style.
+Two terms are used below. A **blank line** is a line that is empty or holds only spaces and tabs. A frontmatter **entry** is a line together with every following line that is blank, a YAML comment line (its first non-space character is `#`), or indented more deeply than it, excluding blank and comment lines at its end — for example, the `questions:` line with the whole map beneath it, or one `- id:` item of `attachments` with its fields. Frontmatter edits are made entry by entry, which is why §15.2 requires `questions` and `attachments` in YAML block style.
 
-1. **Answers.** Every question — declared, or implicit (an undeclared placeholder, §15.2) — takes its answer from the answers set, or else from its declaration's `default`. All answers are validated before any output is produced. An answer of the wrong form for its question's type (§15.7.1), one that disagrees with a currency or unit fixed by a placeholder, or a `text` answer containing `{{` for a placeholder in frontmatter is an Error (`answer-invalid`). A decision question is **needed** when a condition or `{{choose:}}` that uses it lies in a unit whose enclosing conditions are all true — so a question asked only inside an absent section needs no answer; a needed decision question with neither an answer nor a `default` is an Error (`answer-missing`). Either Error stops assembly.
+1. **Answers.** Every question — declared, or implicit (an undeclared placeholder, §15.2) — takes its answer from the answers set, or else from its declaration's `default`. All answers are validated before any output is produced. An answer of the wrong form for its question's type (§15.7.1), one that disagrees with a currency or unit fixed by a placeholder, or a `text` answer containing `{{` for a placeholder in frontmatter is an Error (`answer-invalid`). A decision question is **needed** when a condition or `{{choose:}}` that uses it lies in a unit whose enclosing conditions are all true and outside any drafting note — so a question asked only inside an absent section, or only inside a drafting note that assembly removes, needs no answer; a needed decision question with neither an answer nor a `default` is an Error (`answer-missing`). Either Error stops assembly.
 2. **Removal.** Evaluate the presence condition of every conditional unit and remove each unit that is absent, with everything it contains. A removed unit's lines run from its first line through its last non-blank line; for a section, through the last non-blank line before the next heading of the same or a higher level, or the end of the body. A removed attachment's entry is deleted from `attachments`; if no attachment remains, the `attachments` entry itself is deleted.
 3. **Markers.** In every remaining marker, delete the `when=` attribute together with the whitespace that separated it from the other attribute. A marker left empty (`{}`) is deleted together with the spaces and tabs before it. On every remaining attachment, delete its `when` entry.
 4. **Choices.** Replace each remaining `{{choose:}}` with the phrase listed for the answer, escaped as in §15.7.3.
@@ -1903,7 +1904,7 @@ Two terms are used below. A **blank line** is a line that is empty or holds only
 
    Placeholders without an answer are left unchanged, and the output is a draft (§15.1). A body line that steps 4 and 5 leave blank — for example a `{{choose:}}` on its own line whose phrase is `""` — is deleted.
 6. **Clean-up.** Delete every drafting note — its whole extent (§15.6). Delete the `questions` entry.
-7. **Identifiers.** Section identifiers do not change during assembly. For every heading without an explicit identifier whose auto-generated identifier in the output (§5.3, §5.5) would differ from the one it had in the template, append ` {#id}` with the template's identifier to the heading line.
+7. **Identifiers.** Section identifiers do not change during assembly. Compute the auto-generated identifier (§5.3, §5.5) of every heading in the output of step 6, before any change in this step; then, for every heading without an explicit identifier whose computed identifier differs from the one it had in the template, append ` {#id}` with the template's identifier to the heading line.
 8. **Blank lines.** Outside fenced and indented code blocks, replace every run of one or more blank lines in the body with a single empty line, and end the file with exactly one line break.
 
 No other byte of the template changes. Two conforming implementations therefore produce byte-identical output from the same template and answers set.
@@ -1912,10 +1913,13 @@ No other byte of the template changes. Two conforming implementations therefore 
 
 Text answers and `{{choose:}}` phrases are literal text, and assembly MUST insert them so that the assembled document renders them exactly as written. The assembler inserts a backslash (§11.4, CommonMark backslash escapes):
 
-- before every `\`, `` ` ``, `*`, `_`, `[`, `]`, `<`, and `|`
-- before every `{` — so that no directive (`{{`), anchor (`{#`), or condition (`{when=`) can form
-- before every `&` that begins a character reference — `&` followed by `#` or an ASCII letter, then only ASCII letters and digits, then `;`
-- when the inserted text begins a line (only spaces or tabs precede it), before its first character if that is `#`, `>`, `-`, `+`, `=`, or `~`, and before the `.` or `)` that follows a leading run of ASCII digits
+- before every `\`, `` ` ``, `*`, `_`, `[`, `]`, `<`, `|`, and `{` in the inserted text — so that no emphasis, link, code, table cell, directive (`{{`), anchor (`{#`), or condition (`{when=`) can form
+- before every `&` in the inserted text that is followed in the output by `#` or an ASCII letter — so that no character reference can form, even with template text that follows
+
+An insertion is at a **block start** when only spaces or tabs precede it on its line, optionally after a list-item marker (`-`, `+`, `*`, or digits followed by `.` or `)`) or block-quote markers (`>`) and the spaces after them. At a block start, the assembler first removes any spaces and tabs at the beginning of the inserted text, then:
+
+- inserts a backslash before its first character if that is `#`, `>`, `-`, `+`, `=`, or `~`
+- if it begins with ASCII digits and the character that follows those digits in the output — from the inserted text or from the template text after it — is `.` or `)`, inserts a backslash before that `.` or `)`
 
 No other character is escaped, so ordinary legal text — names, addresses, `s.r.o.`, `Smith & Co.` — is inserted unchanged.
 
@@ -2086,7 +2090,7 @@ The Warning raised when `sides` is absent has the rule id `sides-absent`.
 | `supersedes-file-missing` | `supersedes.file` path exists when specified (Full level, §17.4) | Error |
 | `representative-name-empty` | Representative `name` is non-empty | Error |
 
-Where §3.10 permits a placeholder in a value field, a placeholder value satisfies that field's presence requirement and is **exempt from the field's format checks** above (for example, `effective_date: "{{placeholder: effective-date, type=date}}"` does not fail the ISO 8601 check); the placeholder's own checks (§16.5) apply instead.
+Where §3.10 permits a placeholder in a value field, a placeholder value satisfies that field's presence requirement and is **exempt from the field's format checks** above (for example, `effective_date: "{{placeholder: effective-date, type=date}}"` does not fail the ISO 8601 check); the placeholder's own checks (§16.5) apply instead. In a date field the exemption applies only when the placeholder is the whole value and its effective type is `date` (§3.10); otherwise the field's date check applies and reports the Error.
 
 ### 16.7 Bilingual Validation (when translations metadata present)
 
@@ -2151,7 +2155,7 @@ Template checks (§15) — these rows are Core (§17.2) within the document itse
 
 | ID | Check | Level |
 |---|---|---|
-| `question-invalid` | Each `questions` entry is well-formed: the id follows the identifier format, `type` is one of the six types, `choices` is present with at least two identifier-format value ids and non-empty labels for `choice` and absent otherwise, `default` has the form its type requires, choice value ids are not YAML boolean or null words, and `questions` and a template's `attachments` are in YAML block style (§15.2) | Error |
+| `question-invalid` | Each `questions` entry is well-formed: the id follows the identifier format, `type` is one of the six types, `choices` is present with at least two identifier-format value ids and non-empty labels for `choice` and absent otherwise, `default` has the form its type requires, question ids, choice value ids, and undeclared placeholder ids are not YAML boolean or null words, and `questions` and a template's `attachments` are in YAML block style (§15.2) | Error |
 | `question-unused` | Each declared question is used by a `{{placeholder:}}`, a condition, or a `{{choose:}}` | Warning |
 | `placeholder-question-mismatch` | A placeholder's inline `type` equals the type of its declared question, and no placeholder uses a decision question's id (§15.2) | Error |
 | `condition-invalid` | Each condition — in a marker or in `attachments[].when` — names a declared decision question, uses the form its type requires, and names a declared value (§15.3) | Error |
@@ -2165,7 +2169,7 @@ Assembly checks — reported by implementations of the Assembly capability (§17
 
 | ID | Check | Level |
 |---|---|---|
-| `answer-missing` | Every needed decision question — one used by a condition or `{{choose:}}` in a unit whose enclosing conditions are all true (§15.7.2) — has an answer or a `default` | Error |
+| `answer-missing` | Every needed decision question — one used by a condition or `{{choose:}}` outside drafting notes, in a unit whose enclosing conditions are all true (§15.7.2) — has an answer or a `default` | Error |
 | `answer-invalid` | Every answer has the form its question's type requires (§15.7.1), agrees with any currency or unit fixed by its placeholders, and — for a `text` answer used in frontmatter — contains no `{{` | Error |
 | `answer-unknown` | Every answer id is a declared question or a placeholder id of the template | Warning |
 
