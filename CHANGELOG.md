@@ -36,11 +36,12 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   share an identifier; every reference must resolve under every combination of answers.
 - **`{{choose:}}` (§15.5).** An inline plain-text phrase chosen by a decision; every possible
   answer must be listed.
-- **Drafting notes (§15.6).** `> [!DRAFTING]` block quotes, rendered as guidance in template views
-  and removed on assembly.
+- **Drafting notes (§15.6).** `> [!DRAFTING]` block quotes (marker case-insensitive), rendered as
+  guidance in template views and removed on assembly; a look-alike marker draws a Warning.
 - **Assembly (§15.7).** A byte-deterministic transformation of a template and an answers set into
   an ordinary LegalDown document, with defined answer forms, escaping of inserted text, and
-  identifier preservation. A template without Errors assembles without Errors for every answer set.
+  identifier preservation. A template without Errors assembles without Errors for every valid
+  answers set. Include fragments and attachment files are assembled with the same answers.
 - **Template view (§15.8)** and the **final check (§15.9)**.
 - **`duration` placeholder type (§10.7).**
 - **Assembly capability (§17.6)**, claimable alongside any conformance level.
@@ -55,7 +56,11 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   auto-generated identifier collisions — applies only between declarations that can appear
   together (§5.2, §5.4, §5.5, §7.2).
 - A placeholder's omitted `type` defaults to its declared question's type before `text` (§10.7).
-- `{when=...}` markers outside a condition position draw `anchor-misplaced`.
+- `{when=...}` markers outside a condition position, and markers repeating an attribute, draw
+  `anchor-misplaced`; a `{when=}`-only marker is allowed at the end of a preamble paragraph (§5.7).
+- In a template, `questions` and `attachments` are written in YAML block style, a `when` value
+  starting with `!` is quoted, and choice value ids avoid the YAML 1.1 boolean/null words (§15.2,
+  §15.3), so every YAML parser reads them the same way.
 - `questions` joins the structural frontmatter fields that must not hold placeholders (§3.10).
 - "Template" now means a document template (§15); every place that meant presentation settings
   says **style template** (§5.7, §6.2–§6.3, §7.2, §10, §13, §16.3, §19).
@@ -67,12 +72,14 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 | Rule | Before | After |
 |---|---|---|
 | `question-invalid`, `placeholder-question-mismatch`, `condition-invalid`, `condition-reference-unsafe`, `choose-invalid`, `drafting-note-def` | — | Error (Core) |
-| `question-unused`, `condition-never-true` | — | Warning (Core) |
+| `question-unused`, `condition-never-true`, `drafting-note-unrecognized` | — | Warning (Core) |
 | `answer-missing`, `answer-invalid` | — | Error (Assembly) |
 | `answer-unknown` | — | Warning (Assembly) |
 | `placeholder-unfilled`, `template-construct-present` | — | Error (final option only) |
 | `translation-template-mismatch` | — | Error (Full) |
-| `anchor-duplicate`, `def-duplicate-id`, `attachment-id-duplicate` | Any duplicate | Duplicates between declarations that can appear together |
+| `anchor-duplicate`, `def-duplicate-id`, `def-autogen-collision`, `attachment-id-duplicate`, `attachment-id-collision`, `attachment-anchor-duplicate`, `include-anchor-duplicate` | Any duplicate | Duplicates between declarations that can appear together |
+| `anchor-autogen-collision` | Suffixes in document order | Headings that can never appear together do not collide; suffixes skip only identifiers of headings that can (§5.5) |
+| `placeholder-in-structural-field` | Side/party names, `type`, `document_type`, `legaldown`, structure | adds anything inside `questions` |
 | `placeholder-type-invalid` | `text`, `date`, `money` | adds `duration` |
 | `duration-invalid-unit` | `{{duration:}}` only | also a `type=duration` placeholder's `unit` |
 | `include-heading-skip` | Combined document | Combined document with and without each conditional include |
@@ -80,11 +87,12 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 
 #### Files touched
 
-- `spec/legaldown-spec.md` — new §15; §1.3, §3.2, §3.9, §3.10, §4.2, §4.4, §5.2–§5.7, §7.2,
-  §8.4, §8.6, §10.7, §11.1, §11.4, §12.2, §13.1, §13.5, §13.7, §14.2–§14.3, §16.1–§16.5, §16.7,
-  §16.10, §16.11, new §16.12, §17.2–§17.4, new §17.6, §19; "style template" wording throughout;
-  sections 15–18 renumbered 16–19; version 0.2 DRAFT
-- `fixtures/` — 14 new rule fixtures, `assembly/` cases, `verify.py`, `coverage.json`, README
+- `spec/legaldown-spec.md` — new §15; §1.3, §3.2, §3.9, §3.10, §4.2, §4.4, §5.2–§5.7, §7.2, §8.4,
+  §8.6, §10.3, §10.7, §11.1, §11.2, §11.4, §12.2, §13.1, §13.5, §13.7, §14.2–§14.3, §16.1–§16.5,
+  §16.7, §16.10, §16.11, new §16.12, §17.2–§17.4, new §17.6, §19; "style template" wording
+  throughout; sections 15–18 renumbered 16–19; version 0.2 DRAFT
+- `fixtures/` — 15 new rule fixtures, four byte-exact `assembly/` cases, `verify.py`,
+  `coverage.json`, README
 - `examples/advanced/template/` — reworked as a full template with an answers set and a
   conditional LegalDown attachment; `examples/README.md`
 - `llm/legaldown-spec-llm.md` — new Templates section, validation summary, "Not in the language"

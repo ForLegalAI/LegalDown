@@ -171,8 +171,8 @@ condition on the anchor — `# Non-Solicitation {#non-solicit when=non-solicit}`
 — varies a phrase inline with `{{choose:}}`, and leaves guidance for the
 drafter in `> [!DRAFTING]` notes. Assembly with a set of answers produces an
 ordinary LegalDown document, byte for byte the same in every tool. A template
-that validates is guaranteed to assemble into a valid document for every
-answer.
+that validates is guaranteed to assemble into a valid document for every valid
+set of answers.
 
 **Custom fields stay structured.** Declare reusable custom value types in
 frontmatter under `field_types`, then reference them inline with

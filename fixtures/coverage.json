@@ -1,5 +1,5 @@
 {
-  "total_rules": 112,
+  "total_rules": 113,
   "covered": [
     "amend-def-override",
     "amend-term-undefined",
@@ -45,6 +45,7 @@
     "directive-unknown-param",
     "document-type-invalid",
     "drafting-note-def",
+    "drafting-note-unrecognized",
     "duration-invalid-unit",
     "duration-invalid-value",
     "field-type-key-format",

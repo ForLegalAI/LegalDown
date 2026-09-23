@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "drafting-note-unrecognized",
+      "level": "warning",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "A mistyped alert marker is an ordinary quote, so the guidance would reach the finished document."
+}

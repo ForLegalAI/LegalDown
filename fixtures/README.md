@@ -46,7 +46,7 @@ renumbering.
   ],
   "exhaustive": false,
   "requires_level": "core",
-  "spec": "§16.2",
+  "spec": "16.2",
   "note": "Level 1 followed by level 3 with no intervening level 2."
 }
 ```
@@ -86,15 +86,20 @@ runner must:
    that needs a capability or configuration the implementation lacks, and report it as skipped
    rather than passed — §17.5 forbids reporting checks that were not run.
 
-The three `assembly/` cases cover, between them, every step of §15.7.2: removing conditional
-sections, alternatives, items, and paragraphs; stripping markers; resolving `{{choose:}}`; filling
-placeholders in body and frontmatter; removing drafting notes and `questions`; preserving an
-auto-generated identifier that would otherwise change (`identifier-preservation`); collapsing
-blank lines; and escaping inserted text (`escaping`).
+The four `assembly/` cases:
+
+| Case | Exercises |
+|---|---|
+| `consulting` | Removing conditional sections, an alternative, an item, and a paragraph; stripping `when=` from anchors; `{{choose:}}` for a boolean and a choice; `text`, `date`, and `money` blanks (with `note`) in body and double-quoted frontmatter; decision defaults; removing drafting notes and `questions`; an unanswered blank left in place; blank-line collapse |
+| `identifier-preservation` | A heading whose auto-generated identifier would change is given it explicitly (step 7) |
+| `escaping` | §15.7.3 escaping, including `{`, emphasis and link characters, and a leading ordered-list number |
+| `frontmatter-and-defaults` | Removing an attachment and a remaining attachment's `when` entry; deleting an empty `{when=}` marker; a `duration` blank filled from a `default`; single- and double-quoted YAML escaping; escaped `{{choose:}}` phrases; deleting a line left blank by an empty phrase |
+
+Conditional includes and assembly of attachment files are not yet covered by a case.
 
 ## Coverage
 
-**109 of the 112 rules in §16 have fixtures.** The remaining three are recorded in
+**110 of the 113 rules in §16 have fixtures.** The remaining three are recorded in
 [`coverage.json`](coverage.json) with a reason, so the corpus never implies coverage it does not
 have:
 
