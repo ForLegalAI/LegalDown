@@ -152,6 +152,9 @@ def check():
         manifest = json.load(open(manifest_path, encoding='utf-8'))
         if set(manifest.get('covered', [])) != covered:
             problems.append('coverage.json "covered" does not match the directories on disk')
+        if manifest.get('total_rules') != len(known):
+            problems.append('coverage.json total_rules is %r, but §16 defines %d rule ids'
+                            % (manifest.get('total_rules'), len(known)))
         claimed = covered | set(manifest.get('not_yet_covered', [])) \
             | set(manifest.get('not_mechanically_testable', {}))
         if claimed != known:

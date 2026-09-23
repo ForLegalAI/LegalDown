@@ -318,7 +318,7 @@ Value must be valid ISO 8601 (`YYYY-MM-DD`). Optional `note` provides an automat
 - Supported types: `text` | `date` | `money` | `duration` (`{{placeholder: term, type=duration, unit=MO}}`, `unit` optional)
 - A placeholder must not use a `boolean` or `choice` question's id — those are decisions (see Templates)
 - Same placeholder id used multiple times means the same logical blank
-- Repeated uses of the same placeholder id must keep the same effective type
+- Repeated uses of the same placeholder id must keep the same effective type, and any that fix a `currency` or `unit` must fix the same one (Error)
 - Render as a visible blank such as `[_____]`; if unavailable, fall back to `[TBD: id]`
 - `note`: optional plain-text explanation for automation
 
@@ -378,8 +378,8 @@ A conditional paragraph. {when=!fixed-term}                 ← boolean is false
 
 - Only whole units are conditional: a section (with all its subsections), a list item, a top-level or preamble paragraph (preamble: `when=` only, no `#id`), a paragraph holding only `{{include:}}`, and an attachment (`attachments[].when`)
 - Nested conditional units need **both** conditions — there is no `and`/`or`. Nesting is read in the file where a unit is written; fragment content inherits the condition of its `{{include:}}` paragraph
-- **Include fragments of a template** may hold placeholders, `{{choose:}}`, and drafting notes, but **no conditions**, and every heading in them needs an explicit `{#id}`; make a fragment conditional on its `{{include:}}` line or on a section around it
-- All occurrences of one placeholder id that fix a `currency` or `unit` must fix the same one
+- **Includes in a template:** `{{include:}}` only in the template's own body (not in fragments, attachment files, or drafting notes), each fragment included at most once; a fragment may hold placeholders and `{{choose:}}` but **no conditions or drafting notes**, and every heading in it needs an explicit `{#id}`. Make a fragment conditional on its `{{include:}}` line or on a section around it
+- All occurrences of one placeholder id that fix a `currency` or `unit` must fix the same one (in any document, not only templates)
 - **Alternatives:** units whose conditions can never both hold MAY share an id; `{{ref:}}` resolves to whichever survives. Two `# Dispute Resolution {#disputes when=forum:...}` sections, one per choice value, make an unconditional `{{ref: disputes}}` valid
 - Every `{{ref:}}`/`{{term:}}`/`{{attach:}}` must resolve under every combination of answers where it is present (Error otherwise); references inside drafting notes are exempt, since notes never reach the output
 
@@ -401,9 +401,9 @@ Phrases are plain text — no directives or formatting inside. Not allowed in he
 
 **Answers set** — a flat YAML/JSON map: `text` single-line string with no leading/trailing spaces; `date` `YYYY-MM-DD`; `money` `{amount: "48000.00", currency: EUR}` (or the amount string when every placeholder for it fixes the same `currency`); `duration` `{value, unit}` (or the value when every placeholder fixes the same `unit`); `boolean` `true`/`false`; `choice` a value id. Unanswered questions take their `default`; blanks with neither stay as placeholders (the result is a draft). An undeclared placeholder is answered by its id like a declared one. Only decisions actually reached need an answer — one asked only inside an absent section or a drafting note does not.
 
-**Assembly** first removes drafting notes, then removes absent units and strips `when=`, resolves `{{choose:}}`, turns answered placeholders into `{{date:}}`/`{{money:}}`/`{{duration:}}` or escaped text (every `{` and Markdown-significant character in inserted text is backslash-escaped, including block markers when the text starts a line or list item), removes `questions`, keeps identifiers stable, and collapses blank lines — byte-identical across implementations. Removal works file by file: a section ends at the next heading of its level in its own file, and an `{{include:}}` paragraph is one paragraph whatever its fragment holds. Include fragments and LegalDown attachment files are assembled with the same answers; every one still referenced is written, even if empty. Templates with includes or LegalDown attachments need a Full implementation. A question's `default` must itself be a valid answer. The optional **final** validation option (offered by validators and renderers as a job setting) rejects any remaining placeholder, drafting note, or template construct.
+**Assembly** first removes drafting notes, then removes absent units and strips `when=`, resolves `{{choose:}}`, turns answered placeholders into `{{date:}}`/`{{money:}}`/`{{duration:}}` or escaped text (every `{` and Markdown-significant character in inserted text is backslash-escaped, including block markers when the text starts a line or list item), removes `questions`, keeps identifiers stable, and collapses blank lines — byte-identical across implementations. Removal works file by file: a section ends at the next heading of the same or a higher level in its own file, and an `{{include:}}` paragraph is one paragraph whatever its fragment holds. Include fragments and LegalDown attachment files are assembled with the same answers; each one whose include line or attachment entry remains is written (as an empty file if nothing is left), and non-LegalDown attachments are left untouched. Templates with includes or LegalDown attachments need a Full implementation. A question's `default` must itself be a valid answer. The optional **final** validation option (offered by validators and renderers as a job setting) rejects any remaining placeholder, drafting note, or template construct.
 
-**Bilingual templates:** linked files share question ids, types, choice value ids, defaults (`text` defaults are translated), placeholder ids with their types and fixed currency/unit, conditions, and `{{choose:}}` parameter names; only prompts, labels, `text` defaults, notes, and phrases are translated. One answers set assembles every language.
+**Bilingual templates:** linked files share question ids, types, choice value ids, defaults (a `text` default is translated, but must be present in every language or in none), placeholder ids with their types and fixed currency/unit, conditions, and `{{choose:}}` parameter names; only prompts, labels, `text` defaults, notes, and phrases are translated. One answers set assembles every language.
 
 ## Not in the language
 
@@ -444,7 +444,7 @@ Every check in the specification carries a stable **rule id** (`heading-skip`, `
 - `{{side:}}` `side-name` is empty, malformed, or does not match any side declared in frontmatter
 - `field_types` keys that are malformed or collide with the reserved value-type names (`date`, `money`, `duration`, `party`, `text`)
 - Missing or malformed `type` on `{{field:}}`
-- Invalid `{{placeholder:}}` identifiers or inconsistent placeholder types across repeated uses
+- Invalid `{{placeholder:}}` identifiers, or repeated uses with inconsistent types or with different fixed currencies/units
 - `{{placeholder:}}` in a frontmatter identifier, structural, or format-checked field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure, anything inside `questions`, file paths, attachment `id`/`when`, language codes, `field_types`) — a representative's `name` and `title` are display values and MAY hold placeholders
 - Frontmatter present but not valid YAML
 - Missing or empty `title` when frontmatter is present
@@ -473,7 +473,7 @@ Every check in the specification carries a stable **rule id** (`heading-skip`, `
 - `{{choose:}}` on a non-decision question, not listing exactly every possible answer, or placed in a heading or frontmatter
 - `{{def:}}` inside a drafting note
 - Linked templates with different questions, non-text defaults, placeholder types/currencies/units, or conditions
-- A condition inside an include fragment of a template, or a fragment heading without an explicit id
+- In a template: `{{include:}}` outside the template's own body, a fragment included twice, or a fragment holding a condition, a drafting note, or a heading without an explicit id
 - Assembly: a needed decision with no answer and no default; an answer of the wrong form, disagreeing with a currency/unit fixed by its placeholder, or a text answer with `{{` used in frontmatter
 - Under the final option: a remaining placeholder, `questions` key, condition, `{{choose:}}`, or drafting note
 

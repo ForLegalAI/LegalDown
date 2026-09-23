@@ -42,13 +42,14 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   an ordinary LegalDown document, with defined answer forms, escaping of inserted text, and
   identifier preservation. A template without Errors assembles without Errors for every valid
   answers set. Include fragments and attachment files are assembled with the same answers, file
-  by file; fragments of a template hold no conditions and give every heading an explicit id, so
-  every inclusion assembles alike. Templates with includes or LegalDown attachments need Full.
+  by file. In a template, `{{include:}}` appears only in the template's own body, each fragment
+  is included once, and fragments hold no conditions or drafting notes and give every heading an
+  explicit id. Templates with includes or LegalDown attachments need Full.
 - **Template view (§15.8)** and the **final check (§15.9)**.
 - **`duration` placeholder type (§10.7).**
 - **Assembly capability (§17.6)**, claimable alongside any conformance level.
-- **Bilingual templates (§14.2):** linked templates share questions, defaults (other than `text`
-  defaults, which are translated), placeholder ids with their types and fixed currency or unit,
+- **Bilingual templates (§14.2):** linked templates share questions, defaults (a `text` default
+  is translated, but present in every language or in none), placeholder ids with their types and fixed currency or unit,
   conditions, and `{{choose:}}` parameter names, so one answers set assembles every language.
 - `fixtures/assembly/` — byte-exact template + answers → output cases; fixture fields
   `requires_capability` and `requires_config` values `answers` and `final`.
@@ -59,6 +60,9 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   auto-generated identifier collisions — applies only between declarations that can appear
   together (§5.2, §5.4, §5.5, §7.2).
 - A placeholder's omitted `type` defaults to its declared question's type before `text` (§10.7).
+- Repeated occurrences of one placeholder id that fix a `currency` or `unit` must fix the same one,
+  in every document (§10.7) — previously only a SHOULD. A document that gave one blank two
+  currencies now draws `placeholder-type-inconsistent` (Error): pick one currency, or use two ids.
 - `{when=...}` markers outside a condition position, and markers repeating an attribute, draw
   `anchor-misplaced`; a `{when=}`-only marker is allowed at the end of a preamble paragraph (§5.7).
 - In a template, `questions` and `attachments` are written in YAML block style, a `when` value
@@ -80,8 +84,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 |---|---|---|
 | `question-invalid`, `placeholder-question-mismatch`, `condition-invalid`, `condition-reference-unsafe`, `choose-invalid`, `drafting-note-def` | — | Error (Core) |
 | `question-unused`, `condition-never-true`, `drafting-note-unrecognized` | — | Warning (Core) |
-| `fragment-implicit-id` | — | Error (Full) |
-| `placeholder-type-inconsistent` | Same effective type | In a template, also the same fixed `currency`/`unit` |
+| `template-fragment-invalid` | — | Error (Full where it reads another file) |
+| `placeholder-type-inconsistent` | Same effective type | Also the same fixed `currency`/`unit` (previously a SHOULD with an optional Warning) |
 | `answer-missing`, `answer-invalid` | — | Error (Assembly) |
 | `answer-unknown` | — | Warning (Assembly) |
 | `placeholder-unfilled`, `template-construct-present` | — | Error (final option only) |

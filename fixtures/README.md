@@ -118,7 +118,7 @@ three lists.
 names a real §16 rule id, every expectation has the required fields and legal values, every
 referenced file exists, every asserted line is in range and not blank, every assembly case has its
 three files and an expected output free of template constructs, and `coverage.json` matches what is
-on disk. It does **not** validate or assemble LegalDown documents; that is an implementation's job.
+on disk — including its total rule count against §16. It does **not** validate or assemble LegalDown documents; that is an implementation's job.
 
 ```
 $ python fixtures/verify.py

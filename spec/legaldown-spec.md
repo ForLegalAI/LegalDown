@@ -1158,7 +1158,7 @@ Governed by the laws of {{placeholder: governing-jurisdiction}}.
 - Multiple occurrences using the same `placeholder-id` refer to the same logical blank
 - Placeholder ids form their own namespace (§5.6) — a `placeholder-id` MAY coincide with a section, attachment, or definition identifier without any relation between them
 - All occurrences of the same `placeholder-id` MUST use the same effective `type`
-- When the same `placeholder-id` appears multiple times with type-specific parameters, those parameters SHOULD remain consistent across occurrences; validators MAY emit a warning when they differ
+- When the same `placeholder-id` appears multiple times with type-specific parameters, those parameters SHOULD remain consistent across occurrences; validators MAY emit a warning when they differ. The occurrences that fix a `currency` (for `type=money`) or a `unit` (for `type=duration`) MUST all fix the same one — the same logical blank cannot hold two currencies or units — and a conflict is an Error (`placeholder-type-inconsistent`)
 
 ### 10.8 Side Directive
 
@@ -1636,7 +1636,7 @@ authoritative: en
 - Linked translation files MUST have identical heading hierarchy
 - Linked translation files MUST use identical section identifiers
 - Validators MUST check structural consistency between linked files
-- Linked templates (§15) MUST declare the same question ids, types, choice value ids, and `default` values (except `text` defaults, which are translated), use the same placeholder ids with the same effective types and fixed `currency` or `unit`, carry identical conditions on corresponding units, and list the same parameter names in corresponding `{{choose:}}` directives; only `prompt`, choice labels, `text` defaults, drafting notes, and `{{choose:}}` phrases are translated. One answers set therefore assembles every language version
+- Linked templates (§15) MUST declare the same question ids, types, choice value ids, and `default` values — except that a `text` question's default is translated, so linked templates need only agree on whether it has one — use the same placeholder ids with the same effective types and fixed `currency` or `unit`, carry identical conditions on corresponding units, and list the same parameter names in corresponding `{{choose:}}` directives; only `prompt`, choice labels, `text` defaults, drafting notes, and `{{choose:}}` phrases are translated. One answers set therefore assembles every language version, to the same state — draft or final — in each
 - Cross-references resolve to section numbers (same in both versions)
 
 **Primary and translations:**
@@ -1654,7 +1654,7 @@ Bilingual synchronization validation — a Full-level capability (§17.4) — MU
 - All section identifiers match between the linked files
 - All `{{def:}}` identifiers exist in both files
 - The linked files declare the same set of languages (each file's `language` plus its `translations` keys)
-- Linked templates declare the same questions, defaults, placeholders, and conditions (§14.2)
+- Linked templates declare the same questions, defaults (for `text` questions, only whether one is present), placeholders, and conditions (§14.2)
 
 Violations are Errors; the per-rule severities are defined in §16.7.
 
@@ -1734,7 +1734,7 @@ questions:
 - **Value questions** — `text`, `date`, `money`, `duration` — are filled through `{{placeholder:}}`. A placeholder id **is** a question id: when `questions` declares a value question with the same id as a placeholder, the declaration applies to every occurrence of that placeholder. The placeholder's effective type is then the declared type, and its inline `type` MAY be omitted; if written, it MUST equal the declared type. Declaring a value question is OPTIONAL — an undeclared placeholder behaves exactly as §10.7 defines, and for assembly it is an implicit value question of its effective type, with no prompt and no default
 - **Decision questions** — `boolean`, `choice` — are used only by conditions (§15.3) and `{{choose:}}` (§15.5). They MUST be declared before they can be used, because both constructs depend on the set of possible answers. A `{{placeholder:}}` MUST NOT use a decision question's id
 
-In a template, all occurrences of a placeholder id that fix a `currency` or `unit` MUST fix the same one — otherwise no answer could satisfy them all (§15.7.2 step 1). This tightens the SHOULD of §10.7 and is reported as `placeholder-type-inconsistent`.
+All occurrences of a placeholder id that fix a `currency` or `unit` fix the same one (§10.7), so an answer can always satisfy them.
 
 Question ids share the placeholder namespace (§5.6).
 
@@ -1776,7 +1776,7 @@ The identifier MUST be a declared decision question (§15.2). The `:v` form MUST
 
 | Unit | Marker position | Included or removed together |
 |---|---|---|
-| Section | After the heading text (§5.2) | The heading and the whole section — all content and subsections up to the next heading of the same or a higher level |
+| Section | After the heading text (§5.2) | The heading and the whole section — all content and subsections up to the next heading of the same or a higher level in the same file, or the end of that file (see Presence below) |
 | List item | End of the item's first paragraph (§5.7) | The item, including its nested blocks |
 | Top-level paragraph | End of the paragraph (§5.7) | The paragraph |
 | Preamble paragraph | End of the paragraph | The paragraph. The marker MUST NOT carry `#id` — §4.4 still excludes anchors from the preamble |
@@ -1787,7 +1787,13 @@ A marker holding `when=` in any other position is not a condition; it is literal
 
 **Presence.** The **presence condition** of a unit is the set of conditions that must all be true for it to appear in an assembled document: its own condition, if any, together with the conditions of every unit enclosing it **in the file where it is written** — its ancestor sections and the list items it is nested in — and, for content of an include fragment, the presence condition of the paragraph holding its `{{include:}}` directive, or, for content of an attachment file, the attachment's condition. For this purpose a section extends to the next heading of the same or a higher level in its own file, or to the end of that file, and an `{{include:}}` paragraph counts as one paragraph of the including file, whatever its fragment contains. A unit with an empty presence condition is always present. Directives and definitions are present when the unit containing them is present.
 
-**Include fragments in a template.** An include fragment (§12.2) of a template MAY contain placeholders, `{{choose:}}` directives, and drafting notes, but MUST NOT contain conditions, and every heading in it MUST carry an explicit identifier (§5.2). Every inclusion of a fragment therefore assembles to the same text, and assembly never has to change a fragment's headings. To make a fragment conditional, put the condition on its `{{include:}}` paragraph, or on a section that contains that paragraph.
+**Includes in a template.** A template keeps includes simple, so that every fragment has exactly one place and one presence condition:
+
+- `{{include:}}` MAY appear only in the template's own body — not inside an include fragment, a LegalDown attachment file, or a drafting note
+- Each fragment file MUST be included at most once
+- A fragment MAY contain placeholders and `{{choose:}}` directives, but MUST NOT contain conditions or drafting notes, and every heading in it MUST carry an explicit identifier (§5.2), so that assembly never has to change a fragment's structure or headings
+
+To make a fragment conditional, put the condition on its `{{include:}}` paragraph, or on a section that contains that paragraph. Violations are reported as `template-fragment-invalid` (§16.12).
 
 **Heading hierarchy.** Because a conditional section always takes its subsections with it — and, measured in its own file, any `{{include:}}` paragraph it contains — removing any combination of conditional sections, items, and paragraphs never breaks §4.1: the heading that follows a removed section is at the same level as the removed heading or higher, so it cannot skip a level relative to the heading before. The heading hierarchy therefore needs to be validated only once, on the template. A conditional include is the one exception, because its fragment's headings need not form whole sections: the combined document MUST satisfy §4.1 both with and without each conditional fragment, which `include-heading-skip` (§16.11) checks.
 
@@ -1894,12 +1900,12 @@ A `default` in a question declaration takes the same form. Answers keyed by an i
 
 #### 15.7.2 Procedure
 
-Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template and, with the same answers set, to each of its include fragments (§12.2) and LegalDown attachment files (§12.4). Steps 2–6 work file by file, using the extents and presence conditions of §15.3; only step 7 looks at the combined document. Every fragment and attachment file still referenced after step 2 is written to an output file at the same relative path — even when assembly leaves it empty — and one whose every reference was removed produces no output; where the output is written is implementation-defined. Because fragments hold no conditions and their headings carry explicit identifiers (§15.3), every inclusion of a fragment assembles to the same text. Frontmatter steps apply to the template's frontmatter. Assembling a template that has include fragments or LegalDown attachment files reads other files and therefore needs Full (§17.4, §17.6).
+Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template and, with the same answers set, to each of its include fragments (§12.2) and LegalDown attachment files (§12.4). Steps 2–6 work file by file, using the extents and presence conditions of §15.3; only step 7 looks at the combined document. Each fragment whose `{{include:}}` paragraph remains after step 2, and each LegalDown attachment file whose entry remains, is written to an output file at the same relative path; the others produce no output, and where the output is written is implementation-defined. Non-LegalDown attachment files (§3.9) are not assembly output: they are referenced unchanged. Frontmatter steps apply to the template's frontmatter. Assembling a template that has include fragments or LegalDown attachment files reads other files and therefore needs Full (§17.4, §17.6).
 
 Two terms are used below. A **blank line** is a line that is empty or holds only spaces and tabs. A frontmatter **entry** is a line together with every following line that is blank, a YAML comment line (its first non-space character is `#`), or indented more deeply than it, excluding blank and comment lines at its end — for example, the `questions:` line with the whole map beneath it, or one `- id:` item of `attachments` with its fields. Frontmatter edits are made entry by entry, which is why §15.2 requires `questions` and `attachments` in YAML block style.
 
 1. **Answers.** Every question — declared, or implicit (an undeclared placeholder, §15.2) — takes its answer from the answers set, or else from its declaration's `default`. All answers are validated before any output is produced. An answer of the wrong form for its question's type (§15.7.1), one that disagrees with a currency or unit fixed by a placeholder, or a `text` answer containing `{{` for a placeholder in frontmatter is an Error (`answer-invalid`). A decision question is **needed** when a condition or `{{choose:}}` that uses it lies in a unit whose enclosing conditions are all true and outside any drafting note — so a question asked only inside an absent section, or only inside a drafting note, needs no answer; a needed decision question with neither an answer nor a `default` is an Error (`answer-missing`). Either Error stops assembly.
-2. **Removal.** Delete every drafting note — its whole extent (§15.6). Then evaluate the presence condition of every conditional unit and remove each unit that is absent, with everything it contains. A removed unit's lines run from its first line through its last non-blank line; for a section, through the last non-blank line before the next heading of the same or a higher level in the same file, or the end of that file. A removed `{{include:}}` paragraph is removed like any paragraph; its fragment is not edited, and is not written unless another remaining `{{include:}}` refers to it. A removed attachment's entry is deleted from `attachments`; if no attachment remains, the `attachments` entry itself is deleted.
+2. **Removal.** Delete every drafting note — its whole extent (§15.6). Then evaluate the presence condition of every conditional unit and remove each unit that is absent, with everything it contains. A removed unit's lines run from its first line through its last non-blank line; for a section, through the last non-blank line before the next heading of the same or a higher level in the same file, or the end of that file. A removed `{{include:}}` paragraph is removed like any paragraph, and its fragment produces no output. A removed attachment's entry is deleted from `attachments`; if no attachment remains, the `attachments` entry itself is deleted.
 3. **Markers.** In every remaining marker, delete the `when=` attribute together with the whitespace that separated it from the other attribute. A marker left empty (`{}`) is deleted together with the spaces and tabs before it. On every remaining attachment, delete its `when` entry.
 4. **Choices.** Replace each remaining `{{choose:}}` with the phrase listed for the answer, escaped as in §15.7.3.
 5. **Blanks.** Replace each remaining `{{placeholder:}}` whose question has an answer (step 1):
@@ -1909,7 +1915,7 @@ Two terms are used below. A **blank line** is a line that is empty or holds only
    Placeholders without an answer are left unchanged, and the output is a draft (§15.1). A body line that was not blank before steps 4 and 5 and is blank after them — for example a `{{choose:}}` on its own line whose phrase is `""` — is deleted; lines that were already blank are left to step 8.
 6. **Questions.** Delete the `questions` entry.
 7. **Identifiers.** Section identifiers do not change during assembly. Compute the auto-generated identifier (§5.3, §5.5) of every heading over the combined document produced by step 6 — the body with every remaining fragment spliced in at its directive, followed by the remaining LegalDown attachment files in declared order — before any change in this step; then, for every heading without an explicit identifier whose computed identifier differs from the one it had in the template's combined document, append ` {#id}` with the template's identifier to the heading line. Fragment headings always carry explicit identifiers (§15.3), so only headings in the template and its attachment files change.
-8. **Blank lines.** In each output file, outside fenced and indented code blocks, replace every run of one or more blank lines in the body with a single empty line, and end the file with exactly one line break.
+8. **Blank lines.** In each output file, outside fenced and indented code blocks, replace every run of one or more blank lines in the body with a single empty line, and end the file with exactly one line break. An output file left with no non-blank line is written as an empty file (zero bytes).
 
 No other byte of the template changes. Two conforming implementations therefore produce byte-identical output from the same template and answers set.
 
@@ -2049,7 +2055,7 @@ Validators MUST categorize issues at three levels:
 | `field-type-undeclared` | `{{field:}}` uses a type declared in `field_types` when `field_types` is present | Warning |
 | `placeholder-id-malformed` | `{{placeholder:}}` `placeholder-id` value is non-empty and matches identifier format | Error |
 | `placeholder-type-invalid` | `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, `money`, or `duration` | Error |
-| `placeholder-type-inconsistent` | Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type` — and, in a template, fix the same `currency` or `unit` wherever one is fixed (§15.2) | Error |
+| `placeholder-type-inconsistent` | Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type`, and those that fix a `currency` or `unit` fix the same one (§10.7) | Error |
 | `placeholder-unknown-currency` | `{{placeholder:}}` `currency` parameter for `type=money` is a recognized ISO 4217 code | Warning |
 | `placeholder-in-structural-field` | `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure, `questions`) or a format-checked field (file paths, attachment `id` and `when`, language codes, `field_types`, §3.10) | Error |
 | `note-invalid` | Field spec `note` parameter is plain text and satisfies the value rules in §11.3 (unquoted: no commas or closing braces) | Error |
@@ -2105,7 +2111,7 @@ Where §3.10 permits a placeholder in a value field, a placeholder value satisfi
 | `translation-anchor-mismatch` | Section identifiers match between translations | Error |
 | `translation-def-mismatch` | Definition IDs match between translations | Error |
 | `translation-language-set-mismatch` | Linked files declare the same set of languages (`language` + `translations` keys) | Error |
-| `translation-template-mismatch` | Linked templates declare the same question ids, types, choice value ids, and defaults (`text` defaults excepted), the same placeholder ids with the same effective types and fixed currency or unit, identical conditions on corresponding units, and the same `{{choose:}}` parameter names (§14.2) | Error |
+| `translation-template-mismatch` | Linked templates declare the same question ids, types, choice value ids, and defaults (for `text` questions, the same presence of a default), the same placeholder ids with the same effective types and fixed currency or unit, identical conditions on corresponding units, and the same `{{choose:}}` parameter names (§14.2) | Error |
 | `translation-implicit-id` | Every heading and `{{def:}}` in a translation file (a linked file whose `language` differs from `authoritative`) carries an explicit identifier | Error |
 | `translation-authoritative-absent` | Auto-generated identifiers used in linked files when `authoritative` is absent (primary cannot be determined) | Warning |
 
@@ -2162,12 +2168,12 @@ Template checks (§15) — these rows are Core (§17.2) within the document itse
 | `question-invalid` | Each `questions` entry is well-formed: the id follows the identifier format, `type` is one of the six types, `choices` is present with at least two identifier-format value ids and non-empty labels for `choice` and absent otherwise, `default` meets every requirement assembly places on an answer (form, currency/unit agreement with the question's placeholders, no `{{` in a `text` default used in frontmatter), question ids, choice value ids, and undeclared placeholder ids are not YAML boolean or null words, and `questions` and a template's `attachments` are in YAML block style (§15.2) | Error |
 | `question-unused` | Each declared question is used by a `{{placeholder:}}`, a condition, or a `{{choose:}}` | Warning |
 | `placeholder-question-mismatch` | A placeholder's inline `type` equals the type of its declared question, and no placeholder uses a decision question's id (§15.2) | Error |
-| `condition-invalid` | Each condition — in a marker or in `attachments[].when` — names a declared decision question, uses the form its type requires, and names a declared value; and no condition appears inside an include fragment of a template (§15.3 — that part is Full, since it reads the fragment) | Error |
+| `condition-invalid` | Each condition — in a marker or in `attachments[].when` — names a declared decision question, uses the form its type requires, and names a declared value (§15.3) | Error |
 | `condition-never-true` | Each conditional unit's presence condition is satisfiable (§15.4); otherwise the unit can never appear | Warning |
 | `condition-reference-unsafe` | Each `{{ref:}}`, `{{term:}}`, and `{{attach:}}` outside drafting notes resolves under every combination of answers in which it is present (§15.4) | Error |
 | `choose-invalid` | Each `{{choose:}}` names a declared decision question, lists exactly its possible answers, each once, and appears outside headings and frontmatter (§15.5) | Error |
 | `drafting-note-def` | No `{{def:}}` appears inside a drafting note (§15.6) | Error |
-| `fragment-implicit-id` | Every heading in an include fragment of a template carries an explicit identifier (§15.3) — Full, since it reads the fragment | Error |
+| `template-fragment-invalid` | In a template, `{{include:}}` appears only in the template's own body (not in a fragment, an attachment file, or a drafting note); each fragment is included at most once; and a fragment holds no conditions or drafting notes and gives every heading an explicit identifier (§15.3) — Full where it reads a fragment or attachment file | Error |
 | `drafting-note-unrecognized` | A block quote whose first line looks like an alert marker (`[!` letters `]`) but is not `[!DRAFTING]` (§15.6) | Warning |
 
 Assembly checks — reported by implementations of the Assembly capability (§17.6) when assembling a template with an answers set:
@@ -2244,7 +2250,7 @@ Everything in Rendering, plus all processing that reads files beyond the documen
 - Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §16.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
 - Bilingual documents: Section 14 and the remaining §16.7 checks (cross-file structure, identifier, and language-set matching)
 - Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `supersedes.file`, `translations`) and for image paths (§8.7)
-- Template synchronization between linked translations (§14.2, the `translation-template-mismatch` row of §16.7), and the §16.12 template checks that read include fragments or attachment files, including `fragment-implicit-id`
+- Template synchronization between linked translations (§14.2, the `translation-template-mismatch` row of §16.7), and the §16.12 template checks that read include fragments or attachment files, including `template-fragment-invalid`
 
 ### 17.5 Constructs Beyond the Claimed Level
 
