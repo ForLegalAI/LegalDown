@@ -36,6 +36,36 @@ FRONTMATTER_MARKERS = (
 )
 
 
+LEGALDOWN_EXT = re.compile(r'\.(lgd|legaldown|legal\.md)$')
+
+
+def attachment_files(frontmatter):
+    """File paths of the entries in a block-style `attachments` list (quotes and comments allowed)."""
+    files, inside = [], False
+    for line in frontmatter.split('\n'):
+        if re.match(r'^attachments:\s*(#.*)?$', line):
+            inside = True
+            continue
+        if inside and line.strip() and not line.startswith((' ', '\t')) and not line.lstrip().startswith('#'):
+            inside = False
+        if inside:
+            m = re.match(r'^\s+(?:-\s+)?file:\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s#][^#]*?))\s*(#.*)?$', line)
+            if m:
+                files.append(m.group(1) or m.group(2) or m.group(3))
+    return files
+
+
+def template_reads_files(text):
+    """True when assembling the template reads other files (§15.7.2, §17.6)."""
+    front, body = '', text
+    if text.startswith('---\n') and '\n---\n' in text[4:]:
+        end = text.index('\n---\n', 4)
+        front, body = text[4:end + 1], text[end + 5:]
+    if re.search(r'\{\{include:', body) or re.search(r'^translations:', front, re.M):
+        return True
+    return any(LEGALDOWN_EXT.search(f) for f in attachment_files(front))
+
+
 def spec_rule_ids():
     text = open(os.path.join(REPO, 'spec', 'legaldown-spec.md'), encoding='utf-8').read()
     section = text[text.index('### 16.1 Validation'):text.index('## 17. Conformance')]
@@ -167,12 +197,10 @@ def check():
         template_path = os.path.join(d, 'template.lgd')
         if os.path.exists(template_path):
             source = open(template_path, encoding='utf-8').read()
-            reads_files = bool(re.search(r'\{\{include:', source)) or bool(
-                re.search(r'^\s+file:\s*"?[^"\n]*\.(lgd|legaldown|legal\.md)"?\s*$', source, re.M))
-            if reads_files and level != 'full':
-                problems.append('assembly/%s: the template has include fragments or LegalDown '
-                                'attachment files, so case.json must set requires_level "full" '
-                                '(§17.6)' % case)
+            if template_reads_files(source) and level != 'full':
+                problems.append('assembly/%s: the template has include fragments, LegalDown '
+                                'attachment files, or translations, so case.json must set '
+                                'requires_level "full" (§17.6)' % case)
         for rel, path in sorted(outputs):
             text = open(path, encoding='utf-8').read()
             if text == '':

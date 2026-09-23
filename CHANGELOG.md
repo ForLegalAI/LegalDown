@@ -45,8 +45,9 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   by file. In a template, `{{include:}}` appears only in the template's own body, each fragment
   is included once, each LegalDown attachment file serves one entry and is never also a fragment,
   and fragments hold no conditions or drafting notes and give every heading an explicit id.
-  Templates with includes or LegalDown attachments need Full. Output keeps the template's relative
-  layout, and a translation group is assembled together.
+  Templates with includes, LegalDown attachments, or `translations` need Full. Output keeps the
+  template's relative layout, and a translation group is assembled together. Unanswered blanks keep
+  their declared type inline. A draft is filled by the same procedure.
 - **Template view (§15.8)** and the **final check (§15.9)**.
 - **`duration` placeholder type (§10.7).**
 - **Assembly capability (§17.6)**, claimable alongside any conformance level.
@@ -70,7 +71,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   currencies now draws `placeholder-type-inconsistent` (Error): pick one currency, or use two ids.
 - `{when=...}` markers outside a condition position and markers repeating an attribute draw
   `anchor-misplaced`. An `#id` on a paragraph holding only an `{{include:}}` (§12.2, in any
-  document) is ignored with that Warning — move the anchor to a heading inside the fragment; a `{when=}`-only marker is allowed at the end of a preamble paragraph (§5.7).
+  document) is ignored with that Warning — move the anchor to a heading inside the fragment; in a template, a `{when=}`-only marker is allowed at the end of a preamble paragraph (§5.7); in
+  any other document it remains literal text.
 - In a template, `questions` and `attachments` are written in YAML block style, a `when` value
   starting with `!` is quoted, and choice value ids avoid the YAML 1.1 boolean/null words (§15.2,
   §15.3), so every YAML parser reads them the same way. Question ids and undeclared placeholder ids
@@ -91,7 +93,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 | `question-invalid`, `placeholder-question-mismatch`, `condition-invalid`, `condition-reference-unsafe`, `choose-invalid`, `drafting-note-def` | — | Error (Core) |
 | `question-unused`, `condition-never-true`, `drafting-note-unrecognized` | — | Warning (Core) |
 | `template-fragment-invalid` | — | Error (Full where it reads another file) |
-| `def-term-variable`, `insertion-boundary` | — | Error (Core) |
+| `def-term-variable` | — | Error (Core) |
+| `insertion-boundary` | — | Error (Core; Full where it reads a fragment) — applies to every document holding placeholders, drafts included, so a 0.1 draft with a blank glued to `&`, `<`, `**`, or a link target now draws it |
 | `placeholder-type-inconsistent` | Same effective type | Also the same fixed `currency`/`unit` (previously a SHOULD with an optional Warning) |
 | `answer-missing`, `answer-invalid` | — | Error (Assembly) |
 | `answer-unknown` | — | Warning (Assembly) |

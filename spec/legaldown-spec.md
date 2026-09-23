@@ -610,7 +610,7 @@ Provider may suspend the Services if:
 - They are **never auto-generated** — automatic generation (§5.3) applies to headings only; anchors below heading level are always explicit and opt-in
 - The anchor marker is source-only and MUST NOT appear in rendered output
 - The rendered designation of an anchored item or paragraph is produced by the renderer under the active style template (§6.3, §13.2, §13.3) — the source never contains item letters or paragraph numbers
-- A `{#id}`-like marker — or a marker holding a condition, `{when=...}` (§15.3) — in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading — except a marker holding only `when=` at the end of a preamble paragraph in a template, §15.3) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor. This Warning does **not** apply inside code spans, code blocks, or HTML comments, where anchor markers are not recognized at all (§11.4)
+- A `{#id}`-like marker — or a marker holding a condition, `{when=...}` (§15.3) — in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading — except a marker holding only `when=` at the end of a preamble paragraph in a template, §15.3, and the marker of a paragraph holding only an `{{include:}}`, which is recognized wherever that paragraph stands, §12.2) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor. This Warning does **not** apply inside code spans, code blocks, or HTML comments, where anchor markers are not recognized at all (§11.4)
 
 ---
 
@@ -1757,7 +1757,7 @@ attribute ::= "#" identifier | "when=" condition
 condition ::= [ "!" ] identifier [ ":" identifier ]
 ```
 
-- Each attribute appears at most once in a marker; writing `#id` first is RECOMMENDED. A marker that repeats an attribute, or that carries `#id` at the end of a preamble paragraph, is not a marker: it is literal text and draws `anchor-misplaced` (§16.2)
+- Each attribute appears at most once in a marker; writing `#id` first is RECOMMENDED. A marker that repeats an attribute, or that carries `#id` at the end of a preamble paragraph (other than a paragraph holding only an `{{include:}}`, where the `#id` is ignored, §12.2), is not a marker: it is literal text and draws `anchor-misplaced` (§16.2)
 - `{#id}` alone is the anchor marker of §5.2 and §5.7, unchanged
 - A marker holding only `when=` makes the unit conditional without creating an anchor; on a heading, the section identifier is then auto-generated as usual (§5.3)
 - A condition contains no whitespace, quoting, or words, so it reads identically in every document language
@@ -1876,7 +1876,7 @@ HTML comments (§8.6) keep their role: notes to whoever edits the source, never 
 
 ### 15.7 Assembly
 
-**Assembly** transforms a template and an **answers set** into a LegalDown document with no template constructs. It is a source-to-source transformation: its output is ordinary LegalDown, which can be validated, diffed, negotiated, and rendered like any other document. Assembly is a named capability (§17.6).
+**Assembly** transforms a template and an **answers set** into a LegalDown document with no template constructs. A draft — a document holding placeholders but no other template construct — is filled by the same procedure, in which only the steps for blanks apply. It is a source-to-source transformation: its output is ordinary LegalDown, which can be validated, diffed, negotiated, and rendered like any other document. Assembly is a named capability (§17.6).
 
 #### 15.7.1 Answers Set
 
@@ -1903,7 +1903,7 @@ A `default` in a question declaration takes the same form. Answers keyed by an i
 
 #### 15.7.2 Procedure
 
-Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template and, with the same answers set, to each of its include fragments (§12.2) and LegalDown attachment files (§12.4). Steps 2–6 work file by file, using the extents and presence conditions of §15.3; only step 7 looks at the combined document. Each fragment whose `{{include:}}` paragraph remains after step 2, and each LegalDown attachment file whose entry remains, is written to an output file at the same relative path; the others produce no output, and where the output is written is implementation-defined. Non-LegalDown attachment files (§3.9) are not assembly output: they are referenced unchanged. Output keeps the template's relative layout, so that every relative path in it — to non-LegalDown attachments, images, and linked translations — resolves as it did from the template; an implementation that writes the output away from the template SHOULD place copies of those files at the same relative paths. A translation group (§14) is assembled together: every linked template, with the same answers set, into the same output location. Frontmatter steps apply to the template's frontmatter. Assembling a template that has include fragments or LegalDown attachment files reads other files and therefore needs Full (§17.4, §17.6).
+Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template and, with the same answers set, to each of its include fragments (§12.2) and LegalDown attachment files (§12.4). Steps 2–6 work file by file, using the extents and presence conditions of §15.3; only step 7 looks at the combined document. Each fragment whose `{{include:}}` paragraph remains after step 2, and each LegalDown attachment file whose entry remains, is written to an output file at the same relative path; the others produce no output, and where the output is written is implementation-defined. Non-LegalDown attachment files (§3.9) are not assembly output: they are referenced unchanged. Output keeps the template's relative layout, so that every relative path in it — to non-LegalDown attachments, images, and linked translations — resolves as it did from the template; an implementation that writes the output away from the template SHOULD place copies of those files at the same relative paths. A translation group (§14) is assembled together: every linked template, with the same answers set, into the same output location. Frontmatter steps apply to the template's frontmatter. Assembling a template that has include fragments, LegalDown attachment files, or `translations` (whose linked templates are assembled with it) reads other files and therefore needs Full (§17.4, §17.6).
 
 Two terms are used below. A **blank line** is a line that is empty or holds only spaces and tabs. A frontmatter **entry** is a line together with every following line that is blank, a YAML comment line (its first non-space character is `#`), or indented more deeply than it, excluding blank and comment lines at its end — for example, the `questions:` line with the whole map beneath it, or one `- id:` item of `attachments` with its fields. Frontmatter edits are made entry by entry, which is why §15.2 requires `questions` and `attachments` in YAML block style.
 
@@ -1915,7 +1915,7 @@ Two terms are used below. A **blank line** is a line that is empty or holds only
    - in the body — `text` by the answer, escaped as in §15.7.3; `date` by `{{date: YYYY-MM-DD}}`; `money` by `{{money: AMOUNT, currency=CODE}}`; `duration` by `{{duration: VALUE, unit=UNIT}}`, taking the currency or unit from the placeholder's parameter or else from the answer. A `note` parameter on the placeholder is appended to the new directive exactly as written; on a `text` placeholder it is dropped
    - in frontmatter — the directive text inside the quoted scalar is replaced by the answer as plain text: `text` as written; `date` as `YYYY-MM-DD`; `money` as `AMOUNT CODE`; `duration` as `VALUE UNIT`. The result is escaped for the enclosing YAML scalar: in a double-quoted scalar, `\` and `"` become `\\` and `\"`; in a single-quoted scalar, `'` becomes `''`
 
-   Placeholders without an answer are left unchanged, and the output is a draft (§15.1). A body line that was not blank before steps 4 and 5 and is blank after them — for example a `{{choose:}}` on its own line whose phrase is `""` — is deleted; lines that were already blank are left to step 8.
+   Placeholders without an answer stay, and the output is a draft (§15.1); because step 6 deletes `questions`, each one whose type came from its declaration gets that type written inline — `, type=TYPE` inserted directly after its id, unless a `type` is already written — so that it keeps its type, and with it any `currency` or `unit` parameter, in the draft. A body line that was not blank before steps 4 and 5 and is blank after them — for example a `{{choose:}}` on its own line whose phrase is `""` — is deleted; lines that were already blank are left to step 8.
 6. **Questions.** Delete the `questions` entry.
 7. **Identifiers.** Section identifiers do not change during assembly. Compute the auto-generated identifier (§5.3, §5.5) of every heading over the combined document produced by step 6 — the body with every remaining fragment spliced in at its directive, followed by the remaining LegalDown attachment files in declared order — before any change in this step; then, for every heading without an explicit identifier whose computed identifier differs from the one it had in the template's combined document, append ` {#id}` with the template's identifier to the heading line. Fragment headings always carry explicit identifiers (§15.3), so only headings in the template and its attachment files change.
 8. **Blank lines.** In each output file, outside fenced and indented code blocks, replace every run of one or more blank lines in the body with a single empty line, and end the file with exactly one line break. An output file left with no non-blank line is written as an empty file (zero bytes).
@@ -1924,25 +1924,21 @@ No other byte of the template changes. Two conforming implementations therefore 
 
 #### 15.7.3 Escaping Inserted Text
 
-**Boundaries.** Escaping works on the inserted text alone, so a template must keep every insertion apart from template text it could combine with. In the body of a template, of its include fragments, and of its LegalDown attachment files, each `{{placeholder:}}` and `{{choose:}}` MUST satisfy all of the following (violations are reported as `insertion-boundary`, §16.12):
+**Boundaries.** Escaping works on the inserted text alone, so a template must keep every insertion apart from template text it could combine with. In the body of any document holding placeholders — a template, its include fragments and LegalDown attachment files, or a draft — each `{{placeholder:}}` and `{{choose:}}` MUST satisfy all of the following (violations are reported as `insertion-boundary`, §16.12):
 
 - **Before it:** a letter or digit, a space or tab, the start of the line or of a list item's or block quote's content, the end of another directive (`}}`), or one of `(` `"` `'` `“` `‘` `„` `«` `/` `-` — but not a `(` that directly follows `]`
 - **Around it:** the template text from the preceding space (or line start) up to the insertion contains no `&`, `<`, or `\`, so that no character reference, autolink, or escape can span the boundary
 - **After it:** a letter or digit, a space or tab, the end of the line, the start of another directive (`{{`), or one of `.` `,` `;` `:` `)` `!` `?` `"` `'` `”` `’` `»` `/` `-`
-- **Not in a link or image destination:** it MUST NOT lie between `](` and the next `)` on its line, where an answer could create a link, an image, or a file path
+- **Not in a link or image destination:** it MUST NOT lie between `](` and the next `)` on its line, nor on a line that is a link reference definition (`[label]: destination`), where an answer could create a link, an image, a title, or a file path
 
-These rules keep emphasis markers, brackets, and other Markdown punctuation away from insertions, so an insertion — including a `{{choose:}}` phrase that is empty — can never complete, break, or create a construct of the surrounding template.
-
+These rules keep emphasis markers, brackets, and other Markdown punctuation away from insertions, so an insertion — including a `{{choose:}}` phrase that is empty — can never complete, break, or create an inline construct of the surrounding template; block constructs at the start of a line are handled by the line-start rule below.
 
 Text answers and `{{choose:}}` phrases are literal text, and assembly MUST insert them so that the assembled document renders them exactly as written. The assembler inserts a backslash (§11.4, CommonMark backslash escapes):
 
 - before every `\`, `` ` ``, `*`, `_`, `[`, `]`, `<`, `|`, and `{` in the inserted text — so that no emphasis, link, code, table cell, directive (`{{`), anchor (`{#`), or condition (`{when=`) can form
 - before every `&` in the inserted text that is followed in the output by `#` or an ASCII letter — so that no character reference can form, even with template text that follows
 
-An insertion is at a **block start** when only spaces or tabs precede it on its line, optionally after a list-item marker (`-`, `+`, `*`, or digits followed by `.` or `)`) or block-quote markers (`>`) and the spaces after them. At a block start, the assembler first removes any spaces and tabs at the beginning of the inserted text, then:
-
-- inserts a backslash before its first character if that is `#`, `>`, `-`, `+`, `=`, or `~`
-- if it begins with ASCII digits and the character that follows those digits in the output — from the inserted text or from the template text after it — is `.` or `)`, inserts a backslash before that `.` or `)`
+**Line starts.** When an insertion begins the content of its line — only spaces or tabs precede it, after any list-item or block-quote markers the template line has — the assembler first removes any spaces and tabs at the beginning of the inserted text. Then, for every line that holds an insertion: if the line as assembled would begin a block construct that the template line did not — an ATX heading, a block quote, a list item, a thematic break, a setext heading underline, a code fence, or an HTML block (as CommonMark defines them) — the assembler inserts a backslash before the first character of the line's content (after the template line's own indentation and container markers), or, when that content begins with ASCII digits forming an ordered-list marker, before the `.` or `)` that ends the marker. The character escaped may come from inserted text or from the template, for example when an empty `{{choose:}}` phrase leaves the template text that follows it at the start of the line.
 
 No other character is escaped, so ordinary legal text — names, addresses, `s.r.o.`, `Smith & Co.` — is inserted unchanged.
 
@@ -2188,7 +2184,7 @@ Template checks (§15) — these rows are Core (§17.2) within the document itse
 | `choose-invalid` | Each `{{choose:}}` names a declared decision question, lists exactly its possible answers, each once, and appears outside headings and frontmatter (§15.5) | Error |
 | `drafting-note-def` | No `{{def:}}` appears inside a drafting note (§15.6) | Error |
 | `def-term-variable` | No `{{placeholder:}}` or `{{choose:}}` appears inside the quoted term a `{{def:}}` defines (§15.5) | Error |
-| `insertion-boundary` | Every `{{placeholder:}}` and `{{choose:}}` in the body of a template, its fragments, and its LegalDown attachment files is separated from template text as §15.7.3 requires: permitted characters before and after, no `&`, `<`, or `\` in the run of text before it, and not inside a link or image destination (Full where it reads a fragment or attachment file) | Error |
+| `insertion-boundary` | Every `{{placeholder:}}` and `{{choose:}}` in the body of a document holding placeholders (a template, its fragments and LegalDown attachment files, or a draft) is separated from template text as §15.7.3 requires: permitted characters before and after, no `&`, `<`, or `\` in the run of text before it, and not inside a link or image destination or a link reference definition (Full where it reads a fragment or attachment file) | Error |
 | `template-fragment-invalid` | In a template, `{{include:}}` appears only in the template's own body (not in a fragment, an attachment file, or a drafting note); each fragment is included at most once; each LegalDown attachment file is declared by at most one entry and is not also a fragment; and a fragment holds no conditions or drafting notes and gives every heading an explicit identifier (§15.3) — Full where it reads a fragment or attachment file | Error |
 | `drafting-note-unrecognized` | A block quote whose first line looks like an alert marker (`[!` letters `]`) but is not `[!DRAFTING]` (§15.6) | Warning |
 
@@ -2277,7 +2273,7 @@ An implementation that encounters a construct whose processing lies beyond its c
 
 ### 17.6 Assembly Capability
 
-Assembly (§15.7) reads an answers set, so it lies outside the three levels. It is a named **capability** that an implementation MAY claim together with any level — for example "Core + Assembly" for a document-generation service handling single-file templates, or "Rendering + Assembly" for an editor with a live preview of an answered template. Assembling a template with include fragments or LegalDown attachment files also reads those files, which is Full (§17.4): below Full, an implementation claiming Assembly MUST refuse such a template (§17.5) rather than assemble it partially. An implementation claiming Assembly MUST:
+Assembly (§15.7) reads an answers set, so it lies outside the three levels. It is a named **capability** that an implementation MAY claim together with any level — for example "Core + Assembly" for a document-generation service handling single-file templates, or "Rendering + Assembly" for an editor with a live preview of an answered template. Assembling a template with include fragments, LegalDown attachment files, or `translations` also reads those files, which is Full (§17.4): below Full, an implementation claiming Assembly MUST refuse such a template (§17.5) rather than assemble it partially. An implementation claiming Assembly MUST:
 
 - Perform assembly exactly as §15.7 defines, producing byte-identical output for the same template and answers set
 - Report the assembly rows of §16.12
