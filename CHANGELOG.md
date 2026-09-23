@@ -45,7 +45,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   by file. In a template, `{{include:}}` appears only in the template's own body, each fragment
   is included once, each LegalDown attachment file serves one entry and is never also a fragment,
   and fragments hold no conditions or drafting notes and give every heading an explicit id.
-  Templates with includes or LegalDown attachments need Full.
+  Templates with includes or LegalDown attachments need Full. Output keeps the template's relative
+  layout, and a translation group is assembled together.
 - **Template view (§15.8)** and the **final check (§15.9)**.
 - **`duration` placeholder type (§10.7).**
 - **Assembly capability (§17.6)**, claimable alongside any conformance level.
@@ -67,7 +68,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 - Repeated occurrences of one placeholder id that fix a `currency` or `unit` must fix the same one,
   in every document (§10.7) — previously only a SHOULD. A document that gave one blank two
   currencies now draws `placeholder-type-inconsistent` (Error): pick one currency, or use two ids.
-- `{when=...}` markers outside a condition position, and markers repeating an attribute, draw
+- `{when=...}` markers outside a condition position, markers repeating an attribute, and an
+  anchor on a paragraph holding only an `{{include:}}` (§12.2, in any document) draw
   `anchor-misplaced`; a `{when=}`-only marker is allowed at the end of a preamble paragraph (§5.7).
 - In a template, `questions` and `attachments` are written in YAML block style, a `when` value
   starting with `!` is quoted, and choice value ids avoid the YAML 1.1 boolean/null words (§15.2,
@@ -89,6 +91,7 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 | `question-invalid`, `placeholder-question-mismatch`, `condition-invalid`, `condition-reference-unsafe`, `choose-invalid`, `drafting-note-def` | — | Error (Core) |
 | `question-unused`, `condition-never-true`, `drafting-note-unrecognized` | — | Warning (Core) |
 | `template-fragment-invalid` | — | Error (Full where it reads another file) |
+| `def-term-variable`, `insertion-boundary` | — | Error (Core) |
 | `placeholder-type-inconsistent` | Same effective type | Also the same fixed `currency`/`unit` (previously a SHOULD with an optional Warning) |
 | `answer-missing`, `answer-invalid` | — | Error (Assembly) |
 | `answer-unknown` | — | Warning (Assembly) |
@@ -109,7 +112,7 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   §8.6, §10.3, §10.7, §11.1, §11.2, §11.4, §12.2, §13.1, §13.5, §13.7, §14.2–§14.3, §16.1–§16.5,
   §16.7, §16.10, §16.11, new §16.12, §17.2–§17.4, new §17.6, §19; "style template" wording
   throughout; sections 15–18 renumbered 16–19; version 0.2 DRAFT
-- `fixtures/` — 16 new rule fixtures, five byte-exact `assembly/` cases (one with multi-file
+- `fixtures/` — 18 new rule fixtures, five byte-exact `assembly/` cases (one with multi-file
   `expected/` output and a `case.json` level), a currency case for
   `placeholder-type-inconsistent`, `verify.py`,
   `coverage.json`, README

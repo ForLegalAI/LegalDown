@@ -1,5 +1,5 @@
 {
-  "total_rules": 114,
+  "total_rules": 116,
   "covered": [
     "amend-def-override",
     "amend-term-undefined",
@@ -36,6 +36,7 @@
     "def-lossy-slug",
     "def-no-quoted-span",
     "def-single-quote-ambiguous",
+    "def-term-variable",
     "def-unreferenced",
     "definition-circular",
     "definition-used-before-declaration",
@@ -64,6 +65,7 @@
     "include-has-h1",
     "include-heading-skip",
     "include-not-legaldown",
+    "insertion-boundary",
     "issuer-side-required",
     "language-code-invalid",
     "metadata-date-invalid",

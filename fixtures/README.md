@@ -106,7 +106,7 @@ The five `assembly/` cases:
 
 ## Coverage
 
-**111 of the 114 rules in §16 have fixtures.** The remaining three are recorded in
+**113 of the 116 rules in §16 have fixtures.** The remaining three are recorded in
 [`coverage.json`](coverage.json) with a reason, so the corpus never implies coverage it does not
 have:
 

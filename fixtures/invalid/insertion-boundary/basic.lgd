@@ -1,0 +1,25 @@
+---
+title: Fixture
+document_type: contract
+questions:
+  client-short-name:
+    type: text
+    prompt: Short name of the Client
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# Notices {#notices}
+
+Notices are sent by post to AT&{{placeholder: client-short-name}} at its registered office.

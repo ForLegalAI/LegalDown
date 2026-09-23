@@ -131,11 +131,16 @@ def check():
             if not os.path.exists(os.path.join(d, f)):
                 problems.append('assembly/%s: missing %s' % (case, f))
         case_file = os.path.join(d, 'case.json')
+        level = 'core'
         if os.path.exists(case_file):
             meta = json.load(open(case_file, encoding='utf-8'))
-            if meta.get('requires_level', 'core') not in TIERS:
+            if not isinstance(meta, dict):
+                problems.append('assembly/%s: case.json must be an object' % case)
+                meta = {}
+            level = meta.get('requires_level', 'core')
+            if level not in TIERS:
                 problems.append('assembly/%s: case.json requires_level %r not in %s'
-                                % (case, meta.get('requires_level'), sorted(TIERS)))
+                                % (case, level, sorted(TIERS)))
         # Output is either a single expected.lgd, or an expected/ tree holding every output file
         # (template.lgd plus fragments and LegalDown attachment files at their relative paths).
         single = os.path.join(d, 'expected.lgd')
@@ -154,6 +159,9 @@ def check():
                     if rel != 'template.lgd' and not os.path.exists(os.path.join(d, rel)):
                         problems.append('assembly/%s: expected/%s has no input file %s'
                                         % (case, rel, rel))
+            if len(outputs) > 1 and level != 'full':
+                problems.append('assembly/%s: writes fragment or attachment files, so case.json '
+                                'must set requires_level "full" (§17.6)' % case)
         elif os.path.exists(single):
             outputs = [('template.lgd', single)]
         else:

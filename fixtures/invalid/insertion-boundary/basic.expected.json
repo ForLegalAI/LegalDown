@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "insertion-boundary",
+      "level": "error",
+      "line": 25
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "A blank directly after \"&\" could combine with the answer into a character reference."
+}

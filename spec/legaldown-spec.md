@@ -610,7 +610,7 @@ Provider may suspend the Services if:
 - They are **never auto-generated** — automatic generation (§5.3) applies to headings only; anchors below heading level are always explicit and opt-in
 - The anchor marker is source-only and MUST NOT appear in rendered output
 - The rendered designation of an anchored item or paragraph is produced by the renderer under the active style template (§6.3, §13.2, §13.3) — the source never contains item letters or paragraph numbers
-- A `{#id}`-like marker — or a marker holding a condition, `{when=...}` (§15.3) — in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading — except a marker holding only `when=` at the end of a preamble paragraph in a template, §15.3) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor. This Warning does **not** apply inside code spans, code blocks, or HTML comments, where anchor markers are not recognized at all (§11.4)
+- A `{#id}`-like marker — or a marker holding a condition, `{when=...}` (§15.3) — in any other position (mid-paragraph, in a table cell, on a block quote, on a paragraph holding only an `{{include:}}` (§12.2), before the first heading — except a marker holding only `when=` at the end of a preamble paragraph in a template, §15.3) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor. This Warning does **not** apply inside code spans, code blocks, or HTML comments, where anchor markers are not recognized at all (§11.4)
 
 ---
 
@@ -1332,6 +1332,7 @@ Include targets use the same file model as LegalDown attachment files (§12.4): 
 - Content is spliced verbatim at the directive position; heading levels are **not** re-based. The combined document MUST satisfy the heading hierarchy rules (§4.1) — a fragment whose headings would skip a level at its insertion point is invalid
 - A fragment MAY itself contain `{{include:}}` directives; circular includes MUST be detected across the entire include chain and rejected with an error — except in a template, where `{{include:}}` appears only in the template's own body (§15.3)
 - In a template, a paragraph consisting of a single `{{include:}}` MAY carry a condition that includes or omits the whole fragment (§15.3); a template's fragments are further restricted by §15.3 (included once, no nested includes, conditions, or drafting notes, explicit heading identifiers)
+- A paragraph consisting only of an `{{include:}}` directive MUST NOT carry an anchor (`#id`), in any document: the paragraph is replaced by its fragment, so it is not a reference target. Such a marker is literal text and draws `anchor-misplaced` (§16.2)
 - A `{{def:}}` inside an included fragment registers a document-wide term, exactly as in attachment files (§7.2, §12.4)
 - Section identifiers in included fragments MUST be unique across the entire combined document, except between alternatives in a template (§15.4)
 - Validation of the combined document (including all inclusions) is REQUIRED (§16.11)
@@ -1636,7 +1637,7 @@ authoritative: en
 - Linked translation files MUST have identical heading hierarchy
 - Linked translation files MUST use identical section identifiers
 - Validators MUST check structural consistency between linked files
-- Linked templates (§15) MUST declare the same question ids, types, choice value ids, and `default` values — except that a `text` question's default is translated, so linked templates need only agree on whether it has one — use the same placeholder ids with the same effective types and fixed `currency` or `unit`, carry identical conditions on corresponding units — sections matched by identifier; list items and ordinary top-level paragraphs matched by their explicit anchors, which every conditional item and such paragraph in a linked template MUST therefore carry; conditional preamble paragraphs, which cannot carry anchors (§4.4), matched in order within the preamble; conditional `{{include:}}` paragraphs, which carry no anchor (§15.3), matched in order within their section; and attachments matched by id — and list the same parameter names in corresponding `{{choose:}}` directives; only `prompt`, choice labels, `text` defaults, drafting notes, and `{{choose:}}` phrases are translated. One answers set therefore assembles every language version, to the same state — draft or final — in each
+- Linked templates (§15) MUST declare the same question ids, types, choice value ids, and `default` values — except that a `text` question's default is translated, so linked templates need only agree on whether it has one — use the same placeholder ids with the same effective types and fixed `currency` or `unit`, carry identical conditions on corresponding units — sections matched by identifier (and, where alternatives share an identifier, §15.4, by identifier and condition); list items and ordinary top-level paragraphs matched by their explicit anchors, which every conditional item and such paragraph in a linked template MUST therefore carry; conditional preamble paragraphs, which cannot carry anchors (§4.4), matched in order within the preamble; conditional `{{include:}}` paragraphs, which carry no anchor (§15.3), matched in order within their section; and attachments matched by id (and condition, for alternatives) — and list the same parameter names in corresponding `{{choose:}}` directives; only `prompt`, choice labels, `text` defaults, drafting notes, and `{{choose:}}` phrases are translated. One answers set therefore assembles every language version, to the same state — draft or final — in each
 - Cross-references resolve to section numbers (same in both versions)
 
 **Primary and translations:**
@@ -1840,6 +1841,7 @@ The fee is payable within thirty days of invoice{{choose: vat, true=", plus VAT"
 **Rules:**
 
 - The positional value MUST be the id of a declared decision question (§15.2)
+- Neither `{{choose:}}` nor `{{placeholder:}}` may appear inside the quoted term that a `{{def:}}` defines (§7.2): the term — and any identifier derived from it — must be the same in every assembled document (`def-term-variable`)
 - For a `choice` question, the named parameters are its value ids; for a `boolean` question, they are `true` and `false`
 - The directive MUST list **every** possible answer exactly once, and MUST NOT list any other parameter — for `{{choose:}}`, an undefined parameter is an Error (`choose-invalid`) rather than the general Warning of §11.2. An empty value (`""`) produces no text. Because every answer must be listed, adding a value to a `choice` question makes each `{{choose:}}` that does not cover it invalid, so no phrase can go missing unnoticed
 - Values are plain text, in the document's `language`, and follow §11.3 — quote them when they contain a comma. They are inserted as literal text, so Markdown characters in a value render as written (§15.7.3), and they cannot hold directives: a `{{` inside a value is literal text and draws `brace-stray` (§16.2). A variant that needs a defined term, a reference, or a blank is written as a conditional unit instead (§15.3–§15.4)
@@ -1901,7 +1903,7 @@ A `default` in a question declaration takes the same form. Answers keyed by an i
 
 #### 15.7.2 Procedure
 
-Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template and, with the same answers set, to each of its include fragments (§12.2) and LegalDown attachment files (§12.4). Steps 2–6 work file by file, using the extents and presence conditions of §15.3; only step 7 looks at the combined document. Each fragment whose `{{include:}}` paragraph remains after step 2, and each LegalDown attachment file whose entry remains, is written to an output file at the same relative path; the others produce no output, and where the output is written is implementation-defined. Non-LegalDown attachment files (§3.9) are not assembly output: they are referenced unchanged. Frontmatter steps apply to the template's frontmatter. Assembling a template that has include fragments or LegalDown attachment files reads other files and therefore needs Full (§17.4, §17.6).
+Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template and, with the same answers set, to each of its include fragments (§12.2) and LegalDown attachment files (§12.4). Steps 2–6 work file by file, using the extents and presence conditions of §15.3; only step 7 looks at the combined document. Each fragment whose `{{include:}}` paragraph remains after step 2, and each LegalDown attachment file whose entry remains, is written to an output file at the same relative path; the others produce no output, and where the output is written is implementation-defined. Non-LegalDown attachment files (§3.9) are not assembly output: they are referenced unchanged. Output keeps the template's relative layout, so that every relative path in it — to non-LegalDown attachments, images, and linked translations — resolves as it did from the template; an implementation that writes the output away from the template SHOULD place copies of those files at the same relative paths. A translation group (§14) is assembled together: every linked template, with the same answers set, into the same output location. Frontmatter steps apply to the template's frontmatter. Assembling a template that has include fragments or LegalDown attachment files reads other files and therefore needs Full (§17.4, §17.6).
 
 Two terms are used below. A **blank line** is a line that is empty or holds only spaces and tabs. A frontmatter **entry** is a line together with every following line that is blank, a YAML comment line (its first non-space character is `#`), or indented more deeply than it, excluding blank and comment lines at its end — for example, the `questions:` line with the whole map beneath it, or one `- id:` item of `attachments` with its fields. Frontmatter edits are made entry by entry, which is why §15.2 requires `questions` and `attachments` in YAML block style.
 
@@ -1922,6 +1924,8 @@ No other byte of the template changes. Two conforming implementations therefore 
 
 #### 15.7.3 Escaping Inserted Text
 
+**Boundaries.** Escaping works on the inserted text, so a template must not place an insertion where it could combine with the template text beside it. In a template's body, `{{placeholder:}}` and `{{choose:}}` MUST NOT be immediately preceded by `\`, `&`, `<`, `!`, or `]`, and MUST NOT be immediately followed by `[` or `(` — for example `AT&{{placeholder: x}}` could form a character reference, and `{{placeholder: x}}[link](…)` an image if the answer ends in `!`. Violations are reported as `insertion-boundary` (§16.12). Ordinary punctuation after an insertion — `.`, `,`, `;`, `)` — is unaffected.
+
 Text answers and `{{choose:}}` phrases are literal text, and assembly MUST insert them so that the assembled document renders them exactly as written. The assembler inserts a backslash (§11.4, CommonMark backslash escapes):
 
 - before every `\`, `` ` ``, `*`, `_`, `[`, `]`, `<`, `|`, and `{` in the inserted text — so that no emphasis, link, code, table cell, directive (`{{`), anchor (`{#`), or condition (`{when=`) can form
@@ -1936,7 +1940,7 @@ No other character is escaped, so ordinary legal text — names, addresses, `s.r
 
 #### 15.7.4 The Assembly Guarantee (Non-Normative)
 
-If a template has no Errors at a given conformance level, every document assembled from it has no Errors at that level:
+If a template has no Errors at a given conformance level, every document assembled from it has no Errors at that level — read where the files it references resolve at the same relative paths as they did from the template (§15.7.2):
 
 | Could fail after assembly | Prevented by |
 |---|---|
@@ -1946,7 +1950,8 @@ If a template has no Errors at a given conformance level, every document assembl
 | Changed auto-generated identifiers | Identifier preservation (§15.7.2 step 7) |
 | Invalid dates, amounts, durations | Answer validation (§15.7.2 step 1) |
 | A missing phrase | `{{choose:}}` lists every answer (§15.5) |
-| Inserted text read as Markdown or directives | Escaping (§15.7.3) |
+| Inserted text read as Markdown or directives | Escaping and insertion boundaries (§15.7.3) |
+| A defined term or its identifier changed by an answer | `def-term-variable` (§15.5) |
 
 Warnings may still appear — for example `def-unreferenced` when a term was used only in a removed section — because a Warning asks for review rather than signalling a broken document.
 
@@ -1998,7 +2003,7 @@ Validators MUST categorize issues at three levels:
 | `heading-skip` | Heading levels do not skip | Error |
 | `heading-depth` | Heading depth does not exceed level 5 | Error |
 | `anchor-duplicate` | Explicit anchors (section identifiers, item and paragraph anchors) are unique within the anchor namespace (alternatives in a template excepted, §15.4) | Error |
-| `anchor-misplaced` | `{#id}`-like or `{when=...}` marker outside an anchor or condition position (likely misplaced anchor, §5.7; not raised inside code spans, code blocks, or comments, §11.4) | Warning |
+| `anchor-misplaced` | `{#id}`-like or `{when=...}` marker outside an anchor or condition position — including `#id` on a paragraph that holds only an `{{include:}}` (§12.2) — (likely misplaced anchor, §5.7; not raised inside code spans, code blocks, or comments, §11.4) | Warning |
 | `anchor-autogen-collision` | Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
 | `anchor-lossy-slug` | Auto-generated identifier lost non-transliterable letters or digits (§5.3 — explicit identifier recommended) | Warning |
 | `anchor-format` | Section identifiers follow naming rules | Error |
@@ -2174,6 +2179,8 @@ Template checks (§15) — these rows are Core (§17.2) within the document itse
 | `condition-reference-unsafe` | Each `{{ref:}}`, `{{term:}}`, and `{{attach:}}` outside drafting notes resolves under every combination of answers in which it is present (§15.4) | Error |
 | `choose-invalid` | Each `{{choose:}}` names a declared decision question, lists exactly its possible answers, each once, and appears outside headings and frontmatter (§15.5) | Error |
 | `drafting-note-def` | No `{{def:}}` appears inside a drafting note (§15.6) | Error |
+| `def-term-variable` | No `{{placeholder:}}` or `{{choose:}}` appears inside the quoted term a `{{def:}}` defines (§15.5) | Error |
+| `insertion-boundary` | No `{{placeholder:}}` or `{{choose:}}` in the body is immediately preceded by `\`, `&`, `<`, `!`, or `]`, or immediately followed by `[` or `(` (§15.7.3) | Error |
 | `template-fragment-invalid` | In a template, `{{include:}}` appears only in the template's own body (not in a fragment, an attachment file, or a drafting note); each fragment is included at most once; each LegalDown attachment file is declared by at most one entry and is not also a fragment; and a fragment holds no conditions or drafting notes and gives every heading an explicit identifier (§15.3) — Full where it reads a fragment or attachment file | Error |
 | `drafting-note-unrecognized` | A block quote whose first line looks like an alert marker (`[!` letters `]`) but is not `[!DRAFTING]` (§15.6) | Warning |
 
@@ -2251,7 +2258,7 @@ Everything in Rendering, plus all processing that reads files beyond the documen
 - Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §16.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
 - Bilingual documents: Section 14 and the remaining §16.7 checks (cross-file structure, identifier, and language-set matching)
 - Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `supersedes.file`, `translations`) and for image paths (§8.7)
-- Template synchronization between linked translations (§14.2, the `translation-template-mismatch` row of §16.7), and the parts of the §16.12 template checks that read include fragments or attachment files — for `template-fragment-invalid`, the checks on a fragment's own content (no conditions, drafting notes, or nested includes, explicit heading identifiers); its other parts need only the template and are Core
+- Template synchronization between linked translations (§14.2, the `translation-template-mismatch` row of §16.7), and every part of a §16.12 template check that reads an include fragment or attachment file — for `template-fragment-invalid`, the checks on a fragment's content (no conditions, drafting notes, or nested includes; explicit heading identifiers) and on `{{include:}}` inside an attachment file; its other parts (an include inside a drafting note, a fragment included twice, an attachment file declared twice or also used as a fragment) need only the template and are Core
 
 ### 17.5 Constructs Beyond the Claimed Level
 
