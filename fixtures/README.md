@@ -26,6 +26,11 @@ fixtures/
       main.lgd                 entry point named by "entry"
       <supporting files>
       expected.json
+  assembly/
+    <case>/                    one template assembly (§15.7)
+      template.lgd             a template that MUST produce no Errors
+      answers.yaml             the answers set
+      expected.lgd             the exact bytes assembly MUST produce
 ```
 
 Directory names are **rule ids** as defined in §16.1 — stable identifiers that survive section
@@ -52,7 +57,8 @@ renumbering.
 | `diagnostics` | Diagnostics that MUST appear. Matching is on `rule` + `level` (+ `line` when given) |
 | `exhaustive` | When `true`, the listed diagnostics are the **only** ones permitted. Default `false` |
 | `requires_level` | Lowest conformance level (§17) that can evaluate the case: `core`, `rendering`, or `full` |
-| `requires_config` | Optional. Configuration the case depends on, e.g. `{"document_root": "."}` (paths relative to the case directory). Runners that cannot supply it skip the case and report it as skipped |
+| `requires_capability` | Optional. A named capability the case needs beyond its level — currently only `assembly` (§17.6) |
+| `requires_config` | Optional. Configuration the case depends on, e.g. `{"document_root": "."}` (paths relative to the case directory), `{"answers": "answers.yaml"}` (assemble with this answers set, §15.7), or `{"final": true}` (validate under the final option, §15.9). Runners that cannot supply it skip the case and report it as skipped |
 | `spec` | Section the rule is defined in — informational |
 | `note` | Why the case trips the rule — informational |
 
@@ -73,12 +79,22 @@ runner must:
 2. For each `invalid/` case — validate `entry` and assert every listed diagnostic is present,
    matching on rule id and level (and line, where given). With `exhaustive: true`, assert nothing
    else is reported.
-3. Skip any case whose `requires_level` exceeds the implementation's claimed conformance level, and
-   report it as skipped rather than passed — §17.5 forbids reporting checks that were not run.
+3. For each `assembly/` case — validate `template.lgd` and assert no Error-level diagnostics, then
+   assemble it with `answers.yaml` and assert the output is **byte-identical** to `expected.lgd`.
+   These cases need the Assembly capability (§17.6).
+4. Skip any case whose `requires_level` exceeds the implementation's claimed conformance level, or
+   that needs a capability or configuration the implementation lacks, and report it as skipped
+   rather than passed — §17.5 forbids reporting checks that were not run.
+
+The three `assembly/` cases cover, between them, every step of §15.7.2: removing conditional
+sections, alternatives, items, and paragraphs; stripping markers; resolving `{{choose:}}`; filling
+placeholders in body and frontmatter; removing drafting notes and `questions`; preserving an
+auto-generated identifier that would otherwise change (`identifier-preservation`); collapsing
+blank lines; and escaping inserted text (`escaping`).
 
 ## Coverage
 
-**95 of the 98 rules in §16 have fixtures.** The remaining three are recorded in
+**109 of the 112 rules in §16 have fixtures.** The remaining three are recorded in
 [`coverage.json`](coverage.json) with a reason, so the corpus never implies coverage it does not
 have:
 
@@ -95,8 +111,9 @@ three lists.
 
 [`verify.py`](verify.py) checks that the corpus is well-formed and honest — that every directory
 names a real §16 rule id, every expectation has the required fields and legal values, every
-referenced file exists, every asserted line is in range and not blank, and `coverage.json` matches
-what is on disk. It does **not** validate LegalDown documents; that is an implementation's job.
+referenced file exists, every asserted line is in range and not blank, every assembly case has its
+three files and an expected output free of template constructs, and `coverage.json` matches what is
+on disk. It does **not** validate or assemble LegalDown documents; that is an implementation's job.
 
 ```
 $ python fixtures/verify.py

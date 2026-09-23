@@ -1,0 +1,29 @@
+---
+title: Fixture
+document_type: contract
+questions:
+  extended-scope:
+    type: boolean
+    prompt: Include the extended scope?
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# Services {when=extended-scope}
+
+The Provider shall provide the extended services.
+
+# Services
+
+The Provider shall provide the core services.

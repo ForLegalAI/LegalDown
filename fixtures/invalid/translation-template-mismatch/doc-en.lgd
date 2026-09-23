@@ -1,0 +1,15 @@
+---
+title: Agreement
+language: en
+authoritative: en
+translations:
+  fr: doc-fr.lgd
+questions:
+  non-solicit:
+    type: boolean
+    prompt: Include a non-solicitation covenant?
+---
+
+# Non-Solicitation {#non-solicit when=non-solicit}
+
+Neither party shall solicit the other's employees.

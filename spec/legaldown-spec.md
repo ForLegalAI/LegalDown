@@ -1,7 +1,7 @@
 # LegalDown Specification
-## Version 0.1 DRAFT
+## Version 0.2 DRAFT
 
-**Revision:** 2026-08-14 — change history in [CHANGELOG.md](../CHANGELOG.md)
+**Revision:** 2026-09-23 — change history in [CHANGELOG.md](../CHANGELOG.md)
 
 ---
 
@@ -36,6 +36,7 @@ LegalDown is a superset of CommonMark (standard Markdown). All valid CommonMark 
 - Cross-reference directives
 - Definition declaration and reference directives
 - Placeholder directives
+- Template constructs — questions, conditions, inline choices, and drafting notes (Section 15)
 - File inclusion directives
 - Validation requirements for legal-specific constraints
 
@@ -171,6 +172,7 @@ Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status c
 | `supersedes` | OPTIONAL | Prior document or version superseded by this document — a plain string, or an object with the same fields as `amends` (§3.8) |
 | `amends` | OPTIONAL | Object identifying the original document this document amends (see Section 3.8) |
 | `attachments` | OPTIONAL | Array of attachment objects declaring documents attached to this document (see Section 3.9) |
+| `questions` | OPTIONAL | Map of template question declarations (see Section 15.2) |
 | `tags` | OPTIONAL | Classification tags array |
 
 If `legaldown` is present, it declares the specification version the document was authored against. The value SHOULD be written as a quoted string (unquoted, YAML would parse `0.1` as a number). Implementations SHOULD emit a Warning when the declared version is newer than the version they implement, and MUST NOT fail solely because the declared version is unknown. When the field is absent, implementations process the document under the version they implement. A newer declared version also softens unknown-directive handling — see §11.5.
@@ -364,6 +366,7 @@ Each attachment object has the following fields:
 | `id` | REQUIRED | Identifier following standard identifier rules |
 | `title` | REQUIRED | Full attachment title as it should appear in rendered output |
 | `file` | REQUIRED | Relative path to the attachment file |
+| `when` | OPTIONAL | In a template, the condition under which the attachment is present (§15.3) |
 
 **Rules:**
 
@@ -418,7 +421,7 @@ effective_date: "{{placeholder: effective-date, type=date}}"
 
 - A placeholder in frontmatter MUST be written as a quoted YAML string, because an unquoted `{{` begins a YAML flow mapping and is not valid YAML
 - Placeholders MAY appear in **value** fields (for example `title`, `legal_name`, `address`, `identification_number`, `effective_date`, `governing_law`). A representative's `name` and `title` (§3.5) are display values, not identifiers, and MAY hold placeholders
-- Placeholders MUST NOT appear in **identifier** or **structural** fields — any side or party `name` (these must satisfy the identifier format; a party `name` is additionally referenced by `{{party:}}`), party `type`, `document_type`, `legaldown`, or the `sides`/`parties` array structure
+- Placeholders MUST NOT appear in **identifier** or **structural** fields — any side or party `name` (these must satisfy the identifier format; a party `name` is additionally referenced by `{{party:}}`), party `type`, `document_type`, `legaldown`, the `sides`/`parties` array structure, or anywhere inside `questions` (§15.2)
 - Type-specific placeholders follow §10.7 (for example `"{{placeholder: effective-date, type=date}}"`)
 - A required field whose value is a placeholder satisfies that field's presence requirement; the document is treated as a template or draft with unfilled values
 - A placeholder id used in both frontmatter and body refers to the same logical blank (§10.7)
@@ -469,7 +472,7 @@ Body content MAY appear before the first heading. Such content is the document's
 
 - The preamble is valid and unnumbered — section numbering (§13.1) begins at the first heading
 - All body-level directives are valid in the preamble, including `{{def:}}` declarations and field specs
-- Preamble paragraphs cannot carry paragraph anchors (§5.7) and cannot be targeted by `{{ref:}}`
+- Preamble paragraphs cannot carry paragraph anchors (§5.7) and cannot be targeted by `{{ref:}}`; in a template they MAY carry a condition (§15.3)
 - Renderers place the preamble after the title block and before the first numbered provision
 
 ---
@@ -493,7 +496,7 @@ Any heading MAY include an explicit identifier:
 **Rules for identifiers:**
 
 - Specified using `{#identifier}` syntax placed immediately after heading text, separated by one or more spaces or tabs
-- MUST be unique within the document
+- MUST be unique within the document, except between alternatives in a template (§15.4)
 - MUST contain only lowercase ASCII letters (`a-z`), ASCII digits (`0-9`), and hyphens (`-`)
 - MUST start with a lowercase ASCII letter
 - MUST NOT contain characters outside `a-z`, `0-9`, and `-`
@@ -543,7 +546,7 @@ If no explicit identifier is provided, implementations MUST auto-generate one us
 
 ### 5.4 Identifier Scope
 
-Section identifiers are document-global. Each section MUST have a unique identifier within the document, whether the identifier is provided explicitly or auto-generated. Section identifiers share the anchor namespace with attachment ids (§3.9, §5.6).
+Section identifiers are document-global. Each section MUST have a unique identifier within the document, whether the identifier is provided explicitly or auto-generated; the only exception is alternatives in a template (§15.4). Section identifiers share the anchor namespace with attachment ids (§3.9, §5.6).
 
 Implementations MUST resolve cross-references by matching the referenced identifier directly. Implementations MUST NOT construct, require, or interpret hierarchical dot-separated paths based on heading nesting.
 
@@ -556,6 +559,8 @@ If the same identifier would be auto-generated for two different headings, imple
 
 Suffixes are assigned in document order, are appended after the §5.3 algorithm completes, and are exempt from the 64-character maximum.
 
+In a template, two headings whose presence conditions are mutually exclusive never collide with each other (§15.4).
+
 The same handling applies when an auto-generated identifier would collide with an **explicit** anchor elsewhere in the document (a section identifier, item/paragraph anchor, or attachment id): the explicit identifier always wins, the auto-generated one receives the numeric suffix, and the warning is emitted.
 
 ### 5.6 Identifier Namespaces
@@ -566,7 +571,7 @@ All LegalDown identifiers share one format (§5.2) but live in separate **namesp
 |---|---|---|---|
 | Anchor | Section identifiers (§5.2), item and paragraph anchors (§5.7), and attachment ids (§3.9) | Shared — unique across all | `{{ref:}}` (sections, items, paragraphs), `{{attach:}}` (attachment ids only) |
 | Definition | `{{def:}}` identifiers (§7.2) | Unique among definitions | `{{term:}}` |
-| Placeholder | `{{placeholder:}}` ids (§10.7) | Not applicable — repeated ids denote the same logical blank | — |
+| Placeholder | `{{placeholder:}}` ids (§10.7) and `questions` ids (§15.2) | Repeated placeholder ids denote the same logical blank; `questions` keys are unique | `{{placeholder:}}`, conditions (§15.3), `{{choose:}}` (§15.5) |
 | Side | Side `name` values (§3.3) | Unique among sides | `{{side:}}` |
 | Party | Party `name` values (§3.4) | Unique among all parties | `{{party:}}` |
 | Field type | `field_types` keys (§3.2) | Unique keys | `{{field:}}` `type` parameter |
@@ -602,7 +607,7 @@ Provider may suspend the Services if:
 - They are **never auto-generated** — automatic generation (§5.3) applies to headings only; anchors below heading level are always explicit and opt-in
 - The anchor marker is source-only and MUST NOT appear in rendered output
 - The rendered designation of an anchored item or paragraph is produced by the renderer under the active template (§6.3, §13.2, §13.3) — the source never contains item letters or paragraph numbers
-- A `{#id}`-like marker in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor. This Warning does **not** apply inside code spans, code blocks, or HTML comments, where anchor markers are not recognized at all (§11.4)
+- A `{#id}`-like marker — or a marker holding a condition, `{when=...}` (§15.3) — in any other position (mid-paragraph, in a table cell, on a block quote, before the first heading) is not an anchor and is treated as literal text; validators SHOULD emit a Warning, since it usually indicates a misplaced anchor. This Warning does **not** apply inside code spans, code blocks, or HTML comments, where anchor markers are not recognized at all (§11.4)
 
 ---
 
@@ -734,7 +739,7 @@ A quoted span is delimited by one of the recognized opening/closing quotation-ma
 
 **Identifiers:**
 
-- Definition identifiers follow the same format rules as section identifiers (§5.2) and MUST be unique among definitions within the document. Definitions form their own namespace (§5.6): a definition identifier MAY equal a section identifier without conflict
+- Definition identifiers follow the same format rules as section identifiers (§5.2) and MUST be unique among definitions within the document, except between alternatives in a template (§15.4). Definitions form their own namespace (§5.6): a definition identifier MAY equal a section identifier without conflict
 - The identifier MAY be omitted; when omitted, implementations MUST auto-generate it from the defined term using the algorithm in §5.3 (e.g., `"Services" {{def:}}` → `services`)
 - Explicit identifiers are RECOMMENDED for stability, and are REQUIRED to disambiguate when two different terms would auto-generate the same identifier
 
@@ -876,7 +881,7 @@ Renderers SHOULD apply appropriate legal enumeration at each nesting level based
 
 ### 8.4 Block Quotes
 
-Block quotes are used for recitals, WHEREAS clauses, preambles, and quoted text:
+Block quotes are used for recitals, WHEREAS clauses, preambles, and quoted text. In templates, a block quote whose first line is `[!DRAFTING]` is a drafting note (§15.6).
 
 ```markdown
 > WHEREAS, Provider possesses expertise in software development services; and
@@ -1124,6 +1129,7 @@ The `{{placeholder:}}` directive represents a fillable inline blank. Placeholder
 {{placeholder: placeholder-id, type=text}}
 {{placeholder: placeholder-id, type=date}}
 {{placeholder: placeholder-id, type=money, currency=EUR}}
+{{placeholder: placeholder-id, type=duration, unit=MO}}
 {{placeholder: placeholder-id, note=text}}
 {{placeholder: placeholder-id, type=money, currency=EUR, note=text}}
 ```
@@ -1141,9 +1147,10 @@ Governed by the laws of {{placeholder: governing-jurisdiction}}.
 **Rules:**
 
 - The `placeholder-id` value MUST be a non-empty string matching the identifier format `[a-z][a-z0-9-]*` (a lowercase ASCII letter followed by zero or more lowercase ASCII letters, digits, or hyphens)
-- The `type` parameter is OPTIONAL; if omitted, implementations MUST treat it as `text`
-- Implementations MUST support placeholder types `text`, `date`, and `money`
-- Additional type-specific parameters MAY be provided when defined for the selected `type`; for `type=money`, `currency` MAY be provided using an ISO 4217 three-letter code
+- The `type` parameter is OPTIONAL; if omitted, implementations MUST treat it as the type declared for the placeholder's question (§15.2), or as `text` when no question is declared
+- Implementations MUST support placeholder types `text`, `date`, `money`, and `duration`
+- Additional type-specific parameters MAY be provided when defined for the selected `type`; for `type=money`, `currency` MAY be provided using an ISO 4217 three-letter code; for `type=duration`, `unit` MAY be provided using a unit from §10.5, and an invalid `unit` follows the `{{duration:}}` rule — `[INVALID DURATION UNIT: UNIT]` and a validation Error
+- A placeholder id MAY equal the id of a value question declared in `questions` (§15.2); the declaration then supplies the placeholder's type and a prompt for the person filling it
 - The `note` parameter is OPTIONAL and follows the general field spec rules in Section 10.1
 - Multiple occurrences using the same `placeholder-id` refer to the same logical blank
 - Placeholder ids form their own namespace (§5.6) — a `placeholder-id` MAY coincide with a section, attachment, or definition identifier without any relation between them
@@ -1206,6 +1213,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{include: path}}` | Full | Include external file |
 | `{{attach: id}}` | Core | Reference a declared attachment |
 | `{{attach: id, label=text}}` | Core | Attachment reference with display text |
+| `{{choose: question-id, value=text, ...}}` | Core | Inline choice between plain-text phrases by a template answer (§15.5) |
 
 The **Level** column states the conformance level (Section 17) at which implementations MUST support the directive. `{{include:}}` expansion is a Full capability, and rendering the *content* of attachment files referenced via `{{attach:}}` is likewise Full (§17.4); resolving `{{attach:}}` to its declared `title` is Core. The column says nothing about documents: no directive is ever required to appear in a document — which directives to use is an authoring choice.
 
@@ -1559,6 +1567,7 @@ Renderers SHOULD support external style templates specifying:
 - Cover page format
 - Signature block layout (generation is implementation-defined, §2.2)
 - Locale for value formatting (date order, number and decimal separators, currency display)
+- Labels for template views — drafting notes and conditional units (§15.6, §15.8) — so that they follow the document's language
 
 Templates SHOULD be defined in a separate configuration file (e.g., YAML or JSON) completely independent of document content. The same LegalDown source SHOULD render correctly with any compatible template.
 
@@ -1623,6 +1632,7 @@ authoritative: en
 - Linked translation files MUST have identical heading hierarchy
 - Linked translation files MUST use identical section identifiers
 - Validators MUST check structural consistency between linked files
+- Linked templates (§15) MUST declare the same question ids, types, and choice value ids, carry identical conditions on corresponding units, and list the same parameter names in corresponding `{{choose:}}` directives; only `prompt`, choice labels, drafting notes, and `{{choose:}}` phrases are translated. One answers set therefore assembles every language version
 - Cross-references resolve to section numbers (same in both versions)
 
 **Primary and translations:**
@@ -1640,8 +1650,305 @@ Bilingual synchronization validation — a Full-level capability (§17.4) — MU
 - All section identifiers match between the linked files
 - All `{{def:}}` identifiers exist in both files
 - The linked files declare the same set of languages (each file's `language` plus its `translations` keys)
+- Linked templates declare the same questions and conditions (§14.2)
 
 Violations are Errors; the per-rule severities are defined in §16.7.
+
+## 15. Templates
+
+### 15.1 Overview
+
+A **template** is a LegalDown document that is filled in and tailored to produce other documents. v0.1 templates could hold fillable blanks (`{{placeholder:}}`, §10.7). This section adds the rest of what templates need:
+
+- **Questions** (§15.2) — frontmatter declarations of what the person filling the template is asked
+- **Conditions** (§15.3–§15.4) — sections, list items, paragraphs, included fragments, and attachments that are present only for certain answers
+- **Inline choices** (§15.5) — a phrase inside a sentence that varies with an answer
+- **Drafting notes** (§15.6) — guidance for the person using the template, never part of the finished document
+- **Assembly** (§15.7) — the deterministic transformation of a template and a set of answers into an ordinary LegalDown document
+- **The final check** (§15.9) — a validation option that rejects anything left unfinished
+
+A template is not a separate file format. Any LegalDown document that declares `questions`, carries a `when=` condition, or contains a `{{choose:}}` directive is a template, and every other rule of this specification applies to it unchanged. The following states describe a document's progress:
+
+| State | `questions`, `when=`, `{{choose:}}` | `{{placeholder:}}` | Drafting notes |
+|---|---|---|---|
+| Template | Present | MAY | MAY |
+| Draft | Absent | MAY | MAY |
+| Final | Absent | Absent | Absent |
+
+Assembly turns a template into a draft; a draft whose blanks are all filled is final. Section numbering, reference resolution, and every other rendering step (§13) take place **after** assembly.
+
+Two design constraints keep templates simple and safe:
+
+- **Conditions attach only to whole structural units** — never to an arbitrary span of text. The single inline construct, `{{choose:}}`, selects between plain-text phrases and cannot contain structure.
+- **A condition is a single test of a single answer.** There are no `and`/`or` operators. Nesting one conditional unit inside another requires both conditions; alternatives (§15.4) cover choice among several variants.
+
+Together with the absence of hardcoded numbers (§1.2), these constraints make the following property hold: **a template that validates without Errors assembles into a document without Errors for every set of answers** (§15.7.4).
+
+In this section, "template" means a document template. Presentation settings are always called the **style template** (§13.7).
+
+### 15.2 Questions
+
+The OPTIONAL frontmatter key `questions` is a map from question id to question declaration:
+
+```yaml
+questions:
+  fee:
+    type: money
+    prompt: Fixed fee, excluding VAT
+  non-solicit:
+    type: boolean
+    prompt: Include a non-solicitation covenant?
+    default: true
+  forum:
+    type: choice
+    prompt: How are disputes resolved?
+    choices:
+      courts: State courts
+      arbitration: ICC arbitration
+    default: courts
+```
+
+**Question fields:**
+
+| Field | Status | Description |
+|---|---|---|
+| `type` | REQUIRED | `text`, `date`, `money`, `duration`, `boolean`, or `choice` |
+| `prompt` | RECOMMENDED | The question as presented to the person filling the template — plain text in the document's `language` |
+| `default` | OPTIONAL | The answer used when the answers set omits this question; its form follows §15.7.1 |
+| `choices` | REQUIRED for `choice`; MUST NOT appear otherwise | Map of value id → label, with at least two entries. Value ids follow the identifier format (§5.2); labels are non-empty plain text in the document's `language`. Map order is presentation order |
+
+**Rules:**
+
+- Question ids follow the identifier format (§5.2)
+- `questions` MUST be written in YAML block style (one key per line), because assembly edits frontmatter line by line (§15.7.2)
+- `questions` is a structural field: `{{placeholder:}}` MUST NOT appear anywhere inside it (§3.10)
+- Additional fields on a question declaration are permitted and MUST be ignored, consistent with §3.7
+
+**Blanks and decisions.** Question types fall into two groups:
+
+- **Value questions** — `text`, `date`, `money`, `duration` — are filled through `{{placeholder:}}`. A placeholder id **is** a question id: when `questions` declares a value question with the same id as a placeholder, the declaration applies to every occurrence of that placeholder. The placeholder's effective type is then the declared type, and its inline `type` MAY be omitted; if written, it MUST equal the declared type. Declaring a value question is OPTIONAL — an undeclared placeholder behaves exactly as §10.7 defines
+- **Decision questions** — `boolean`, `choice` — are used only by conditions (§15.3) and `{{choose:}}` (§15.5). They MUST be declared before they can be used, because both constructs depend on the set of possible answers. A `{{placeholder:}}` MUST NOT use a decision question's id
+
+Question ids share the placeholder namespace (§5.6).
+
+### 15.3 Conditions
+
+**Syntax.** The marker that carries anchors (§5.2, §5.7) MAY also carry a condition:
+
+```markdown
+# Non-Solicitation {#non-solicit when=non-solicit}
+
+- processing of personal data under {{attach: dpa}} {#scope-data when=personal-data}
+
+The Client may terminate for convenience on thirty days' notice. {when=!fixed-term}
+```
+
+```ebnf
+marker    ::= "{" attribute ( ws+ attribute )* "}"
+attribute ::= "#" identifier | "when=" condition
+condition ::= [ "!" ] identifier [ ":" identifier ]
+```
+
+- Each attribute appears at most once in a marker; writing `#id` first is RECOMMENDED
+- `{#id}` alone is the anchor marker of §5.2 and §5.7, unchanged
+- A marker holding only `when=` makes the unit conditional without creating an anchor; on a heading, the section identifier is then auto-generated as usual (§5.3)
+- A condition contains no whitespace, quoting, or words, so it reads identically in every document language
+
+**Meaning.** A condition is one test of one decision question:
+
+| Condition | True when |
+|---|---|
+| `q` | Boolean question `q` is `true` |
+| `!q` | Boolean question `q` is `false` |
+| `q:v` | Choice question `q` is `v` |
+| `!q:v` | Choice question `q` is any value other than `v` |
+
+The identifier MUST be a declared decision question (§15.2). The `:v` form MUST be used with a `choice` question and `v` MUST be one of its declared value ids; the bare form MUST be used with a `boolean` question.
+
+**Conditional units.** A condition MAY appear in these positions only:
+
+| Unit | Marker position | Included or removed together |
+|---|---|---|
+| Section | After the heading text (§5.2) | The heading and the whole section — all content and subsections up to the next heading of the same or a higher level |
+| List item | End of the item's first paragraph (§5.7) | The item, including its nested blocks |
+| Top-level paragraph | End of the paragraph (§5.7) | The paragraph |
+| Preamble paragraph | End of the paragraph | The paragraph. The marker MUST NOT carry `#id` — §4.4 still excludes anchors from the preamble |
+| Include | End of a paragraph consisting of a single `{{include:}}` directive | The whole included fragment (§12) |
+| Attachment | A `when` field on the entry in `attachments` (§3.9), holding a condition | The attachment |
+
+A marker holding `when=` in any other position is not a condition; it is literal text and draws the misplaced-marker Warning (`anchor-misplaced`, §16.2).
+
+**Presence.** The **presence condition** of a unit is the set of conditions that must all be true for it to appear in an assembled document: its own condition, if any, together with the conditions of every unit enclosing it — its ancestor sections, the list items it is nested in, the include through which its content was inserted, and the attachment containing it. A unit with an empty presence condition is always present. Directives and definitions are present when the unit containing them is present.
+
+**Heading hierarchy.** Because a conditional section always takes its subsections with it, removing any combination of conditional units never breaks §4.1: the heading that follows a removed section is at the same level as the removed heading or higher, so it cannot skip a level relative to the heading before. The heading hierarchy therefore needs to be validated only once, on the template.
+
+### 15.4 Alternatives and Reference Safety
+
+**Mutual exclusion.** A presence condition is **satisfiable** if some combination of answers makes all its conditions true. This is decided per question: the conditions on a boolean question are satisfiable unless they include both `q` and `!q`; the conditions on a choice question are satisfiable if at least one declared value satisfies all of them. Two units are **mutually exclusive** when the union of their presence conditions is not satisfiable. Defaults (§15.2) play no part: any answer is possible.
+
+**Alternatives.** Every uniqueness requirement of this specification — section identifiers and item/paragraph anchors (§5.2, §5.4, §5.7), attachment ids (§3.9), definition identifiers (§7.2), and the collision handling of auto-generated identifiers (§5.5, §7.2) — applies only between declarations that are **not** mutually exclusive. Mutually exclusive declarations MAY share an identifier; they are **alternatives**, and a reference to the shared identifier resolves to whichever alternative is present after assembly:
+
+```markdown
+# Dispute Resolution {#disputes when=forum:courts}
+
+Disputes are resolved exclusively by the courts of {{placeholder: forum-city}}.
+
+# Dispute Resolution {#disputes when=forum:arbitration}
+
+Disputes are finally settled under the ICC Rules by a sole arbitrator seated in
+{{placeholder: forum-city}}.
+```
+
+**Reference safety.** Every `{{ref:}}`, `{{term:}}`, and `{{attach:}}` MUST resolve in every assembled document in which it is present. Validators check this as follows: for a reference with presence condition *P* whose identifier is declared by units with presence conditions *T₁ … Tₙ*, every combination of values of the questions mentioned in *P* and *T₁ … Tₙ* that makes *P* true MUST make at least one *Tᵢ* true. The number of combinations is finite and small, because each question has two values or a short list of choices. In the example above, an unconditional `{{ref: disputes}}` is safe, because `forum` has exactly the two values `courts` and `arbitration`.
+
+### 15.5 Inline Choices
+
+The `{{choose:}}` directive selects a plain-text phrase according to the answer to a decision question.
+
+**Syntax:**
+
+```markdown
+{{choose: question-id, value-id=text, value-id=text, ...}}
+{{choose: question-id, true=text, false=text}}
+```
+
+**Examples:**
+
+```markdown
+Nothing in Section {{ref: disputes}} prevents interim relief from
+{{choose: forum, courts="a competent court", arbitration="a competent court or an emergency arbitrator"}}.
+
+The fee is payable within thirty days of invoice{{choose: vat, true=", plus VAT", false=""}}.
+```
+
+**Rules:**
+
+- The positional value MUST be the id of a declared decision question (§15.2)
+- For a `choice` question, the named parameters are its value ids; for a `boolean` question, they are `true` and `false`
+- The directive MUST list **every** possible answer exactly once, and MUST NOT list any other parameter. An empty value (`""`) produces no text. Because every answer must be listed, adding a value to a `choice` question makes each `{{choose:}}` that does not cover it invalid, so no phrase can go missing unnoticed
+- Values are plain text, in the document's `language`, and follow §11.3 — quote them when they contain a comma. They MUST NOT contain Markdown formatting or directives: a `{{` inside a value is literal text and draws `brace-stray` (§16.2). A variant that needs a defined term, a reference, or a blank is written as a conditional unit instead (§15.3–§15.4)
+- `{{choose:}}` is recognized wherever directives are recognized in body text (§11.4). It MUST NOT appear in headings (§4.2) or frontmatter
+
+Use a condition when a whole unit appears or disappears, and `{{choose:}}` when only words change.
+
+### 15.6 Drafting Notes
+
+A **drafting note** is guidance for the person using a template — when to use a clause, what may be negotiated, what must never change. It is written as a block quote whose first line is exactly `[!DRAFTING]`:
+
+```markdown
+# Non-Solicitation {#non-solicit when=non-solicit}
+
+> [!DRAFTING]
+> Twelve months is the firm's standard. Do not extend beyond twenty-four months without
+> partner approval.
+
+For {{duration: 12, unit=MO}} after the engagement ends, neither party shall solicit ...
+```
+
+**Rules:**
+
+- A drafting note is written in the document's `language` and MAY contain several paragraphs and inline formatting
+- Drafting notes MAY appear in templates and drafts. Assembly removes them (§15.7.2); the final check rejects any that remain (§15.9)
+- Directives inside a drafting note are recognized and validated, so that a `{{ref:}}` in a note cannot go stale unnoticed. A `{{def:}}` MUST NOT appear inside a drafting note, because assembly would remove the definition
+- Drafting notes are not conditional units, carry no anchors, and are never numbered
+- `[!DRAFTING]` is a fixed keyword, like a directive name, and is never rendered as written: renderers label the note using text from the style template (§13.7), so the label follows the document's language
+
+HTML comments (§8.6) keep their role: notes to whoever edits the source, never rendered. Drafting notes address whoever uses the template, and are rendered while it is in use. The `[!DRAFTING]` form follows the alert syntax of GitHub-flavoured Markdown, so ordinary Markdown viewers display a drafting note as a quote.
+
+### 15.7 Assembly
+
+**Assembly** transforms a template and an **answers set** into a LegalDown document with no template constructs. It is a source-to-source transformation: its output is ordinary LegalDown, which can be validated, diffed, negotiated, and rendered like any other document. Assembly is a named capability (§17.6).
+
+#### 15.7.1 Answers Set
+
+An answers set is a YAML or JSON map from question id to answer:
+
+```yaml
+fee: "48000.00"
+non-solicit: true
+forum: arbitration
+forum-city: Vienna
+effective-date: 2026-10-01
+```
+
+| Type | Answer |
+|---|---|
+| `text` | A non-empty string without line breaks |
+| `date` | An ISO 8601 calendar date (`YYYY-MM-DD`), as a string or a YAML date |
+| `money` | A map `{amount, currency}` — `amount` a string in §10.3 format, `currency` an ISO 4217 code — or the `amount` string alone when every placeholder for the question fixes `currency`. Amounts are strings so that no floating-point conversion can alter them |
+| `duration` | A map `{value, unit}` — `value` per §10.5, written as an integer or a string, `unit` per §10.5 — or the `value` alone when every placeholder for the question fixes `unit` |
+| `boolean` | `true` or `false` |
+| `choice` | One of the question's declared value ids |
+
+A `default` in a question declaration takes the same form. Answers keyed by an id that is neither a declared question nor a placeholder id in the template are reported (`answer-unknown`, §16.12) and ignored. Apart from `text`, every answer is language-neutral, so one answers set serves every language version of a template (§14).
+
+#### 15.7.2 Procedure
+
+Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template source. Frontmatter edits are made line by line; they rely on `questions` and `attachments` being written in YAML block style.
+
+1. **Decisions.** Determine the answer to every decision question: the answers set's value, or else the declaration's `default`. A decision question used by a condition or `{{choose:}}` that has neither is an Error (`answer-missing`), and assembly stops. An answer of the wrong form for its question's type is an Error (`answer-invalid`), and assembly stops.
+2. **Removal.** Evaluate the presence condition of every conditional unit and remove each unit that is absent, with everything it contains. A removed unit's lines run from its first line through its last non-blank line; for a section, through the last non-blank line before the next heading of the same or a higher level, or the end of the body. A removed attachment is deleted from `attachments` — its `- ` entry line and every following line indented more deeply than that entry. If no attachment remains, the `attachments` key line is deleted too.
+3. **Markers.** In every remaining marker, delete the `when=` attribute together with the whitespace that separated it from the other attribute. A marker left empty (`{}`) is deleted together with the spaces and tabs before it. On every remaining attachment, delete the `when` line.
+4. **Choices.** Replace each remaining `{{choose:}}` with the phrase listed for the answer, escaped as in §15.7.3.
+5. **Blanks.** Replace each remaining `{{placeholder:}}` whose question is answered:
+   - in the body — `text` by the answer, escaped as in §15.7.3; `date` by `{{date: YYYY-MM-DD}}`; `money` by `{{money: AMOUNT, currency=CODE}}`; `duration` by `{{duration: VALUE, unit=UNIT}}`. The currency or unit comes from the placeholder's parameter or the answer — when both give one, they MUST agree, or the answer is invalid. A `note` parameter on the placeholder is appended to the new directive exactly as written; on a `text` placeholder it is dropped
+   - in frontmatter — the directive text inside the quoted scalar is replaced by the answer as plain text: `text` as written; `date` as `YYYY-MM-DD`; `money` as `AMOUNT CODE`; `duration` as `VALUE UNIT`. The result is escaped for the enclosing YAML scalar: in a double-quoted scalar, `\` and `"` become `\\` and `\"`; in a single-quoted scalar, `'` becomes `''`
+
+   Unanswered placeholders are left unchanged.
+6. **Clean-up.** Delete every drafting note (its block quote lines). Delete the `questions` entry: its key line and every following line that is blank or indented more deeply than the key.
+7. **Identifiers.** Section identifiers do not change during assembly. For every heading without an explicit identifier whose auto-generated identifier in the output (§5.3, §5.5) would differ from the one it had in the template, append ` {#id}` with the template's identifier to the heading line.
+8. **Blank lines.** Outside fenced and indented code blocks, collapse every run of consecutive blank lines in the body to a single blank line, and end the file with exactly one line break.
+
+No other byte of the template changes. Two conforming implementations therefore produce byte-identical output from the same template and answers set.
+
+#### 15.7.3 Escaping Inserted Text
+
+Text answers and `{{choose:}}` phrases are literal text, and assembly MUST insert them so that the assembled document renders them exactly as written. The assembler inserts a backslash (§11.4, CommonMark backslash escapes):
+
+- before every `\`, `` ` ``, `*`, `_`, `[`, `]`, `<`, and `|`
+- before every `{` that is immediately followed by `{`
+- before every `&` that begins a character reference — `&` followed by `#` or an ASCII letter, then only ASCII letters and digits, then `;`
+- when the inserted text begins a line (only spaces or tabs precede it), before its first character if that is `#`, `>`, `-`, `+`, or `=`, and before the `.` or `)` that follows a leading run of ASCII digits
+
+No other character is escaped, so ordinary legal text — names, addresses, `s.r.o.`, `Smith & Co.` — is inserted unchanged.
+
+#### 15.7.4 The Assembly Guarantee (Non-Normative)
+
+If a template has no Errors at a given conformance level, every document assembled from it has no Errors at that level:
+
+| Could fail after assembly | Prevented by |
+|---|---|
+| Skipped heading levels (§4.1) | Conditional sections always take their subsections with them (§15.3) |
+| Broken `{{ref:}}`, `{{term:}}`, `{{attach:}}` | Reference safety (§15.4) |
+| Duplicate identifiers | Uniqueness between non-exclusive declarations (§15.4) |
+| Changed auto-generated identifiers | Identifier preservation (§15.7.2 step 7) |
+| Invalid dates, amounts, durations | Answer validation (§15.7.2 step 1) |
+| A missing phrase | `{{choose:}}` lists every answer (§15.5) |
+| Inserted text read as Markdown or directives | Escaping (§15.7.3) |
+
+Warnings may still appear — for example `def-unreferenced` when a term was used only in a removed section — because a Warning asks for review rather than signalling a broken document.
+
+### 15.8 Rendering Templates
+
+A renderer asked to render a template **with** an answers set assembles it first (§15.7) and renders the result. A renderer asked to render a template **without** answers produces a template view, in which:
+
+- Every conditional unit MUST be marked visibly, together with its condition. The label and layout come from the style template (§13.7), not from fixed text, so that they follow the document's language
+- Every `{{choose:}}` MUST show all of its phrases, in the order written. The RECOMMENDED form uses symbols only: `[a competent court / a competent court or an emergency arbitrator]`
+- Drafting notes SHOULD be rendered in a visually distinct style (§15.6)
+- Placeholders render as defined in §13.5; renderers MAY display the question's `prompt`
+- Numbering is implementation-defined; alternatives that share an identifier SHOULD share a number
+- A `{{choose:}}` that violates §15.5 renders as `[INVALID CHOICE: question-id]`, or `[INVALID CHOICE]` when the question id cannot be determined, and the validation Error is reported
+
+A renderer MUST NOT resolve conditions or `{{choose:}}` without an answers set, and MUST NOT silently omit conditional content (§17.5).
+
+### 15.9 The Final Check
+
+A document still holding a blank or a drafting note is valid LegalDown, yet not fit for signature. Validators and renderers SHOULD offer a **final** option — for example a command-line flag or a render-job setting — under which the following checks apply in addition to all others:
+
+- no `{{placeholder:}}` remains, in the body or in frontmatter (`placeholder-unfilled`)
+- no template construct remains — a `questions` key, a `when=` condition, a `{{choose:}}` directive, or a drafting note (`template-construct-present`)
+
+Both are Errors under the final option and are not reported without it (§16.12). Whether a document is final is a property of the render or validation job, not of the document, so no frontmatter field declares it.
 
 ---
 
@@ -1655,7 +1962,7 @@ Validators MUST categorize issues at three levels:
 - **Warning** — Potential issue that should be reviewed (SHOULD be reported)
 - **Info** — Suggestion for improvement (MAY be reported)
 
-**Rule identifiers.** Every check in §16.2–§16.11 carries a **rule id** — a stable, lowercase identifier in the same format as every other LegalDown identifier, `[a-z][a-z0-9-]*` (§5.2). Rule ids identify a check independently of where it sits in this document, so that section renumbering never invalidates a reference to a rule.
+**Rule identifiers.** Every check in §16.2–§16.12 carries a **rule id** — a stable, lowercase identifier in the same format as every other LegalDown identifier, `[a-z][a-z0-9-]*` (§5.2). Rule ids identify a check independently of where it sits in this document, so that section renumbering never invalidates a reference to a rule.
 
 - Implementations SHOULD include the rule id in their diagnostic output (§16.9), enabling users to suppress, escalate, or filter a specific check consistently across tools
 - Rule ids are **stable**: once assigned, an id is not renamed or reused for a different check. A check that is removed retires its id permanently
@@ -1668,8 +1975,8 @@ Validators MUST categorize issues at three levels:
 |---|---|---|
 | `heading-skip` | Heading levels do not skip | Error |
 | `heading-depth` | Heading depth does not exceed level 5 | Error |
-| `anchor-duplicate` | Explicit anchors (section identifiers, item and paragraph anchors) are unique within the anchor namespace | Error |
-| `anchor-misplaced` | `{#id}`-like marker outside an anchor position (likely misplaced anchor, §5.7; not raised inside code spans, code blocks, or comments, §11.4) | Warning |
+| `anchor-duplicate` | Explicit anchors (section identifiers, item and paragraph anchors) are unique within the anchor namespace (alternatives in a template excepted, §15.4) | Error |
+| `anchor-misplaced` | `{#id}`-like or `{when=...}` marker outside an anchor or condition position (likely misplaced anchor, §5.7; not raised inside code spans, code blocks, or comments, §11.4) | Warning |
 | `anchor-autogen-collision` | Auto-generated section identifiers would collide (implementations append numeric suffixes) | Warning |
 | `anchor-lossy-slug` | Auto-generated identifier lost non-transliterable letters or digits (§5.3 — explicit identifier recommended) | Warning |
 | `anchor-format` | Section identifiers follow naming rules | Error |
@@ -1699,7 +2006,7 @@ Validators MUST categorize issues at three levels:
 
 | ID | Check | Level |
 |---|---|---|
-| `def-duplicate-id` | All `{{def: id}}` identifiers are unique among definitions (§5.6) | Error |
+| `def-duplicate-id` | All `{{def: id}}` identifiers are unique among definitions (§5.6; alternatives in a template excepted, §15.4) | Error |
 | `def-no-quoted-span` | `{{def:}}` is immediately preceded by a recognized quoted span | Error |
 | `def-autogen-collision` | Two definitions auto-generate the same identifier (omitted ids) | Error |
 | `def-lossy-slug` | Auto-derived definition identifier lost non-transliterable letters or digits (§5.3 — explicit id recommended) | Warning |
@@ -1726,10 +2033,10 @@ Validators MUST categorize issues at three levels:
 | `field-type-missing` | `{{field:}}` `type` parameter is present and matches identifier format | Error |
 | `field-type-undeclared` | `{{field:}}` uses a type declared in `field_types` when `field_types` is present | Warning |
 | `placeholder-id-malformed` | `{{placeholder:}}` `placeholder-id` value is non-empty and matches identifier format | Error |
-| `placeholder-type-invalid` | `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, or `money` | Error |
+| `placeholder-type-invalid` | `{{placeholder:}}` `type` parameter, when present, is one of `text`, `date`, `money`, or `duration` | Error |
 | `placeholder-type-inconsistent` | Repeated `{{placeholder:}}` occurrences with the same `placeholder-id` use the same effective `type` | Error |
 | `placeholder-unknown-currency` | `{{placeholder:}}` `currency` parameter for `type=money` is a recognized ISO 4217 code | Warning |
-| `placeholder-in-structural-field` | `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure) | Error |
+| `placeholder-in-structural-field` | `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure, `questions`) | Error |
 | `note-invalid` | Field spec `note` parameter is plain text and satisfies the value rules in §11.3 (unquoted: no commas or closing braces) | Error |
 
 ### 16.6 Document Metadata Validation
@@ -1783,6 +2090,7 @@ Where §3.10 permits a placeholder in a value field, a placeholder value satisfi
 | `translation-anchor-mismatch` | Section identifiers match between translations | Error |
 | `translation-def-mismatch` | Definition IDs match between translations | Error |
 | `translation-language-set-mismatch` | Linked files declare the same set of languages (`language` + `translations` keys) | Error |
+| `translation-template-mismatch` | Linked templates declare the same question ids, types, and choice value ids, identical conditions on corresponding units, and the same `{{choose:}}` parameter names (§14.2) | Error |
 | `translation-implicit-id` | Every heading and `{{def:}}` in a translation file (a linked file whose `language` differs from `authoritative`) carries an explicit identifier | Error |
 | `translation-authoritative-absent` | Auto-generated identifiers used in linked files when `authoritative` is absent (primary cannot be determined) | Warning |
 
@@ -1804,7 +2112,7 @@ Validators MUST produce structured output indicating file, line number, identifi
 
 | ID | Check | Level |
 |---|---|---|
-| `attachment-id-duplicate` | Attachment `id` is unique across document | Error |
+| `attachment-id-duplicate` | Attachment `id` is unique across document (alternatives in a template excepted, §15.4) | Error |
 | `attachment-id-collision` | Attachment `id` does not collide with any other anchor (section identifier or item/paragraph anchor, §5.6) | Error |
 | `attachment-title-empty` | Attachment `title` is non-empty | Error |
 | `attachment-file-missing` | Attachment `file` path exists | Error |
@@ -1829,6 +2137,36 @@ Non-LegalDown attachments: only file existence is checked.
 | `include-heading-skip` | Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) | Error |
 
 All other §16 checks apply to the combined document after inclusion (§12.2). Include processing is a Full-level capability (§17.4); the file-extension check on the include path is determinable from the document alone and applies at Core (§17.2).
+
+### 16.12 Template Validation
+
+Template checks (§15) — the first eight rows need only the document and are Core (§17.2):
+
+| ID | Check | Level |
+|---|---|---|
+| `question-invalid` | Each `questions` entry is well-formed: the id follows the identifier format, `type` is one of the six types, `choices` is present with at least two identifier-format value ids and non-empty labels for `choice` and absent otherwise, `default` has the form its type requires, and the map is in YAML block style (§15.2) | Error |
+| `question-unused` | Each declared question is used by a `{{placeholder:}}`, a condition, or a `{{choose:}}` | Warning |
+| `placeholder-question-mismatch` | A placeholder's inline `type` equals the type of its declared question, and no placeholder uses a decision question's id (§15.2) | Error |
+| `condition-invalid` | Each condition — in a marker or in `attachments[].when` — names a declared decision question, uses the form its type requires, and names a declared value (§15.3) | Error |
+| `condition-never-true` | Each conditional unit's presence condition is satisfiable (§15.4); otherwise the unit can never appear | Warning |
+| `condition-reference-unsafe` | Each `{{ref:}}`, `{{term:}}`, and `{{attach:}}` resolves under every combination of answers in which it is present (§15.4) | Error |
+| `choose-invalid` | Each `{{choose:}}` names a declared decision question and lists exactly its possible answers, each once (§15.5) | Error |
+| `drafting-note-def` | No `{{def:}}` appears inside a drafting note (§15.6) | Error |
+
+Assembly checks — reported by implementations of the Assembly capability (§17.6) when assembling a template with an answers set:
+
+| ID | Check | Level |
+|---|---|---|
+| `answer-missing` | Every decision question used by a condition or `{{choose:}}` has an answer or a `default` | Error |
+| `answer-invalid` | Every answer has the form its question's type requires (§15.7.1), and agrees with any currency or unit fixed by its placeholders | Error |
+| `answer-unknown` | Every answer id is a declared question or a placeholder id of the template | Warning |
+
+Final checks — reported only under the final option (§15.9), at Core:
+
+| ID | Check | Level |
+|---|---|---|
+| `placeholder-unfilled` | No `{{placeholder:}}` remains, in the body or in frontmatter | Error |
+| `template-construct-present` | No `questions` key, condition, `{{choose:}}`, or drafting note remains | Error |
 
 ---
 
@@ -1856,9 +2194,10 @@ Scope: everything that can be determined from the document file alone. A Core im
 
 - File format requirements (§2) and frontmatter metadata (§3), including the `amends` (§3.8), `attachments` (§3.9), and frontmatter placeholder (§3.10) schemas
 - Document structure (§4) and identifiers (§5), including automatic identifier generation (§5.3) and item/paragraph anchors (§5.7)
-- Recognition and validation of all directives in §11.1: cross-references (§6), definitions and term references (§7), field specs (§10), and attachment references (§6.4)
+- Recognition and validation of all directives in §11.1: cross-references (§6), definitions and term references (§7), field specs (§10), attachment references (§6.4), and inline choices (§15.5)
+- Template constructs (§15.2–§15.6): questions, conditions, alternatives and reference safety, and drafting notes
 - Standard text formatting (§8) and tables (§9)
-- Validation (§16): §16.1–§16.6 and §16.9 in full, with two rows excluded — the §16.3 row on refs to non-enumerated item/paragraph anchors, which depends on the active style template and is therefore evaluated from the Rendering level (§17.3), and the §16.6 `supersedes.file` existence row, which requires opening another file and is therefore Full (§17.4) — plus the rows of §16.7, §16.8, §16.10, and §16.11 that need only the document itself:
+- Validation (§16): §16.1–§16.6, §16.9, and the template and final-check rows of §16.12 in full, with two rows excluded — the §16.3 row on refs to non-enumerated item/paragraph anchors, which depends on the active style template and is therefore evaluated from the Rendering level (§17.3), and the §16.6 `supersedes.file` existence row, which requires opening another file and is therefore Full (§17.4) — plus the rows of §16.7, §16.8, §16.10, and §16.11 that need only the document itself:
   - §16.7 — the single-file translation rows: every heading and `{{def:}}` carries an explicit identifier when the document itself is a translation (its `language` differs from its declared `authoritative`), and the auto-generated-identifier Warning when the document declares `translations` without `authoritative`
   - §16.8 — `amends.title` is non-empty; unresolved `{{term:}}` references are handled per §7.5's "original not available" rules (a Core implementation never loads the original, so that branch always applies)
   - §16.10 — attachment `id` uniqueness, attachment `id` collisions with other anchors (§5.6), attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
@@ -1875,6 +2214,7 @@ Everything in Core, plus rendering (Section 13) of a single document. A Renderin
 - Party and side display rules (§3.6)
 - At least one of the RECOMMENDED output formats in §13.6 (PDF, DOCX, or HTML)
 - Comment stripping (§8.6)
+- The template view (§15.8) when rendering a template without answers
 
 List enumeration (§13.2), style templates (§13.7), and signature block generation (§2.2) remain SHOULD. Rendering the content of attachment files (§13.8) is a Full capability; a Rendering implementation resolves `{{attach:}}` to the declared `title` (§6.4) without reading the attachment file.
 
@@ -1887,6 +2227,7 @@ Everything in Rendering, plus all processing that reads files beyond the documen
 - Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §16.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
 - Bilingual documents: Section 14 and the remaining §16.7 checks (cross-file structure, identifier, and language-set matching)
 - Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `supersedes.file`, `translations`) and for image paths (§8.7)
+- Template synchronization between linked translations (§14.2, the `translation-template-mismatch` row of §16.7)
 
 ### 17.5 Constructs Beyond the Claimed Level
 
@@ -1894,6 +2235,15 @@ An implementation that encounters a construct whose processing lies beyond its c
 
 - Validators MUST emit a Warning identifying each check category they did not perform (for example, "translations declared; bilingual validation not performed at this conformance level") and MUST NOT report the document as passing checks they did not run.
 - Renderers MUST NOT produce output that silently omits unprocessed content. Where content cannot be processed (for example, `{{include:}}` below Full), the renderer MUST either refuse to render or insert a visible marker in place of the construct — `[NOT PROCESSED: include schedules/pricing.lgd]` — and emit a Warning.
+
+### 17.6 Assembly Capability
+
+Assembly (§15.7) reads an answers set rather than another LegalDown document, so it lies outside the three levels. It is a named **capability** that an implementation MAY claim together with any level — for example "Core + Assembly" for a document-generation service, or "Rendering + Assembly" for an editor with a live preview of an answered template. An implementation claiming Assembly MUST:
+
+- Perform assembly exactly as §15.7 defines, producing byte-identical output for the same template and answers set
+- Report the assembly rows of §16.12
+
+An implementation that does not claim Assembly MUST NOT resolve conditions or `{{choose:}}` directives; it validates templates and renders them in the template view (§15.8). The final check (§15.9) is available at every level.
 
 ---
 
@@ -2150,3 +2500,6 @@ Candidates considered during the v0.1 draft and deliberately deferred. Their abs
 - **A structured signature model** — per-representative signing lines, date and place, signing capacities; signature block generation is implementation-defined in v0.1 (§2.2)
 - **Template-supplied reference label words** — e.g., `{{ref: id, style=full}}` rendering "Article I.A" with the label word chosen by the style template (§6.2 note)
 - **Machine-readable export** — a JSON document model as a companion specification; the source file remains the canonical machine-readable representation (§10.1)
+- **Richer template logic** — combined conditions (`and`/`or`), conditions on `text`, `money`, or `date` answers, repetition over collections (one clause per property), computed values, conditional parties and table rows; v0.2 keeps conditions to a single test on whole structural units (§15.1)
+- **Directives inside `{{choose:}}` phrases** — so a phrase can vary a defined term or reference inline; v0.2 phrases are plain text (§15.5)
+- **Assembly provenance** — recording in an assembled document which template (and version) it came from, so tooling can re-assemble after the template changes

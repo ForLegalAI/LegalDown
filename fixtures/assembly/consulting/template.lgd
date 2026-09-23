@@ -1,0 +1,92 @@
+---
+title: "Consulting Agreement with {{placeholder: client-name}}"
+document_type: contract
+effective_date: "{{placeholder: effective-date, type=date}}"
+questions:
+  client-name:
+    type: text
+    prompt: Client's registered name
+  fee:
+    type: money
+    prompt: Fixed fee, excluding VAT
+  non-solicit:
+    type: boolean
+    prompt: Include a non-solicitation covenant?
+    default: true
+  personal-data:
+    type: boolean
+    prompt: Will the Consultant process personal data for the Client?
+    default: false
+  forum:
+    type: choice
+    prompt: How are disputes resolved?
+    choices:
+      courts: State courts
+      arbitration: ICC arbitration
+    default: courts
+sides:
+  - name: consultants
+    label: Consultant
+    parties:
+      - name: acme
+        label: Acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: client
+        type: legal_entity
+        legal_name: "{{placeholder: client-name}}"
+governing_law: "{{placeholder: governing-law}}"
+language: en
+---
+
+This Consulting Agreement (this "Agreement" {{def: agreement}}) is entered into on
+{{placeholder: effective-date, type=date}} between {{party: acme}} and {{party: client}}.
+
+> [!DRAFTING]
+> For fixed-fee advisory engagements only.
+
+# Definitions {#definitions}
+
+"Services" {{def: services}} means the advisory services described in Section {{ref: scope}}.
+
+"Client Data" {{def: client-data}} means personal data processed by the Consultant on behalf of
+the Client. {when=personal-data}
+
+# Scope {#scope}
+
+The Consultant shall provide the {{term: services}}, comprising:
+
+- a review of the Client's operations {#scope-review}
+- a written recommendations report {#scope-report}
+- processing of {{term: client-data}} under strict confidentiality {#scope-data when=personal-data}
+
+# Fees {#fees}
+
+The Client shall pay {{placeholder: fee, currency=EUR, note=Fixed fee}} for the
+{{term: services}}{{choose: personal-data, true=", including data processing", false=""}}.
+
+# Non-Solicitation {#non-solicit when=non-solicit}
+
+> [!DRAFTING]
+> Twelve months is the firm's standard.
+
+For {{duration: 12, unit=MO}} after the engagement ends, neither party shall solicit any
+employee of the other who was involved in the {{term: services}}.
+
+# Dispute Resolution {#disputes when=forum:courts}
+
+Disputes are resolved exclusively by the courts of {{placeholder: forum-city}}.
+
+# Dispute Resolution {#disputes when=forum:arbitration}
+
+Disputes are finally settled under the ICC Rules by a sole arbitrator seated in
+{{placeholder: forum-city}}.
+
+# Governing Law {#governing-law}
+
+The {{term: agreement}} is governed by the laws of {{placeholder: governing-law}}. Nothing in
+Section {{ref: disputes}} prevents interim relief from
+{{choose: forum, courts="a competent court", arbitration="a competent court or an emergency arbitrator"}}.

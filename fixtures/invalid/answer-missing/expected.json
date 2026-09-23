@@ -1,0 +1,18 @@
+{
+  "entry": "template.lgd",
+  "diagnostics": [
+    {
+      "rule": "answer-missing",
+      "level": "error",
+      "file": "template.lgd"
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "requires_capability": "assembly",
+  "requires_config": {
+    "answers": "answers.yaml"
+  },
+  "spec": "16.12",
+  "note": "The forum decision has neither an answer nor a default."
+}

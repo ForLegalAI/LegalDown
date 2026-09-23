@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "question-unused",
+      "level": "warning",
+      "line": 18
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "The question is declared but no placeholder, condition, or choose directive uses it."
+}

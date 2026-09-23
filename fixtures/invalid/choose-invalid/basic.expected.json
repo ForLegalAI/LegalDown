@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "choose-invalid",
+      "level": "error",
+      "line": 37
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "The choose directive does not list a phrase for the arbitration answer."
+}

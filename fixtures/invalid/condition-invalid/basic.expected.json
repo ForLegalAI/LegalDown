@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "condition-invalid",
+      "level": "error",
+      "line": 19
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "The condition names a question that is not declared."
+}

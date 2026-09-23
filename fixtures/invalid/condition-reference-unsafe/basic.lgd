@@ -1,0 +1,29 @@
+---
+title: Fixture
+document_type: contract
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+questions:
+  non-solicit:
+    type: boolean
+    prompt: Include a non-solicitation covenant?
+---
+
+# Non-Solicitation {#non-solicit when=non-solicit}
+
+Neither party shall solicit the other's employees.
+
+# Termination {#termination}
+
+Breach of Section {{ref: non-solicit}} entitles the other party to terminate.

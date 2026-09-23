@@ -20,6 +20,9 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(ROOT)
 LEVELS = {'error', 'warning', 'info'}
 TIERS = {'core', 'rendering', 'full'}
+CAPABILITIES = {'assembly'}
+ASSEMBLY_FILES = ('template.lgd', 'answers.yaml', 'expected.lgd')
+TEMPLATE_MARKERS = ('when=', '{{choose:', '[!DRAFTING]', '\nquestions:')
 
 
 def spec_rule_ids():
@@ -55,6 +58,10 @@ def check():
             if exp.get('requires_level') not in TIERS:
                 problems.append('%s/%s: requires_level %r not in %s'
                                 % (rule, name, exp.get('requires_level'), sorted(TIERS)))
+            cap = exp.get('requires_capability')
+            if cap is not None and cap not in CAPABILITIES:
+                problems.append('%s/%s: requires_capability %r not in %s'
+                                % (rule, name, cap, sorted(CAPABILITIES)))
             if not exp.get('diagnostics'):
                 problems.append('%s/%s: no diagnostics asserted' % (rule, name))
             for diag in exp.get('diagnostics', []):
@@ -88,6 +95,25 @@ def check():
         errors = [d for d in exp.get('diagnostics', []) if d.get('level') == 'error']
         if errors:
             problems.append('valid/%s: asserts Error-level diagnostics' % name)
+
+    assembly = os.path.join(ROOT, 'assembly')
+    for case in sorted(os.listdir(assembly)) if os.path.isdir(assembly) else []:
+        d = os.path.join(assembly, case)
+        if not os.path.isdir(d):
+            continue
+        for f in ASSEMBLY_FILES:
+            if not os.path.exists(os.path.join(d, f)):
+                problems.append('assembly/%s: missing %s' % (case, f))
+        out = os.path.join(d, 'expected.lgd')
+        if os.path.exists(out):
+            text = open(out, encoding='utf-8').read()
+            for marker in TEMPLATE_MARKERS:
+                if marker in text:
+                    problems.append('assembly/%s: expected.lgd still contains %r'
+                                    % (case, marker.strip()))
+            if not text.endswith('\n') or text.endswith('\n\n'):
+                problems.append('assembly/%s: expected.lgd must end with exactly one line break'
+                                % case)
 
     manifest_path = os.path.join(ROOT, 'coverage.json')
     if os.path.exists(manifest_path):

@@ -1,5 +1,5 @@
 {
-  "total_rules": 98,
+  "total_rules": 112,
   "covered": [
     "amend-def-override",
     "amend-term-undefined",
@@ -10,6 +10,9 @@
     "anchor-format",
     "anchor-lossy-slug",
     "anchor-misplaced",
+    "answer-invalid",
+    "answer-missing",
+    "answer-unknown",
     "attach-undeclared",
     "attachment-anchor-duplicate",
     "attachment-file-missing",
@@ -21,6 +24,10 @@
     "attachment-unreferenced",
     "authoritative-not-declared",
     "brace-stray",
+    "choose-invalid",
+    "condition-invalid",
+    "condition-never-true",
+    "condition-reference-unsafe",
     "date-invalid",
     "date-of-birth-invalid",
     "def-autogen-collision",
@@ -37,6 +44,7 @@
     "directive-unknown",
     "directive-unknown-param",
     "document-type-invalid",
+    "drafting-note-def",
     "duration-invalid-unit",
     "duration-invalid-value",
     "field-type-key-format",
@@ -71,9 +79,13 @@
     "path-outside-root",
     "placeholder-id-malformed",
     "placeholder-in-structural-field",
+    "placeholder-question-mismatch",
     "placeholder-type-inconsistent",
     "placeholder-type-invalid",
+    "placeholder-unfilled",
     "placeholder-unknown-currency",
+    "question-invalid",
+    "question-unused",
     "raw-html",
     "ref-broken",
     "ref-targets-attachment",
@@ -86,6 +98,7 @@
     "sides-minimum",
     "supersedes-file-missing",
     "supersedes-title-empty",
+    "template-construct-present",
     "term-undefined",
     "title-missing",
     "translation-anchor-mismatch",
@@ -95,13 +108,14 @@
     "translation-hierarchy-mismatch",
     "translation-implicit-id",
     "translation-language-set-mismatch",
+    "translation-template-mismatch",
     "value-curly-quote"
   ],
   "not_yet_covered": [],
   "not_mechanically_testable": {
-    "ref-not-enumerated": "Depends on the active style template rather than the document; evaluated from the Rendering level (\u00a716.3).",
+    "ref-not-enumerated": "Depends on the active style template rather than the document; evaluated from the Rendering level (§17.3).",
     "anchor-autogen-collision": "Implementations resolve it silently by appending numeric suffixes; observable only through generated identifiers, not through a diagnostic on a document.",
     "legaldown-version-newer": "Depends on which specification version the implementation supports, not on the document alone."
   },
-  "note": "Rule ids are defined in specification \u00a715.1. A rule under not_yet_covered has no fixture yet; a rule under not_mechanically_testable cannot be exercised by a document fixture and is documented here rather than given a fixture that would not actually test it."
+  "note": "Rule ids are defined in specification §16.1. A rule under not_yet_covered has no fixture yet; a rule under not_mechanically_testable cannot be exercised by a document fixture and is documented here rather than given a fixture that would not actually test it."
 }

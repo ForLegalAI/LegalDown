@@ -1,0 +1,19 @@
+{
+  "entry": "template.lgd",
+  "diagnostics": [
+    {
+      "rule": "answer-unknown",
+      "level": "warning",
+      "file": "answers.yaml",
+      "line": 3
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "requires_capability": "assembly",
+  "requires_config": {
+    "answers": "answers.yaml"
+  },
+  "spec": "16.12",
+  "note": "The answers set supplies an id that is neither a question nor a placeholder of the template."
+}

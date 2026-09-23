@@ -1,0 +1,15 @@
+---
+title: Contrat
+language: fr
+authoritative: en
+translations:
+  en: doc-en.lgd
+questions:
+  non-solicit:
+    type: boolean
+    prompt: Inclure une clause de non-sollicitation ?
+---
+
+# Non-sollicitation {#non-solicit when=!non-solicit}
+
+Aucune partie ne sollicite les salariés de l'autre.

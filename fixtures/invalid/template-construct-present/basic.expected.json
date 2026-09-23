@@ -1,0 +1,16 @@
+{
+  "diagnostics": [
+    {
+      "rule": "template-construct-present",
+      "level": "error",
+      "line": 21
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "requires_config": {
+    "final": true
+  },
+  "spec": "16.12",
+  "note": "Under the final option, a remaining drafting note is an Error."
+}

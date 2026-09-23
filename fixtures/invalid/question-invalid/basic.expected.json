@@ -1,0 +1,13 @@
+{
+  "diagnostics": [
+    {
+      "rule": "question-invalid",
+      "level": "error",
+      "line": 18
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "core",
+  "spec": "16.12",
+  "note": "A choice question must declare at least two choices."
+}
