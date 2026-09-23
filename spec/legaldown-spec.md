@@ -1636,7 +1636,7 @@ authoritative: en
 - Linked translation files MUST have identical heading hierarchy
 - Linked translation files MUST use identical section identifiers
 - Validators MUST check structural consistency between linked files
-- Linked templates (§15) MUST declare the same question ids, types, choice value ids, and `default` values — except that a `text` question's default is translated, so linked templates need only agree on whether it has one — use the same placeholder ids with the same effective types and fixed `currency` or `unit`, carry identical conditions on corresponding units — sections matched by identifier, list items and top-level paragraphs (including `{{include:}}` paragraphs) matched by their explicit anchors, which every conditional item and paragraph in a linked template MUST therefore carry, conditional preamble paragraphs matched in order, and attachments matched by id — and list the same parameter names in corresponding `{{choose:}}` directives; only `prompt`, choice labels, `text` defaults, drafting notes, and `{{choose:}}` phrases are translated. One answers set therefore assembles every language version, to the same state — draft or final — in each
+- Linked templates (§15) MUST declare the same question ids, types, choice value ids, and `default` values — except that a `text` question's default is translated, so linked templates need only agree on whether it has one — use the same placeholder ids with the same effective types and fixed `currency` or `unit`, carry identical conditions on corresponding units — sections matched by identifier; list items and ordinary top-level paragraphs matched by their explicit anchors, which every conditional item and such paragraph in a linked template MUST therefore carry; conditional preamble paragraphs, which cannot carry anchors (§4.4), matched in order within the preamble; conditional `{{include:}}` paragraphs, which carry no anchor (§15.3), matched in order within their section; and attachments matched by id — and list the same parameter names in corresponding `{{choose:}}` directives; only `prompt`, choice labels, `text` defaults, drafting notes, and `{{choose:}}` phrases are translated. One answers set therefore assembles every language version, to the same state — draft or final — in each
 - Cross-references resolve to section numbers (same in both versions)
 
 **Primary and translations:**
@@ -1654,7 +1654,7 @@ Bilingual synchronization validation — a Full-level capability (§17.4) — MU
 - All section identifiers match between the linked files
 - All `{{def:}}` identifiers exist in both files
 - The linked files declare the same set of languages (each file's `language` plus its `translations` keys)
-- Linked templates declare the same questions, defaults (for `text` questions, only whether one is present), placeholders, and conditions (§14.2)
+- Linked templates declare the same questions, defaults (for `text` questions, only whether one is present), placeholders, and conditions — every conditional item and ordinary paragraph carrying an explicit anchor to match by — and use the same parameter names in corresponding `{{choose:}}` directives (§14.2)
 
 Violations are Errors; the per-rule severities are defined in §16.7.
 
@@ -1780,7 +1780,7 @@ The identifier MUST be a declared decision question (§15.2). The `:v` form MUST
 | List item | End of the item's first paragraph (§5.7) | The item, including its nested blocks |
 | Top-level paragraph | End of the paragraph (§5.7) | The paragraph |
 | Preamble paragraph | End of the paragraph | The paragraph. The marker MUST NOT carry `#id` — §4.4 still excludes anchors from the preamble |
-| Include | End of a paragraph consisting of a single `{{include:}}` directive | The whole included fragment (§12) |
+| Include | End of a paragraph consisting of a single `{{include:}}` directive | The whole included fragment (§12). The marker MUST NOT carry `#id`: an include paragraph is replaced by its fragment, so it is not an anchor target |
 | Attachment | A `when` field on the entry in `attachments` (§3.9), holding a condition as a YAML string — quoted when it begins with `!`, which YAML otherwise reads as a tag: `when: "!schedule"` | The attachment |
 
 A marker holding `when=` in any other position is not a condition; it is literal text and draws the misplaced-marker Warning (`anchor-misplaced`, §16.2).
@@ -1796,7 +1796,7 @@ A marker holding `when=` in any other position is not a condition; it is literal
 
 To make a fragment conditional, put the condition on its `{{include:}}` paragraph, or on a section that contains that paragraph; to make an attachment conditional, use its `when` field. Violations are reported as `template-fragment-invalid` (§16.12).
 
-**Heading hierarchy.** Because a conditional section always takes its subsections with it — and, measured in its own file, any `{{include:}}` paragraph it contains — removing any combination of conditional sections, items, and paragraphs never breaks §4.1: the heading that follows a removed section is at the same level as the removed heading or higher, so it cannot skip a level relative to the heading before. The heading hierarchy therefore needs to be validated only once, on the template. Conditional includes are the one exception, because a fragment's headings need not form whole sections: the combined document MUST satisfy §4.1 under every combination of answers to the questions named in the presence conditions of `{{include:}}` paragraphs — checked, as in §15.4, by trying each such combination, with every include present or absent as that combination decides — which `include-heading-skip` (§16.11) reports.
+**Heading hierarchy.** Because a conditional section always takes its subsections with it — and, measured in its own file, any `{{include:}}` paragraph it contains — removing any combination of conditional sections, items, and paragraphs never breaks §4.1: the heading that follows a removed section is at the same level as the removed heading or higher, so it cannot skip a level relative to the heading before. The heading hierarchy therefore needs to be validated only once, on the template. Conditional includes are the one exception, because a fragment's headings need not form whole sections: the combined document MUST satisfy §4.1 under every combination of answers to the questions named in the presence conditions of `{{include:}}` paragraphs — checked, as in §15.4, by trying each such combination and, for each, removing every unit whose presence condition that combination makes false (includes, and the sections, items, and paragraphs around them) before checking — which `include-heading-skip` (§16.11) reports.
 
 ### 15.4 Alternatives and Reference Safety
 
@@ -1940,7 +1940,7 @@ If a template has no Errors at a given conformance level, every document assembl
 
 | Could fail after assembly | Prevented by |
 |---|---|
-| Skipped heading levels (§4.1) | Conditional sections always take their subsections with them; conditional includes are checked both ways (§15.3) |
+| Skipped heading levels (§4.1) | Conditional sections always take their subsections with them; conditional includes are checked under every combination of answers that decides them (§15.3) |
 | Broken `{{ref:}}`, `{{term:}}`, `{{attach:}}` | Reference safety (§15.4) |
 | Duplicate identifiers | Uniqueness between non-exclusive declarations (§15.4) |
 | Changed auto-generated identifiers | Identifier preservation (§15.7.2 step 7) |
@@ -2112,7 +2112,7 @@ Where §3.10 permits a placeholder in a value field, a placeholder value satisfi
 | `translation-anchor-mismatch` | Section identifiers match between translations | Error |
 | `translation-def-mismatch` | Definition IDs match between translations | Error |
 | `translation-language-set-mismatch` | Linked files declare the same set of languages (`language` + `translations` keys) | Error |
-| `translation-template-mismatch` | Linked templates declare the same question ids, types, choice value ids, and defaults (for `text` questions, the same presence of a default), the same placeholder ids with the same effective types and fixed currency or unit, identical conditions on corresponding units (every conditional item and paragraph carrying an explicit anchor to match by), and the same `{{choose:}}` parameter names (§14.2) | Error |
+| `translation-template-mismatch` | Linked templates declare the same question ids, types, choice value ids, and defaults (for `text` questions, the same presence of a default), the same placeholder ids with the same effective types and fixed currency or unit, identical conditions on corresponding units (every conditional item and ordinary top-level paragraph carrying an explicit anchor to match by; preamble and `{{include:}}` paragraphs matched in order), and the same `{{choose:}}` parameter names (§14.2) | Error |
 | `translation-implicit-id` | Every heading and `{{def:}}` in a translation file (a linked file whose `language` differs from `authoritative`) carries an explicit identifier | Error |
 | `translation-authoritative-absent` | Auto-generated identifiers used in linked files when `authoritative` is absent (primary cannot be determined) | Warning |
 
@@ -2156,7 +2156,7 @@ Non-LegalDown attachments: only file existence is checked.
 | `include-has-frontmatter` | Included fragment contains frontmatter | Error |
 | `include-has-h1` | Included fragment contains a level 1 heading | Error |
 | `include-anchor-duplicate` | Section identifiers in included fragments are unique across the entire combined document (alternatives in a template excepted, §15.4) | Error |
-| `include-heading-skip` | Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) — in a template, under every combination of answers that decides which conditional includes are present (§15.3) | Error |
+| `include-heading-skip` | Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) — in a template, under every combination of answers that decides which conditional includes are present, with every unit that combination makes absent removed (§15.3) | Error |
 
 All other §16 checks apply to the combined document after inclusion (§12.2). Include processing is a Full-level capability (§17.4); the file-extension check on the include path is determinable from the document alone and applies at Core (§17.2).
 
@@ -2251,7 +2251,7 @@ Everything in Rendering, plus all processing that reads files beyond the documen
 - Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §16.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
 - Bilingual documents: Section 14 and the remaining §16.7 checks (cross-file structure, identifier, and language-set matching)
 - Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `supersedes.file`, `translations`) and for image paths (§8.7)
-- Template synchronization between linked translations (§14.2, the `translation-template-mismatch` row of §16.7), and the §16.12 template checks that read include fragments or attachment files, including `template-fragment-invalid`
+- Template synchronization between linked translations (§14.2, the `translation-template-mismatch` row of §16.7), and the parts of the §16.12 template checks that read include fragments or attachment files — for `template-fragment-invalid`, the checks on a fragment's own content (no conditions, drafting notes, or nested includes, explicit heading identifiers); its other parts need only the template and are Core
 
 ### 17.5 Constructs Beyond the Claimed Level
 

@@ -1,0 +1,4 @@
+{
+  "requires_level": "full",
+  "note": "Has include fragments and a LegalDown attachment file, so assembling it reads other files (\u00a715.7.2, \u00a717.6)."
+}

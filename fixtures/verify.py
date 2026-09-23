@@ -130,6 +130,12 @@ def check():
         for f in ASSEMBLY_INPUTS:
             if not os.path.exists(os.path.join(d, f)):
                 problems.append('assembly/%s: missing %s' % (case, f))
+        case_file = os.path.join(d, 'case.json')
+        if os.path.exists(case_file):
+            meta = json.load(open(case_file, encoding='utf-8'))
+            if meta.get('requires_level', 'core') not in TIERS:
+                problems.append('assembly/%s: case.json requires_level %r not in %s'
+                                % (case, meta.get('requires_level'), sorted(TIERS)))
         # Output is either a single expected.lgd, or an expected/ tree holding every output file
         # (template.lgd plus fragments and LegalDown attachment files at their relative paths).
         single = os.path.join(d, 'expected.lgd')

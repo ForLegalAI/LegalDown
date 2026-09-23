@@ -52,8 +52,9 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 - **Bilingual templates (§14.2):** linked templates share questions, defaults (a `text` default
   is translated, but present in every language or in none), placeholder ids with their types and fixed currency or unit,
   conditions, and `{{choose:}}` parameter names, so one answers set assembles every language.
-  Every conditional item and paragraph in a linked template carries an explicit anchor, by which
-  its condition is matched across languages.
+  Every conditional item and ordinary paragraph in a linked template carries an explicit anchor,
+  by which its condition is matched across languages; conditional preamble paragraphs and include
+  lines, which take no anchor, are matched in order.
 - `fixtures/assembly/` — byte-exact template + answers → output cases; fixture fields
   `requires_capability` and `requires_config` values `answers` and `final`.
 
@@ -99,7 +100,7 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 | `metadata-date-invalid`, `date-of-birth-invalid` | Any placeholder exempt | Exempt only when the placeholder is the whole value and of type `date` |
 | `placeholder-type-invalid` | `text`, `date`, `money` | adds `duration` |
 | `duration-invalid-unit` | `{{duration:}}` only | also a `type=duration` placeholder's `unit` |
-| `include-heading-skip` | Combined document | Combined document under every combination of answers deciding which conditional includes are present |
+| `include-heading-skip` | Combined document | Combined document under every combination of answers deciding which conditional includes are present, with the units each combination removes removed |
 | `anchor-misplaced` | Misplaced `{#id}` | Misplaced `{#id}` or `{when=...}` |
 
 #### Files touched
@@ -109,7 +110,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   §16.7, §16.10, §16.11, new §16.12, §17.2–§17.4, new §17.6, §19; "style template" wording
   throughout; sections 15–18 renumbered 16–19; version 0.2 DRAFT
 - `fixtures/` — 16 new rule fixtures, five byte-exact `assembly/` cases (one with multi-file
-  `expected/` output), a currency case for `placeholder-type-inconsistent`, `verify.py`,
+  `expected/` output and a `case.json` level), a currency case for
+  `placeholder-type-inconsistent`, `verify.py`,
   `coverage.json`, README
 - `examples/advanced/template/` — reworked as a full template with an answers set and a
   conditional LegalDown attachment; `examples/README.md`

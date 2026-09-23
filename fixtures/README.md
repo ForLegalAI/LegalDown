@@ -30,6 +30,8 @@ fixtures/
     <case>/                    one template assembly (§15.7)
       template.lgd             a template that MUST produce no Errors
       answers.yaml             the answers set
+      case.json                optional: {"requires_level": "full"} when the case has include
+                                 fragments or LegalDown attachment files (default "core")
       expected.lgd             the exact bytes assembly MUST produce — or, when assembly writes
       expected/                  several files, a tree of every output file: template.lgd plus
                                  each fragment and LegalDown attachment file at its relative path
@@ -85,10 +87,11 @@ runner must:
    assemble it with `answers.yaml` and assert the output is **byte-identical** to `expected.lgd`
    — or, for a case with an `expected/` tree, that the set of output files is exactly the files in
    that tree (a file absent there must not be written; an empty file there is written as zero
-   bytes) and each is byte-identical. These cases need the Assembly capability (§17.6); a case with
-   include fragments or LegalDown attachment files also needs Full.
-4. Skip any case whose `requires_level` exceeds the implementation's claimed conformance level, or
-   that needs a capability or configuration the implementation lacks, and report it as skipped
+   bytes) and each is byte-identical. These cases need the Assembly capability (§17.6), and the level
+   named in the case's `case.json` (`core` when there is none).
+4. Skip any case whose `requires_level` (in its expectation file, or an assembly case's
+   `case.json`) exceeds the implementation's claimed conformance level, or that needs a capability
+   or configuration the implementation lacks, and report it as skipped
    rather than passed — §17.5 forbids reporting checks that were not run.
 
 The five `assembly/` cases:
@@ -99,7 +102,6 @@ The five `assembly/` cases:
 | `identifier-preservation` | A heading whose auto-generated identifier would change is given it explicitly (step 7) |
 | `escaping` | §15.7.3 escaping: `{`, emphasis and link characters, `&` before a letter, a heading marker at the start of a list item, and an ordered-list number completed by template text |
 | `frontmatter-and-defaults` | Removing an attachment and a remaining attachment's `when` entry; deleting an empty `{when=}` marker; a `duration` blank filled from a `default`; single- and double-quoted YAML escaping; escaped `{{choose:}}` phrases; deleting a line left blank by an empty phrase |
-
 | `multi-file` | A kept fragment filled with a blank and a `{{choose:}}`; a removed conditional include (its fragment not written); a conditional attachment file emptied by a removed section (written as zero bytes); a non-LegalDown attachment left out of the output |
 
 ## Coverage
@@ -122,7 +124,8 @@ three lists.
 [`verify.py`](verify.py) checks that the corpus is well-formed and honest — that every directory
 names a real §16 rule id, every expectation has the required fields and legal values, every
 referenced file exists, every asserted line is in range and not blank, every assembly case has its
-three files and an expected output free of template constructs, and `coverage.json` matches what is
+template, answers set, a valid optional `case.json`, and either `expected.lgd` or an `expected/`
+tree whose files all correspond to input files and are free of template constructs, and `coverage.json` matches what is
 on disk — including its total rule count against §16. It does **not** validate or assemble LegalDown documents; that is an implementation's job.
 
 ```
