@@ -9,7 +9,8 @@
 
 This is a design proposal, not specification text. Nothing here is normative until it lands in
 [`spec/legaldown-spec.md`](../spec/legaldown-spec.md) through the process in
-[CONTRIBUTING.md](../CONTRIBUTING.md). Section references (§) point to the v0.1 specification.
+[CONTRIBUTING.md](../CONTRIBUTING.md). References written with § (§5.3) point to the v0.1
+specification; references written as "section 5.3" point to this proposal.
 
 ---
 
@@ -75,7 +76,7 @@ take their `.lgd` files elsewhere has not really taken their templates. Placehol
 ## 2. Design goals
 
 1. **Validate once, assemble any.** Static checks on the template guarantee that every
-   assembly is Error-free (§4.6 below). This needs condition domains to be finite, which is why
+   assembly is Error-free (section 7.5). This needs condition domains to be finite, which is why
    conditions range only over `boolean` and `choice` answers.
 2. **Structure-aligned conditionality.** Only whole structural units are optional. This keeps
    the heading hierarchy intact under any answers, and it fits LegalDown's commitment to
@@ -110,7 +111,7 @@ its frontmatter. Three states follow from what a document contains:
                        ┌──────────────┐
   template.lgd ───────►│              │      draft.lgd                final.lgd
                        │   assemble   ├───►  (blanks may      ──►     (complete)  ──► render
-  answers.yaml ───────►│    (§7)      │       remain)     fill rest
+  answers.yaml ───────►│  (section 7) │       remain)     fill rest
                        └──────────────┘
 ```
 
@@ -170,7 +171,7 @@ template:
 
 | Field | Status | Description |
 |---|---|---|
-| `id` | RECOMMENDED | Template identifier (`[a-z][a-z0-9-]*`), recorded in `assembled_from` (§7.4) |
+| `id` | RECOMMENDED | Template identifier (`[a-z][a-z0-9-]*`), recorded in `assembled_from` (section 7.4) |
 | `version` | OPTIONAL | Template version string, recorded in `assembled_from` |
 | `answers` | OPTIONAL | Map of answer id → answer declaration |
 | `conditions` | OPTIONAL | Map of condition name → condition expression (§5.2) |
@@ -182,7 +183,7 @@ template:
 | `type` | REQUIRED | `text`, `date`, `money`, `duration`, `boolean`, or `choice` |
 | `prompt` | RECOMMENDED | Question shown to the person filling the template (plain text) |
 | `help` | OPTIONAL | Longer guidance for that person (plain text) |
-| `default` | OPTIONAL | Value used when the answers set omits this answer. Its form follows §7.1 |
+| `default` | OPTIONAL | Value used when the answers set omits this answer. Its form follows section 7.1 |
 | `choices` | REQUIRED for `choice` | Map of value id (`[a-z][a-z0-9-]*`) → display label. At least two entries. Order is presentation order |
 | `currency` | OPTIONAL, `money` only | Fixed ISO 4217 currency. The answer then supplies only the amount |
 | `unit` | OPTIONAL, `duration` only | Fixed §10.5 unit. The answer then supplies only the value |
@@ -411,8 +412,8 @@ thirty days of invoice.
   the parameters are exactly `yes` and `no`.
 - Values are **plain text**, following §11.3. They cannot contain directives: the grammar
   prevents nesting, and `{{` inside a quoted value is literal and draws `brace-stray`.
-  Alternatives that need defined terms or references must be structural (§5).
-- Assembly replaces the directive with the selected text, escaped as literal text (§7.3).
+  Alternatives that need defined terms or references must be structural (section 5).
+- Assembly replaces the directive with the selected text, escaped as literal text (section 7.3).
 
 This deliberately narrow directive covers the most common inline need, a phrase that depends
 on a decision, without bringing back arbitrary conditional spans.
@@ -467,9 +468,9 @@ Given a template *T* with no Errors and an answers set *A*:
 3. **Evaluate presence** for every conditional unit. Remove each absent unit with its whole
    subtree, and remove absent attachments from `attachments`. On surviving units, delete the
    `when=` attribute, and delete any marker left empty (`{}`).
-4. **Resolve `{{choose:}}`** to the selected text (§7.3).
+4. **Resolve `{{choose:}}`** to the selected text (section 7.3).
 5. **Fill placeholders** that have an answer:
-   - `text` → the text, escaped (§7.3)
+   - `text` → the text, escaped (section 7.3)
    - `date` → `{{date: 2026-10-01}}`
    - `money` → `{{money: 48000.00, currency=EUR}}`
    - `duration` → `{{duration: 6, unit=MO}}`
@@ -478,9 +479,9 @@ Given a template *T* with no Errors and an answers set *A*:
    is exactly one placeholder becomes the plain scalar (a date string or text). A placeholder
    embedded in a longer frontmatter string must be `text`. Unanswered placeholders stay as
    they are, which makes the output a draft.
-6. **Remove drafting notes** (§8).
-7. **Stabilize identifiers** per §5.5, rule 2.
-8. **Replace the `template` block with provenance** (§7.4).
+6. **Remove drafting notes** (section 8).
+7. **Stabilize identifiers** per section 5.5, rule 2.
+8. **Replace the `template` block with provenance** (section 7.4).
 
 Output formatting is deterministic. Assembly changes only the bytes these steps touch, and
 every other byte of *T*, including line wrapping and comments, is preserved.
@@ -512,12 +513,12 @@ no Errors at the levels *T* was validated at:
 
 | Could fail after assembly | Prevented by |
 |---|---|
-| Heading skips | Structural units (§5.4) |
-| Broken `{{ref:}}`, `{{term:}}`, `{{attach:}}` | `template-ref-conditional` (§5.6) |
-| Duplicate anchors or definitions | Per-configuration uniqueness (§5.6) |
+| Heading skips | Structural units (section 5.4) |
+| Broken `{{ref:}}`, `{{term:}}`, `{{attach:}}` | `template-ref-conditional` (section 5.6) |
+| Duplicate anchors or definitions | Per-configuration uniqueness (section 5.6) |
 | Invalid dates, amounts, durations | Answer type validation (step 2) |
-| Directive or Markdown injection through answers | Escaping (§7.3) |
-| Shifted auto-generated identifiers | Identifier stabilization (§5.5) |
+| Directive or Markdown injection through answers | Escaping (section 7.3) |
+| Shifted auto-generated identifiers | Identifier stabilization (section 5.5) |
 
 Warnings can still appear. For example, `def-unreferenced` fires when the only use of a term
 was in an omitted section. Warnings flag something to review, and they are acceptable in an
@@ -551,7 +552,7 @@ solicit for employment any employee of the other who was involved in the
 - A block quote whose first line is exactly `[!DRAFTING]` is a **drafting note**. It may span
   several paragraphs and use inline formatting.
 - Drafting notes MAY appear in templates and drafts. Assembly removes them, and the completeness
-  profile (§9) rejects any that remain.
+  profile (section 9) rejects any that remain.
 - Renderers SHOULD show them in a visually distinct style, labelled as drafting notes, when
   rendering templates and drafts.
 - Directives inside a note are recognized and validated, so a `{{ref:}}` in a note cannot go
@@ -584,7 +585,7 @@ option or a render-job setting, which adds these Errors:
 
 Outside the profile, these rows are not reported. The profile is a property of the *job*
 ("render this for signature"), not of the document, so no frontmatter field is needed. A
-frontmatter `status` field is listed as an open question (§14).
+frontmatter `status` field is listed as an open question (section 14).
 
 ---
 
@@ -597,7 +598,7 @@ at the Rendering level rendering a template without answers (*template view*):
   text. The RECOMMENDED form is `[IF: forum is arbitration]` at the head of the unit.
 - MUST render `{{choose:}}` with all alternatives visible. RECOMMENDED form:
   `[courts: any competent court | arbitration: any competent court or an emergency arbitrator]`.
-- SHOULD render drafting notes distinctly (§8).
+- SHOULD render drafting notes distinctly (section 8).
 - Render placeholders as in v0.1 (§13.5). Renderers MAY show the `prompt` text.
 - Numbering in template view is implementation-defined. Alternatives that share an identifier
   SHOULD share a number, so that `{{ref:}}` renders one designation.
@@ -638,7 +639,7 @@ New rule ids, following §15.1. Each needs a fixture under `fixtures/invalid/<ru
 | `condition-cycle` | Named conditions do not reference each other cyclically | Error | Core |
 | `condition-outside-template` | `when=` or `{{choose:}}` used in a document without a `template` block | Error | Core |
 | `condition-unsatisfiable` | A unit's presence condition can never be true (dead content) | Warning | Core |
-| `condition-too-complex` | A §5.6 check exceeds 65,536 assignments and was skipped | Warning | Core |
+| `condition-too-complex` | A section 5.6 check exceeds 65,536 assignments and was skipped | Warning | Core |
 | `template-ref-conditional` | A `{{ref:}}`, `{{term:}}`, or `{{attach:}}` target may be absent where the reference is present | Error | Core |
 | `template-implicit-id` | A conditional heading has no explicit identifier | Warning | Core |
 | `choose-invalid-subject` | `{{choose:}}` subject is a choice answer, boolean answer, or named condition | Error | Core |
@@ -651,7 +652,7 @@ New rule ids, following §15.1. Each needs a fixture under `fixtures/invalid/<ru
 | `drafting-note-present` | Drafting note remains | Error (profile only) | Core |
 | `template-unassembled` | Template constructs remain | Error (profile only) | Core |
 
-**Refined v0.1 rules** (same ids, same checks, now evaluated per configuration, §5.6):
+**Refined v0.1 rules** (same ids, same checks, now evaluated per configuration, section 5.6):
 `anchor-duplicate`, `def-duplicate-id`, `attachment-id-duplicate`, `attachment-id-collision`,
 `anchor-autogen-collision`, `def-autogen-collision`.
 
@@ -672,7 +673,7 @@ Full level's "other files" scope. Following #38's suggestion, the proposal defin
 | Rendering + Assembly | An editor with a live preview of the answered template |
 | Full + Assembly | A complete toolchain, including conditional includes and attachments |
 
-An implementation without Assembly that is asked to render a template follows §10 (template
+An implementation without Assembly that is asked to render a template follows section 10 (template
 view) and §16.5. It never silently resolves conditions.
 
 ---
@@ -836,7 +837,7 @@ What the validator proves statically:
 - `{{ref: disputes}}` in Governing Law is unconditional, and its target's presence is
   `forum is courts or forum is arbitration`, which always holds. ✓
 - Removing the Non-Solicitation section, or either Dispute Resolution section, cannot break the
-  heading hierarchy (§5.4). ✓
+  heading hierarchy (section 5.4). ✓
 
 ### 13.2 Answers
 
@@ -947,7 +948,7 @@ These are consistent with #38's out-of-scope list:
 - Repetition and loops: one clause per property, or a variable number of parties or items
 - Arithmetic and computed values, such as a fee of rate × days
 - Conditions over `text`, `money`, or `date` answers (`fee > 100000`). These would make condition
-  domains infinite and break the exhaustive checks in §5.6. Model the threshold as a `choice`.
+  domains infinite and break the exhaustive checks in section 5.6. Model the threshold as a `choice`.
 - Conditional table rows
 - Clause libraries, template inheritance, or overriding parts of another template
 - External data lookups
@@ -956,7 +957,7 @@ These are consistent with #38's out-of-scope list:
 
 | Alternative | Why not |
 |---|---|
-| **Delimited regions** (`{{if:}} … {{endif}}`, #38 shape B) | Arbitrary spans break the heading-hierarchy guarantee (§5.4), need pairing and nesting in an otherwise flat block model, and invite hard-to-review mid-sentence logic |
+| **Delimited regions** (`{{if:}} … {{endif}}`, #38 shape B) | Arbitrary spans break the heading-hierarchy guarantee (section 5.4), need pairing and nesting in an otherwise flat block model, and invite hard-to-review mid-sentence logic |
 | **Named variants only** (#38 shape C) | Kept as the optional `template.conditions` layer. Requiring it for even a single boolean adds indirection with no benefit |
 | **Embedding Jinja, Liquid, or Handlebars** | Not total, differs between engines, makes source unreadable to lawyers, and cannot be validated statically |
 | **A separate template file type (`.lgdt`)** | A template is a document. One file type means one set of tools, and the `template` block already shows the state |
