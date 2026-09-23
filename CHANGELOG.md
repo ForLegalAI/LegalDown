@@ -41,13 +41,15 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 - **Assembly (§15.7).** A byte-deterministic transformation of a template and an answers set into
   an ordinary LegalDown document, with defined answer forms, escaping of inserted text, and
   identifier preservation. A template without Errors assembles without Errors for every valid
-  answers set. Assembly works on the combined document (template, include fragments, LegalDown
-  attachment files) and writes each line back to its own file.
+  answers set. Include fragments and attachment files are assembled with the same answers, file
+  by file; fragments of a template hold no conditions and give every heading an explicit id, so
+  every inclusion assembles alike. Templates with includes or LegalDown attachments need Full.
 - **Template view (§15.8)** and the **final check (§15.9)**.
 - **`duration` placeholder type (§10.7).**
 - **Assembly capability (§17.6)**, claimable alongside any conformance level.
-- **Bilingual templates (§14.2):** linked templates share questions, conditions, and
-  `{{choose:}}` parameter names.
+- **Bilingual templates (§14.2):** linked templates share questions, defaults (other than `text`
+  defaults, which are translated), placeholder ids with their types and fixed currency or unit,
+  conditions, and `{{choose:}}` parameter names, so one answers set assembles every language.
 - `fixtures/assembly/` — byte-exact template + answers → output cases; fixture fields
   `requires_capability` and `requires_config` values `answers` and `final`.
 
@@ -78,6 +80,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
 |---|---|---|
 | `question-invalid`, `placeholder-question-mismatch`, `condition-invalid`, `condition-reference-unsafe`, `choose-invalid`, `drafting-note-def` | — | Error (Core) |
 | `question-unused`, `condition-never-true`, `drafting-note-unrecognized` | — | Warning (Core) |
+| `fragment-implicit-id` | — | Error (Full) |
+| `placeholder-type-inconsistent` | Same effective type | In a template, also the same fixed `currency`/`unit` |
 | `answer-missing`, `answer-invalid` | — | Error (Assembly) |
 | `answer-unknown` | — | Warning (Assembly) |
 | `placeholder-unfilled`, `template-construct-present` | — | Error (final option only) |
@@ -97,7 +101,7 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   §8.6, §10.3, §10.7, §11.1, §11.2, §11.4, §12.2, §13.1, §13.5, §13.7, §14.2–§14.3, §16.1–§16.5,
   §16.7, §16.10, §16.11, new §16.12, §17.2–§17.4, new §17.6, §19; "style template" wording
   throughout; sections 15–18 renumbered 16–19; version 0.2 DRAFT
-- `fixtures/` — 15 new rule fixtures, four byte-exact `assembly/` cases, `verify.py`,
+- `fixtures/` — 16 new rule fixtures, four byte-exact `assembly/` cases, `verify.py`,
   `coverage.json`, README
 - `examples/advanced/template/` — reworked as a full template with an answers set and a
   conditional LegalDown attachment; `examples/README.md`

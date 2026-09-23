@@ -1,0 +1,15 @@
+{
+  "entry": "main.lgd",
+  "diagnostics": [
+    {
+      "rule": "fragment-implicit-id",
+      "level": "error",
+      "file": "extended-support.lgd",
+      "line": 1
+    }
+  ],
+  "exhaustive": false,
+  "requires_level": "full",
+  "spec": "16.12",
+  "note": "A heading in an include fragment of a template must carry an explicit identifier, so that assembly never has to change a fragment."
+}

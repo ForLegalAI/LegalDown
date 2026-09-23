@@ -1,0 +1,27 @@
+---
+title: Fixture
+document_type: contract
+questions:
+  extended-support:
+    type: boolean
+    prompt: Include extended support?
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# Support {#support}
+
+The Provider shall provide standard support during business hours.
+
+{{include: extended-support.lgd}} {when=extended-support}

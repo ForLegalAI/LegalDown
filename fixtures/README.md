@@ -99,7 +99,7 @@ Conditional includes and assembly of attachment files are not yet covered by a c
 
 ## Coverage
 
-**110 of the 113 rules in §16 have fixtures.** The remaining three are recorded in
+**111 of the 114 rules in §16 have fixtures.** The remaining three are recorded in
 [`coverage.json`](coverage.json) with a reason, so the corpus never implies coverage it does not
 have:
 

@@ -1,5 +1,5 @@
 {
-  "total_rules": 113,
+  "total_rules": 114,
   "covered": [
     "amend-def-override",
     "amend-term-undefined",
@@ -52,6 +52,7 @@
     "field-type-key-reserved",
     "field-type-missing",
     "field-type-undeclared",
+    "fragment-implicit-id",
     "frontmatter-absent",
     "frontmatter-invalid-yaml",
     "heading-depth",
