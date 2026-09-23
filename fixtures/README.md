@@ -31,8 +31,8 @@ fixtures/
       template.lgd             a template that MUST produce no Errors
       answers.yaml             the answers set
       case.json                {"requires_level": "full"} — required when the template has include
-                                 fragments or LegalDown attachment files; otherwise optional
-                                 (default "core")
+                                 fragments, LegalDown attachment files, or translations;
+                                 otherwise optional (default "core")
       expected.lgd             the exact bytes assembly MUST produce — or, when assembly writes
       expected/                  several files, a tree of every output file: template.lgd plus
                                  each fragment and LegalDown attachment file at its relative path
@@ -95,7 +95,7 @@ runner must:
    or configuration the implementation lacks, and report it as skipped
    rather than passed — §17.5 forbids reporting checks that were not run.
 
-The five `assembly/` cases:
+The six `assembly/` cases:
 
 | Case | Exercises |
 |---|---|
@@ -103,6 +103,7 @@ The five `assembly/` cases:
 | `identifier-preservation` | A heading whose auto-generated identifier would change is given it explicitly (step 7) |
 | `escaping` | §15.7.3 escaping: `{`, emphasis and link characters, `&` before a letter, a heading marker at the start of a list item, and an ordered-list number completed by template text |
 | `frontmatter-and-defaults` | Removing an attachment and a remaining attachment's `when` entry; deleting an empty `{when=}` marker; a `duration` blank filled from a `default`; single- and double-quoted YAML escaping; escaped `{{choose:}}` phrases; deleting a line left blank by an empty phrase |
+| `draft-and-line-starts` | An unanswered declared blank keeps its type inline (a draft); an empty `{{choose:}}` at a line start leaves `2.` that is escaped; a deleted choice line makes the next line a list start, which is escaped; trailing spaces of a phrase that ends a line are trimmed |
 | `multi-file` | A kept fragment filled with a blank and a `{{choose:}}`; a removed conditional include (its fragment not written); a conditional attachment file emptied by a removed section (written as zero bytes); a non-LegalDown attachment left out of the output |
 
 ## Coverage

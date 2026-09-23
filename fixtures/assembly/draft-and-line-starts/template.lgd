@@ -1,0 +1,47 @@
+---
+title: Fixture
+document_type: contract
+questions:
+  fee:
+    type: money
+    prompt: Fixed fee
+  cite:
+    type: choice
+    prompt: Citation style
+    choices:
+      full: Full citation
+      short: Short citation
+  detailed:
+    type: boolean
+    prompt: Include the step-by-step description?
+  vat:
+    type: boolean
+    prompt: Is the fee stated net of VAT?
+sides:
+  - name: providers
+    label: Provider
+    parties:
+      - name: acme
+        type: legal_entity
+        legal_name: Acme Corporation
+  - name: clients
+    label: Client
+    parties:
+      - name: beta
+        type: legal_entity
+        legal_name: Beta Industries Inc.
+---
+
+# Fees {#fees}
+
+The Client shall pay {{placeholder: fee, currency=EUR}} for the services.
+
+{{choose: cite, full="Clause", short=""}} 2. of Schedule A applies to every invoice.
+
+Payment works as follows.
+
+{{choose: detailed, true="The steps are:", false=""}}
+2. The Client pays within thirty days.
+
+The fee is {{choose: vat, true="net  ", false="gross"}}
+of VAT.

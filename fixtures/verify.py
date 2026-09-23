@@ -46,8 +46,9 @@ def attachment_files(frontmatter):
         if re.match(r'^attachments:\s*(#.*)?$', line):
             inside = True
             continue
-        if inside and line.strip() and not line.startswith((' ', '\t')) and not line.lstrip().startswith('#'):
-            inside = False
+        if (inside and line.strip() and not line.startswith((' ', '\t', '-'))
+                and not line.lstrip().startswith('#')):
+            inside = False  # the next top-level key; a column-0 "- " item still belongs to the list
         if inside:
             m = re.match(r'^\s+(?:-\s+)?file:\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s#][^#]*?))\s*(#.*)?$', line)
             if m:

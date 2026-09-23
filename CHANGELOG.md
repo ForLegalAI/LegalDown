@@ -47,7 +47,9 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   and fragments hold no conditions or drafting notes and give every heading an explicit id.
   Templates with includes, LegalDown attachments, or `translations` need Full. Output keeps the
   template's relative layout, and a translation group is assembled together. Unanswered blanks keep
-  their declared type inline. A draft is filled by the same procedure.
+  their declared type inline. A draft is filled by the same procedure, all steps included. Line
+  starts are checked after insertions and after deleted choice lines, and trailing spaces of an
+  insertion ending a line are trimmed, so no Markdown block or hard break can form.
 - **Template view (§15.8)** and the **final check (§15.9)**.
 - **`duration` placeholder type (§10.7).**
 - **Assembly capability (§17.6)**, claimable alongside any conformance level.
@@ -115,8 +117,8 @@ recorded in [`proposals/templates.md`](proposals/templates.md).
   §8.6, §10.3, §10.7, §11.1, §11.2, §11.4, §12.2, §13.1, §13.5, §13.7, §14.2–§14.3, §16.1–§16.5,
   §16.7, §16.10, §16.11, new §16.12, §17.2–§17.4, new §17.6, §19; "style template" wording
   throughout; sections 15–18 renumbered 16–19; version 0.2 DRAFT
-- `fixtures/` — 18 new rule fixtures, five byte-exact `assembly/` cases (one with multi-file
-  `expected/` output and a `case.json` level), a currency case for
+- `fixtures/` — 18 new rule fixtures, byte-exact `assembly/` cases (one with multi-file
+  `expected/` output and a `case.json` level; six in all), a currency case for
   `placeholder-type-inconsistent`, `verify.py`,
   `coverage.json`, README
 - `examples/advanced/template/` — reworked as a full template with an answers set and a
