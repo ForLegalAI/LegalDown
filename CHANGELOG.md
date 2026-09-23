@@ -9,6 +9,82 @@ will be recorded here with a migration note.
 
 ---
 
+## [Unreleased] — targets 0.2
+
+Templates could hold fillable blanks in 0.1, but nothing else a template needs: a template that
+said one thing to a consumer and another to a business had to be split in two, drafting guidance
+lived in HTML comments that no rendered review ever showed, and turning a template into a document
+was left to whichever tool did it. That put the most valuable part of a template — its logic —
+outside the format ([#38](https://github.com/ForLegalAI/LegalDown/issues/38)). The design is
+recorded in [`proposals/templates.md`](proposals/templates.md).
+
+### 2026-09-23 — Templates (new §15)
+
+> Sections 15–18 are renumbered 16–19 to make room for §15. Rule ids are unchanged, so fixture
+> directories and suppressions keep working; citations of section numbers need updating.
+
+#### Added
+
+- **Questions (§15.2).** Optional frontmatter `questions`: value questions (`text`, `date`,
+  `money`, `duration`) give a placeholder of the same id a `prompt` and `default`; decision
+  questions (`boolean`, `choice`) drive conditions and inline choices.
+- **Conditions (§15.3).** `when=` on the anchor marker — `{#id when=q}`, `when=!q`, `when=q:value`,
+  `when=!q:value` — on whole sections (with their subsections), list items, top-level and preamble
+  paragraphs, include paragraphs, and attachments (`attachments[].when`). One test per marker;
+  nesting combines conditions.
+- **Alternatives and reference safety (§15.4).** Units whose conditions can never both hold MAY
+  share an identifier; every reference must resolve under every combination of answers.
+- **`{{choose:}}` (§15.5).** An inline plain-text phrase chosen by a decision; every possible
+  answer must be listed.
+- **Drafting notes (§15.6).** `> [!DRAFTING]` block quotes, rendered as guidance in template views
+  and removed on assembly.
+- **Assembly (§15.7).** A byte-deterministic transformation of a template and an answers set into
+  an ordinary LegalDown document, with defined answer forms, escaping of inserted text, and
+  identifier preservation. A template without Errors assembles without Errors for every answer set.
+- **Template view (§15.8)** and the **final check (§15.9)**.
+- **`duration` placeholder type (§10.7).**
+- **Assembly capability (§17.6)**, claimable alongside any conformance level.
+- **Bilingual templates (§14.2):** linked templates share questions, conditions, and
+  `{{choose:}}` parameter names.
+- `fixtures/assembly/` — byte-exact template + answers → output cases; fixture fields
+  `requires_capability` and `requires_config` values `answers` and `final`.
+
+#### Changed
+
+- Uniqueness of section identifiers, anchors, attachment ids, and definition ids — and
+  auto-generated identifier collisions — applies only between declarations that can appear
+  together (§5.2, §5.4, §5.5, §7.2).
+- A placeholder's omitted `type` defaults to its declared question's type before `text` (§10.7).
+- `{when=...}` markers outside a condition position draw `anchor-misplaced`.
+- `questions` joins the structural frontmatter fields that must not hold placeholders (§3.10).
+
+#### Validation changes
+
+| Rule | Before | After |
+|---|---|---|
+| `question-invalid`, `placeholder-question-mismatch`, `condition-invalid`, `condition-reference-unsafe`, `choose-invalid`, `drafting-note-def` | — | Error (Core) |
+| `question-unused`, `condition-never-true` | — | Warning (Core) |
+| `answer-missing`, `answer-invalid` | — | Error (Assembly) |
+| `answer-unknown` | — | Warning (Assembly) |
+| `placeholder-unfilled`, `template-construct-present` | — | Error (final option only) |
+| `translation-template-mismatch` | — | Error (Full) |
+| `anchor-duplicate`, `def-duplicate-id`, `attachment-id-duplicate` | Any duplicate | Duplicates between declarations that can appear together |
+| `placeholder-type-invalid` | `text`, `date`, `money` | adds `duration` |
+
+#### Files touched
+
+- `spec/legaldown-spec.md` — new §15; §1.3, §3.2, §3.9, §3.10, §4.4, §5.2, §5.4–§5.7, §7.2, §8.4,
+  §10.7, §11.1, §13.7, §14.2–§14.3, §16.1, §16.2, §16.4, §16.5, §16.7, §16.10, new §16.12, §17.2–§17.4,
+  new §17.6, §19; sections 15–18 renumbered 16–19; version 0.2 DRAFT
+- `fixtures/` — 14 new rule fixtures, `assembly/` cases, `verify.py`, `coverage.json`, README
+- `examples/advanced/template/` — reworked as a full template with an answers set and a
+  conditional LegalDown attachment; `examples/README.md`
+- `llm/legaldown-spec-llm.md` — new Templates section, validation summary, "Not in the language"
+- `README.md`, `CONTRIBUTING.md` — templates overview, version, section numbers
+- `proposals/templates.md` — the design proposal
+
+---
+
 ## [0.1] — 2026-08-14
 
 First published version of the LegalDown specification. Everything below is new.

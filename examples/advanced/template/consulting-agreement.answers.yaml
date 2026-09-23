@@ -1,0 +1,14 @@
+# An answers set for consulting-agreement-template.lgd (specification §15.7.1).
+# Omitted decisions take their defaults: non-solicit is true, personal-data is false.
+client-short-name: Northwind
+client-legal-name: Northwind Trading s.r.o.
+client-id: CZ-27082440
+client-address: Na Příkopě 12, 110 00 Prague 1, Czech Republic
+client-signatory: Jana Nováková
+client-signatory-title: Managing Director
+effective-date: 2026-10-01
+engagement-term: 6
+fee-amount: "48000.00"
+forum: arbitration
+forum-city: Vienna
+governing-law: Austria

@@ -371,7 +371,7 @@ Each attachment object has the following fields:
 **Rules:**
 
 - `attachments` is an OPTIONAL array in frontmatter
-- Attachment ids MUST be unique within the document
+- Attachment ids MUST be unique within the document, except between alternatives in a template (§15.4)
 - Attachment ids share the anchor namespace with section identifiers (§5.6) — collisions are not allowed
 - The `title` is author-written and rendered verbatim — the renderer does not generate labels such as "Schedule" or "Annex" (to remain language-agnostic)
 - The `file` path MAY point to a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
@@ -1825,8 +1825,8 @@ The fee is payable within thirty days of invoice{{choose: vat, true=", plus VAT"
 
 - The positional value MUST be the id of a declared decision question (§15.2)
 - For a `choice` question, the named parameters are its value ids; for a `boolean` question, they are `true` and `false`
-- The directive MUST list **every** possible answer exactly once, and MUST NOT list any other parameter. An empty value (`""`) produces no text. Because every answer must be listed, adding a value to a `choice` question makes each `{{choose:}}` that does not cover it invalid, so no phrase can go missing unnoticed
-- Values are plain text, in the document's `language`, and follow §11.3 — quote them when they contain a comma. They MUST NOT contain Markdown formatting or directives: a `{{` inside a value is literal text and draws `brace-stray` (§16.2). A variant that needs a defined term, a reference, or a blank is written as a conditional unit instead (§15.3–§15.4)
+- The directive MUST list **every** possible answer exactly once, and MUST NOT list any other parameter — for `{{choose:}}`, an undefined parameter is an Error (`choose-invalid`) rather than the general Warning of §11.2. An empty value (`""`) produces no text. Because every answer must be listed, adding a value to a `choice` question makes each `{{choose:}}` that does not cover it invalid, so no phrase can go missing unnoticed
+- Values are plain text, in the document's `language`, and follow §11.3 — quote them when they contain a comma. They are inserted as literal text, so Markdown characters in a value render as written (§15.7.3), and they cannot hold directives: a `{{` inside a value is literal text and draws `brace-stray` (§16.2). A variant that needs a defined term, a reference, or a blank is written as a conditional unit instead (§15.3–§15.4)
 - `{{choose:}}` is recognized wherever directives are recognized in body text (§11.4). It MUST NOT appear in headings (§4.2) or frontmatter
 
 Use a condition when a whole unit appears or disappears, and `{{choose:}}` when only words change.
@@ -1884,9 +1884,9 @@ A `default` in a question declaration takes the same form. Answers keyed by an i
 
 #### 15.7.2 Procedure
 
-Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template source. Frontmatter edits are made line by line; they rely on `questions` and `attachments` being written in YAML block style.
+Given a template with no Errors and an answers set, an implementation MUST produce its output by applying the following steps to the template source. Frontmatter edits are made line by line; they rely on `questions` and `attachments` being written in YAML block style. Include fragments (§12.2) and LegalDown attachment files (§12.4) are assembled with the same answers set, each into its own output file, by the same steps (those that apply to a body-only fragment); the fragment of a removed include and the file of a removed attachment produce no output.
 
-1. **Decisions.** Determine the answer to every decision question: the answers set's value, or else the declaration's `default`. A decision question used by a condition or `{{choose:}}` that has neither is an Error (`answer-missing`), and assembly stops. An answer of the wrong form for its question's type is an Error (`answer-invalid`), and assembly stops.
+1. **Decisions.** Determine the answer to every decision question: the answers set's value, or else the declaration's `default`. A decision question is **needed** when a condition or `{{choose:}}` that uses it lies in a unit whose enclosing conditions are all true — so a question asked only inside an absent section needs no answer. A needed decision question with neither an answer nor a `default` is an Error (`answer-missing`), and assembly stops. An answer of the wrong form for its question's type is an Error (`answer-invalid`), and assembly stops.
 2. **Removal.** Evaluate the presence condition of every conditional unit and remove each unit that is absent, with everything it contains. A removed unit's lines run from its first line through its last non-blank line; for a section, through the last non-blank line before the next heading of the same or a higher level, or the end of the body. A removed attachment is deleted from `attachments` — its `- ` entry line and every following line indented more deeply than that entry. If no attachment remains, the `attachments` key line is deleted too.
 3. **Markers.** In every remaining marker, delete the `when=` attribute together with the whitespace that separated it from the other attribute. A marker left empty (`{}`) is deleted together with the spaces and tabs before it. On every remaining attachment, delete the `when` line.
 4. **Choices.** Replace each remaining `{{choose:}}` with the phrase listed for the answer, escaped as in §15.7.3.
@@ -2157,7 +2157,7 @@ Assembly checks — reported by implementations of the Assembly capability (§17
 
 | ID | Check | Level |
 |---|---|---|
-| `answer-missing` | Every decision question used by a condition or `{{choose:}}` has an answer or a `default` | Error |
+| `answer-missing` | Every needed decision question — one used by a condition or `{{choose:}}` in a unit whose enclosing conditions are all true (§15.7.2) — has an answer or a `default` | Error |
 | `answer-invalid` | Every answer has the form its question's type requires (§15.7.1), and agrees with any currency or unit fixed by its placeholders | Error |
 | `answer-unknown` | Every answer id is a declared question or a placeholder id of the template | Warning |
 

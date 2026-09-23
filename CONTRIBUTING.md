@@ -3,7 +3,7 @@
 LegalDown is an open specification. Contributions are welcome — from typo fixes to new language
 features.
 
-The specification is currently **v0.1 DRAFT**: breaking changes are still possible between draft
+The specification is currently **v0.2 DRAFT**: breaking changes are still possible between draft
 revisions, and are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
@@ -43,9 +43,10 @@ argument:
   Error, Warning, or Info — otherwise implementations will disagree about what to do with it.
 - **Every rule needs a conformance level.** Decide whether the check is Core, Rendering, or Full
   (§17). Roughly: a check needing only the document file is **Core**; one needing the active style
-  template or rendered output is **Rendering**; one needing another file is **Full**. Where a rule
-  sits in a §16 table whose level differs, §17.2 carves it out by name — as it does for the
-  template-dependent §16.3 row and the `supersedes.file` existence row.
+  template or rendered output is **Rendering**; one needing another file is **Full**; one needing
+  an answers set belongs to the **Assembly** capability (§17.6). Where a rule sits in a §16 table
+  whose level differs, §17.2 carves it out by name — as it does for the template-dependent §16.3
+  row and the `supersedes.file` existence row.
 
 ---
 

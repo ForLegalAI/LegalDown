@@ -1,8 +1,33 @@
 ---
-legaldown: "0.1"
+legaldown: "0.2"
 title: "Consulting Agreement with {{placeholder: client-short-name}}"
 document_type: contract
 effective_date: "{{placeholder: effective-date, type=date}}"
+questions:
+  client-short-name:
+    type: text
+    prompt: Client's short name, as it should appear in the title
+  fee-amount:
+    type: money
+    prompt: Fixed fee for the engagement, excluding VAT
+  engagement-term:
+    type: duration
+    prompt: Length of the engagement
+  non-solicit:
+    type: boolean
+    prompt: Include a non-solicitation covenant?
+    default: true
+  personal-data:
+    type: boolean
+    prompt: Will the Consultant process personal data on the Client's behalf?
+    default: false
+  forum:
+    type: choice
+    prompt: How are disputes resolved?
+    choices:
+      courts: State courts
+      arbitration: ICC arbitration
+    default: courts
 sides:
   - name: consultants                    # identifier — stays concrete
     label: Consultant
@@ -29,40 +54,75 @@ sides:
             title: "{{placeholder: client-signatory-title}}"
 governing_law: "{{placeholder: governing-law}}"
 language: en
+attachments:
+  - id: dpa
+    title: "Schedule 1: Data Processing Terms"
+    file: attachments/data-processing.lgd
+    when: personal-data
 ---
 
 This Consulting Agreement (this "Agreement" {{def: agreement}}) is entered into on
 {{placeholder: effective-date, type=date}} between {{party: acme}} and {{party: client}}.
+
+> [!DRAFTING]
+> Use this template for fixed-fee advisory engagements only. For time-and-materials work, use
+> the time-and-materials template instead.
 
 # Definitions {#definitions}
 
 "Consulting Services" {{def: consulting-services}} means the advisory services described in
 Section {{ref: scope}}.
 
+"Client Data" {{def: client-data}} means personal data processed by
+{{party: acme, label=the Consultant}} on behalf of the Client under the {{term: agreement}}. {when=personal-data}
+
 # Scope of Engagement {#scope}
 
-{{party: acme, label=the Consultant}} shall provide the {{term: consulting-services}} described
-below:
+{{party: acme, label=the Consultant}} shall provide the {{term: consulting-services}},
+comprising:
 
-- {{placeholder: service-description-1}} {#scope-item-1}
-- {{placeholder: service-description-2}} {#scope-item-2}
+- a strategic review of the Client's operations {#scope-review}
+- a written recommendations report {#scope-report}
+- processing of {{term: client-data}} strictly in accordance with {{attach: dpa}} {#scope-data when=personal-data}
 
 The engagement begins on {{placeholder: effective-date, type=date}} and continues for
-{{placeholder: engagement-duration}} unless terminated earlier.
+{{placeholder: engagement-term, unit=MO}} unless terminated earlier.
 
 # Fees {#fees}
 
-The Client shall pay {{placeholder: fee-amount, type=money, currency=EUR}} for the
+The Client shall pay {{placeholder: fee-amount, currency=EUR}} for the
 {{term: consulting-services}}, payable within {{duration: 30, unit=D}} of invoice.
 
 Expenses are reimbursed only where approved in advance in writing.
+
+# Non-Solicitation {#non-solicit when=non-solicit}
+
+> [!DRAFTING]
+> Twelve months is the firm's standard. Do not extend beyond twenty-four months without partner
+> approval.
+
+During the engagement and for {{duration: 12, unit=MO}} after it ends, neither party shall
+solicit for employment any employee of the other who was involved in the
+{{term: consulting-services}}.
 
 # Confidentiality {#confidentiality}
 
 Each party shall keep confidential all non-public information received from the other in
 connection with the {{term: agreement}}.
 
+# Dispute Resolution {#disputes when=forum:courts}
+
+Any dispute arising out of the {{term: agreement}} shall be resolved exclusively by the courts of
+{{placeholder: forum-city}}.
+
+# Dispute Resolution {#disputes when=forum:arbitration}
+
+Any dispute arising out of the {{term: agreement}} shall be finally settled under the Rules of
+Arbitration of the International Chamber of Commerce by a sole arbitrator. The seat of
+arbitration is {{placeholder: forum-city}}.
+
 # Governing Law {#governing-law}
 
-The {{term: agreement}} is governed by the laws of {{placeholder: governing-law}}, and the parties
-submit to the exclusive jurisdiction of the courts of {{placeholder: forum}}.
+The {{term: agreement}} is governed by the laws of {{placeholder: governing-law}}. Nothing in
+Section {{ref: disputes}} prevents either party from seeking interim relief from
+{{choose: forum, courts="any competent court", arbitration="any competent court or an emergency arbitrator"}}.

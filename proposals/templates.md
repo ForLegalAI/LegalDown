@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Draft for discussion |
+| **Status** | Accepted — specified in [`spec/legaldown-spec.md`](../spec/legaldown-spec.md) §15 (v0.2 DRAFT) |
 | **Targets** | v0.2 |
 | **Tracks** | [ForLegalAI/LegalDown#38](https://github.com/ForLegalAI/LegalDown/issues/38) — Conditional content for templates |
 | **Date** | 2026-09-23 |

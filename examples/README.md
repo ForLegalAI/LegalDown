@@ -31,7 +31,7 @@ Two tiers:
 | [`msa/`](advanced/msa) | The flagship contract: multi-party sides, a `natural_person` party, `field_types` + `{{field:}}`, `{{side:}}`, item and paragraph anchors, `{{include:}}`, two LegalDown attachments + one PDF, recitals, tables, `supersedes` object form |
 | [`amendment/`](advanced/amendment) | Amends the MSA above; declares its own definitions while using imported ones |
 | [`bilingual/`](advanced/bilingual) | An en/fr pair: `translations`, `authoritative`, explicit identifiers throughout, French guillemet term delimiters (§7.2) |
-| [`template/`](advanced/template) | A fillable template: `{{placeholder:}}` in frontmatter value fields (§3.10) and in body text, with identifier and structural fields kept concrete |
+| [`template/`](advanced/template) | A template (§15): `questions`, optional and alternative sections, a conditional item, paragraph, and attachment, `{{choose:}}`, drafting notes, and `{{placeholder:}}` in frontmatter and body — with an answers set (`consulting-agreement.answers.yaml`) to assemble it with |
 
 ---
 
@@ -77,11 +77,18 @@ Where to find a live example of each feature. Section numbers refer to the speci
 | `{{party:}}` with `label` | 10.4 | `simple/nda`, `advanced/msa` |
 | `{{duration:}}` — all seven units | 10.5 | `advanced/msa` and its fragments cover `S`, `MIN`, `H`, `D`, `W`, `MO`; `simple/amendment` covers `Y` |
 | `{{field:}}` custom typed values | 10.6 | `advanced/msa` (`ticket-id`), include (`invoice-id`) |
-| `{{placeholder:}}` — text, date, money | 10.7 | `advanced/template`, `advanced/msa` |
+| `{{placeholder:}}` — text, date, money, duration | 10.7 | `advanced/template`, `advanced/msa` |
 | `{{side:}}` collective reference | 10.8 | `advanced/msa` |
 | `{{include:}}` body-only fragment | 12.1–12.2 | `advanced/msa` (`includes/payment-terms.lgd`) |
 | Attachment files (body-only, no `#`) | 12.4 | `simple/nda`, `advanced/msa` |
 | Bilingual primary/translation pair | 14 | `advanced/bilingual` |
+| Template questions — value and decision | 15.2 | `advanced/template` |
+| Conditional section, item, and paragraph (`when=`) | 15.3 | `advanced/template` (`non-solicit`, `scope-data`, the "Client Data" definition) |
+| Conditional attachment (`attachments[].when`) | 15.3 | `advanced/template` (`dpa`) |
+| Alternatives sharing an identifier | 15.4 | `advanced/template` (the two `disputes` sections) |
+| `{{choose:}}` inline choice | 15.5 | `advanced/template` (Governing Law) |
+| Drafting notes | 15.6 | `advanced/template` |
+| Answers set and assembly | 15.7 | `advanced/template/consulting-agreement.answers.yaml`; byte-exact cases in [`fixtures/assembly/`](../fixtures/assembly) |
 
 ---
 

@@ -1,0 +1,14 @@
+{{party: acme, label=The Consultant}} shall process {{term: client-data}} only on documented
+instructions from the Client and only for the purpose of performing the
+{{term: consulting-services}}.
+
+## Security {#dpa-security}
+
+The Consultant shall implement appropriate technical and organisational measures to protect
+{{term: client-data}} against accidental or unlawful destruction, loss, alteration, or
+disclosure.
+
+## Return and Deletion {#dpa-return}
+
+At the end of the engagement, the Consultant shall return or delete all {{term: client-data}},
+at the Client's choice.
