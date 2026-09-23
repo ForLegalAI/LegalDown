@@ -9,125 +9,161 @@ will be recorded here with a migration note.
 
 ---
 
-## [Unreleased] — targets 0.2
+## [Unreleased]
 
-Templates could hold fillable blanks in 0.1, but nothing else a template needs: a template that
-said one thing to a consumer and another to a business had to be split in two, drafting guidance
-lived in HTML comments that no rendered review ever showed, and turning a template into a document
-was left to whichever tool did it. That put the most valuable part of a template — its logic —
-outside the format ([#38](https://github.com/ForLegalAI/LegalDown/issues/38)). The design is
-recorded in [`proposals/templates.md`](proposals/templates.md).
+Nothing yet.
 
-### 2026-09-23 — Templates (new §15)
+---
 
-> Sections 15–18 are renumbered 16–19 to make room for §15. Rule ids are unchanged, so fixture
-> directories and suppressions keep working; citations of section numbers need updating.
+## [0.2] — 2026-09-23
 
-#### Added
+The template release. Templates could hold fillable blanks in 0.1, but nothing else a template
+needs: a template that said one thing to a consumer and another to a business had to be split in
+two, drafting guidance lived in HTML comments that no rendered review ever showed, and turning a
+template into a document was left to whichever tool did it. That put the most valuable part of a
+template — its logic — outside the format
+([#38](https://github.com/ForLegalAI/LegalDown/issues/38)). 0.2 brings it in, as a new §15, while
+keeping templates simple, language-neutral, and deterministic. The design and its rationale are
+recorded in [`proposals/templates.md`](proposals/templates.md); where the proposal and the
+specification differ, the specification is normative.
 
-- **Questions (§15.2).** Optional frontmatter `questions`: value questions (`text`, `date`,
-  `money`, `duration`) give a placeholder of the same id a `prompt` and `default`; decision
-  questions (`boolean`, `choice`) drive conditions and inline choices.
-- **Conditions (§15.3).** `when=` on the anchor marker — `{#id when=q}`, `when=!q`, `when=q:value`,
-  `when=!q:value` — on whole sections (with their subsections), list items, top-level and preamble
-  paragraphs, include paragraphs, and attachments (`attachments[].when`). One test per marker;
-  nesting combines conditions.
+> **Breaking changes.** Most 0.1 documents are unaffected. The following now draw Errors or
+> Warnings they did not draw in 0.1 — see *Migration* below:
+>
+> - one placeholder id fixing two different currencies or units (`placeholder-type-inconsistent`)
+> - a placeholder in a date field that is not the whole value or not of type `date`
+>   (`metadata-date-invalid`, `date-of-birth-invalid`), or in a file path, attachment `id`,
+>   language code, or `field_types` (`placeholder-in-structural-field`)
+> - a blank glued to Markdown punctuation — `&`, `<`, `**`, a link target — in a draft
+>   (`insertion-boundary`)
+> - an `#id` on a paragraph that holds only an `{{include:}}` (ignored, `anchor-misplaced`)
+>
+> **Renumbering.** Sections 15–18 are now 16–19 (Validation, Conformance Levels, Complete Examples,
+> Roadmap). Rule ids are unchanged, so fixture directories and rule suppressions keep working;
+> citations of section numbers need updating.
+
+### Added
+
+**Templates (§15).** A template is an ordinary LegalDown document that declares `questions`,
+carries a `when=` condition, or contains a `{{choose:}}` directive.
+
+- **Questions (§15.2).** Optional frontmatter `questions`. Value questions (`text`, `date`,
+  `money`, `duration`) give a placeholder of the same id a `prompt` and a `default`; decision
+  questions (`boolean`, `choice`) drive conditions and inline choices. A placeholder's omitted
+  `type` now defaults to its declared question's type.
+- **Conditions (§15.3).** `when=` on the existing anchor marker — `{#id when=q}`, `when=!q`,
+  `when=q:value`, `when=!q:value` — on whole units only: sections (with their subsections), list
+  items, top-level and preamble paragraphs, `{{include:}}` paragraphs, and attachments
+  (`attachments[].when`). One test per marker, with no expression language; nesting combines
+  conditions. The syntax uses no English words.
 - **Alternatives and reference safety (§15.4).** Units whose conditions can never both hold MAY
-  share an identifier; every reference must resolve under every combination of answers.
-- **`{{choose:}}` (§15.5).** An inline plain-text phrase chosen by a decision; every possible
-  answer must be listed.
-- **Drafting notes (§15.6).** `> [!DRAFTING]` block quotes (marker case-insensitive), rendered as
-  guidance in template views and removed on assembly; a look-alike marker draws a Warning.
+  share an identifier, so an either/or clause keeps one reference target. Every `{{ref:}}`,
+  `{{term:}}`, and `{{attach:}}` must resolve under every combination of answers.
+- **Inline choices — `{{choose:}}` (§15.5).** A plain-text phrase chosen by a decision; every
+  possible answer must be listed, so a new choice value cannot silently drop text.
+- **Drafting notes (§15.6).** `> [!DRAFTING]` block quotes: guidance for the template user, shown
+  in template views and removed on assembly. A look-alike marker draws a Warning.
 - **Assembly (§15.7).** A byte-deterministic transformation of a template and an answers set into
-  an ordinary LegalDown document, with defined answer forms, escaping of inserted text, and
-  identifier preservation. A template without Errors assembles without Errors for every valid
-  answers set. Include fragments and attachment files are assembled with the same answers, file
-  by file. In a template, `{{include:}}` appears only in the template's own body, each fragment
-  is included once, each LegalDown attachment file serves one entry and is never also a fragment,
-  and fragments hold no conditions or drafting notes and give every heading an explicit id.
-  Templates with includes, LegalDown attachments, or `translations` need Full. Output keeps the
-  template's relative layout, and a translation group is assembled together. Unanswered blanks keep
-  their declared type inline. A draft is filled by the same procedure, all steps included. Line
-  starts are checked after insertions and after deleted choice lines, and trailing spaces of an
-  insertion ending a line are trimmed, so no Markdown block or hard break can form.
-- **Template view (§15.8)** and the **final check (§15.9)**.
+  an ordinary LegalDown document: defined answer forms (§15.7.1), an eight-step procedure
+  (§15.7.2), escaping and insertion boundaries so answers are inserted as literal text (§15.7.3),
+  and identifier preservation. **A template without Errors assembles without Errors for every
+  valid answers set** (§15.7.4). Drafts are filled by the same procedure; unanswered blanks keep
+  their declared type.
+- **Template view (§15.8)** for rendering a template without answers, and the **final check**
+  (§15.9), a validation option that rejects any blank, drafting note, or template construct left
+  in a document meant for signature.
+- **Includes and attachment files in templates (§15.3).** Kept simple so every fragment has one
+  place and one condition: `{{include:}}` only in the template's own body, each fragment included
+  once, no conditions or drafting notes in fragments, explicit heading identifiers there.
+- **Bilingual templates (§14.2).** Linked templates share questions, defaults (a `text` default is
+  translated but present in every language or none), placeholders, conditions, and `{{choose:}}`
+  parameter names, so one answers set assembles every language version to the same state.
+- **Assembly capability (§17.6)**, claimable alongside any conformance level. Templates with
+  includes, LegalDown attachment files, or `translations` need Full.
 - **`duration` placeholder type (§10.7).**
-- **Assembly capability (§17.6)**, claimable alongside any conformance level.
-- **Bilingual templates (§14.2):** linked templates share questions, defaults (a `text` default
-  is translated, but present in every language or in none), placeholder ids with their types and fixed currency or unit,
-  conditions, and `{{choose:}}` parameter names, so one answers set assembles every language.
-  Every conditional item and ordinary paragraph in a linked template carries an explicit anchor,
-  by which its condition is matched across languages; conditional preamble paragraphs and include
-  lines, which take no anchor, are matched in order.
-- `fixtures/assembly/` — byte-exact template + answers → output cases; fixture fields
-  `requires_capability` and `requires_config` values `answers` and `final`.
 
-#### Changed
+**Conformance corpus.**
+
+- Fixtures for every new rule id; the corpus now accounts for all 116 rule ids (113 with fixtures).
+- `fixtures/assembly/` — six byte-exact cases (template + answers set → expected output),
+  including a multi-file case with an `expected/` output tree and a `case.json` level.
+- `verify.py` checks assembly cases, `requires_capability` / `requires_config`, `case.json`
+  levels, and the total rule count.
+
+### Changed
 
 - Uniqueness of section identifiers, anchors, attachment ids, and definition ids — and
   auto-generated identifier collisions — applies only between declarations that can appear
-  together (§5.2, §5.4, §5.5, §7.2).
-- A placeholder's omitted `type` defaults to its declared question's type before `text` (§10.7).
-- Repeated occurrences of one placeholder id that fix a `currency` or `unit` must fix the same one,
-  in every document (§10.7) — previously only a SHOULD. A document that gave one blank two
-  currencies now draws `placeholder-type-inconsistent` (Error): pick one currency, or use two ids.
-- `{when=...}` markers outside a condition position and markers repeating an attribute draw
-  `anchor-misplaced`. An `#id` on a paragraph holding only an `{{include:}}` (§12.2, in any
-  document) is ignored with that Warning — move the anchor to a heading inside the fragment; in a template, a `{when=}`-only marker is allowed at the end of a preamble paragraph (§5.7); in
-  any other document it remains literal text.
-- In a template, `questions` and `attachments` are written in YAML block style, a `when` value
-  starting with `!` is quoted, and choice value ids avoid the YAML 1.1 boolean/null words (§15.2,
-  §15.3), so every YAML parser reads them the same way. Question ids and undeclared placeholder ids
-  in a template avoid the same words.
-- A placeholder in a frontmatter date field must be the whole value and of type `date` (§3.10);
-  otherwise the field's date check applies (§16.6). Placeholders are not allowed in file paths,
-  attachment `id`/`when`, language codes, or `field_types`, which a filled-in value could break.
-- `questions` joins the structural frontmatter fields that must not hold placeholders (§3.10).
-- "Template" now means a document template (§15); every place that meant presentation settings
-  says **style template** (§5.7, §6.2–§6.3, §7.2, §10, §13, §16.3, §19).
+  together (§5.2, §5.4, §5.5, §7.2), which is what lets alternatives share an identifier.
+- Repeated occurrences of one placeholder id that fix a `currency` or `unit` must fix the same
+  one, in every document (§10.7) — previously only a SHOULD.
+- A placeholder in a frontmatter date field must be the whole value and of type `date`, and
+  placeholders are not allowed in file paths, attachment `id`/`when`, language codes, or
+  `field_types`, which a filled-in value could break (§3.10, §16.6).
+- `{{placeholder:}}` and `{{choose:}}` must be kept apart from Markdown punctuation they could
+  combine with, in templates and drafts alike (§15.7.3, `insertion-boundary`).
+- An `#id` on a paragraph that holds only an `{{include:}}` is ignored with `anchor-misplaced`, in
+  any document: the paragraph is replaced by its fragment, so it is not a reference target
+  (§12.2). A `when=` in the same marker still applies in a template.
+- `{when=...}` markers outside a condition position, and markers repeating an attribute, draw
+  `anchor-misplaced`. In a template, a `{when=}`-only marker is allowed on a preamble paragraph;
+  in any other document it remains literal text (§5.7).
 - Anchor and condition markers are excluded from heading text for identifier generation (§4.2,
   §5.3) and are not recognized inside code or comments (§11.4).
+- "Template" now always means a document template (§15); presentation settings are called the
+  **style template** throughout (§5.7, §6.2–§6.3, §7.2, §10, §13, §16.3, §19).
 
-#### Validation changes
+### Validation changes
 
 | Rule | Before | After |
 |---|---|---|
-| `question-invalid`, `placeholder-question-mismatch`, `condition-invalid`, `condition-reference-unsafe`, `choose-invalid`, `drafting-note-def` | — | Error (Core) |
+| `question-invalid`, `placeholder-question-mismatch`, `condition-invalid`, `condition-reference-unsafe`, `choose-invalid`, `drafting-note-def`, `def-term-variable` | — | Error (Core) |
 | `question-unused`, `condition-never-true`, `drafting-note-unrecognized` | — | Warning (Core) |
-| `template-fragment-invalid` | — | Error (Full where it reads another file) |
-| `def-term-variable` | — | Error (Core) |
-| `insertion-boundary` | — | Error (Core; Full where it reads a fragment) — applies to every document holding placeholders, drafts included, so a 0.1 draft with a blank glued to `&`, `<`, `**`, or a link target now draws it |
-| `placeholder-type-inconsistent` | Same effective type | Also the same fixed `currency`/`unit` (previously a SHOULD with an optional Warning) |
+| `template-fragment-invalid` | — | Error (Core; Full where it reads another file) |
+| `insertion-boundary` | — | Error (Core; Full where it reads a fragment) — templates and drafts |
 | `answer-missing`, `answer-invalid` | — | Error (Assembly) |
 | `answer-unknown` | — | Warning (Assembly) |
 | `placeholder-unfilled`, `template-construct-present` | — | Error (final option only) |
 | `translation-template-mismatch` | — | Error (Full) |
-| `anchor-duplicate`, `def-duplicate-id`, `def-autogen-collision`, `attachment-id-duplicate`, `attachment-id-collision`, `attachment-anchor-duplicate`, `include-anchor-duplicate` | Any duplicate | Duplicates between declarations that can appear together |
-| `anchor-autogen-collision` | Suffixes in document order | Headings that can never appear together do not collide; suffixes skip only identifiers of headings that can (§5.5) |
-| `placeholder-in-structural-field` | Side/party names, `type`, `document_type`, `legaldown`, structure | adds anything inside `questions`, file paths, attachment `id`/`when`, language codes, `field_types` |
+| `placeholder-type-inconsistent` | Same effective type | Also the same fixed `currency`/`unit` (previously a SHOULD with an optional Warning) |
+| `placeholder-in-structural-field` | Side/party names, `type`, `document_type`, `legaldown`, structure | Adds anything inside `questions`, file paths, attachment `id`/`when`, language codes, `field_types` |
 | `metadata-date-invalid`, `date-of-birth-invalid` | Any placeholder exempt | Exempt only when the placeholder is the whole value and of type `date` |
-| `placeholder-type-invalid` | `text`, `date`, `money` | adds `duration` |
-| `duration-invalid-unit` | `{{duration:}}` only | also a `type=duration` placeholder's `unit` |
-| `include-heading-skip` | Combined document | Combined document under every combination of answers deciding which conditional includes are present, with the units each combination removes removed |
-| `anchor-misplaced` | Misplaced `{#id}` | Misplaced `{#id}` or `{when=...}`; also an `#id` on a paragraph holding only an `{{include:}}` (ignored — a 0.1 document that anchored an include line and referenced it now also draws `ref-broken`) |
+| `placeholder-type-invalid` | `text`, `date`, `money` | Adds `duration` |
+| `duration-invalid-unit` | `{{duration:}}` only | Also a `type=duration` placeholder's `unit` |
+| `anchor-misplaced` | Misplaced `{#id}` | Also `{when=...}`, repeated attributes, and an `#id` on an include-only paragraph (ignored) |
+| `anchor-duplicate`, `def-duplicate-id`, `def-autogen-collision`, `attachment-id-duplicate`, `attachment-id-collision`, `attachment-anchor-duplicate`, `include-anchor-duplicate` | Any duplicate | Duplicates between declarations that can appear together |
+| `anchor-autogen-collision` | Suffixes in document order | Headings that can never appear together do not collide (§5.5) |
+| `include-heading-skip` | Combined document | Also under every combination of answers deciding which conditional includes are present |
 
-#### Files touched
+### Migration from 0.1
 
-- `spec/legaldown-spec.md` — new §15; §1.3, §3.2, §3.9, §3.10, §4.2, §4.4, §5.2–§5.7, §7.2, §8.4,
-  §8.6, §10.3, §10.7, §11.1, §11.2, §11.4, §12.2, §13.1, §13.5, §13.7, §14.2–§14.3, §16.1–§16.5,
-  §16.7, §16.10, §16.11, new §16.12, §17.2–§17.4, new §17.6, §19; "style template" wording
-  throughout; sections 15–18 renumbered 16–19; version 0.2 DRAFT
-- `fixtures/` — 18 new rule fixtures, byte-exact `assembly/` cases (one with multi-file
-  `expected/` output and a `case.json` level; six in all), a currency case for
-  `placeholder-type-inconsistent`, `verify.py`,
+- **Two currencies on one blank.** If `{{placeholder: fee, type=money, currency=EUR}}` and
+  `{{placeholder: fee, type=money, currency=USD}}` both appear, pick one currency or use two ids.
+- **Placeholders in frontmatter.** Write a date field's placeholder as the whole value with
+  `type=date` (`effective_date: "{{placeholder: effective-date, type=date}}"`). Move any
+  placeholder out of file paths, attachment ids, language codes, and `field_types`.
+- **Blanks next to punctuation.** Separate a blank from `&`, `<`, `\`, `!`, `]`, emphasis markers,
+  or a link target with a space or ordinary punctuation (§15.7.3 lists what is allowed).
+- **Anchored include lines.** Move an anchor on an `{{include:}}`-only paragraph to a heading
+  inside the fragment, and point `{{ref:}}` there.
+- **Section citations.** References to "§15"–"§18" of 0.1 are now §16–§19.
+- **Declared version.** Documents MAY declare `legaldown: "0.2"`; 0.1 documents that pass the
+  points above remain valid unchanged.
+
+### Files touched
+
+- `spec/legaldown-spec.md` — new §15 Templates; new §16.12 and §17.6; updates across §1.3, §3,
+  §4–§8, §10–§14, §16–§17, §19; sections 15–18 renumbered 16–19; version 0.2
+- `llm/legaldown-spec-llm.md` — new Templates section; directives, identifiers, validation summary,
+  and "Not in the language" updated
+- `fixtures/` — rule fixtures for every new rule id, `assembly/` cases, `verify.py`,
   `coverage.json`, README
-- `examples/advanced/template/` — reworked as a full template with an answers set and a
-  conditional LegalDown attachment; `examples/README.md`
-- `llm/legaldown-spec-llm.md` — new Templates section, validation summary, "Not in the language"
-- `README.md`, `CONTRIBUTING.md` — templates overview, version, section numbers, fixture and
-  assembly-case guidance
-- `.gitattributes` — `*.yaml`/`*.yml` normalized to LF, keeping assembly cases byte-stable
+- `examples/advanced/` — `template/` reworked as a full template with an answers set and a
+  conditional LegalDown attachment; the other advanced examples declare `legaldown: "0.2"`;
+  `examples/README.md`
+- `README.md`, `CONTRIBUTING.md` — templates overview, version, section numbers, fixture guidance
 - `proposals/templates.md` — the design proposal
+- `.gitattributes`, `.gitignore` — YAML normalized to LF; Python caches ignored
 
 ---
 
@@ -196,4 +232,6 @@ amendments, a `{{meta:}}` directive for inserting frontmatter values into body t
 `adopted_by` for collective acts, template-generated attachment labels, a structured signature
 model, template-supplied reference label words, and a machine-readable export format.
 
+[Unreleased]: https://github.com/ForLegalAI/LegalDown/compare/v0.2...HEAD
+[0.2]: https://github.com/ForLegalAI/LegalDown/releases/tag/v0.2
 [0.1]: https://github.com/ForLegalAI/LegalDown/releases/tag/v0.1

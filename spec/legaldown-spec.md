@@ -97,7 +97,7 @@ Documents SHOULD include YAML frontmatter as the first element, delimited by tri
 
 ```yaml
 ---
-legaldown: "0.1"
+legaldown: "0.2"
 title: Master Service Agreement
 subtitle: Between Acme Corporation and Beta Industries Inc.
 version: 1.0
@@ -158,7 +158,7 @@ Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status c
 | `title` | REQUIRED | Document title |
 | `subtitle` | OPTIONAL | Document subtitle |
 | `version` | OPTIONAL | Document version identifier |
-| `legaldown` | OPTIONAL | LegalDown specification version the document targets (e.g., `"0.1"`) |
+| `legaldown` | OPTIONAL | LegalDown specification version the document targets (e.g., `"0.2"`) |
 | `document_type` | OPTIONAL | Document type. Valid values: `contract`, `unilateral_act`, `collective_act`. Default: `contract` |
 | `effective_date` | OPTIONAL | Document effective date (ISO 8601) |
 | `field_types` | OPTIONAL | Map of custom field type declarations for `{{field:}}` (type name → description) |
@@ -2527,7 +2527,7 @@ force and effect.
 
 ## 19. Roadmap and Known Limitations (Non-Normative)
 
-Candidates considered during the v0.1 draft and deliberately deferred. Their absence from this version is a decision, not an oversight:
+Candidates considered during the v0.1 and v0.2 drafts and deliberately deferred. Their absence from this version is a decision, not an oversight:
 
 - **Qualified cross-document references for amendments** — a `{{ref: id, doc=amends}}` form resolving against the imported original (§3.8, §7.5); v0.1 instead provides authoring guidance in §3.8
 - **`{{meta:}}` field insertion** — rendering frontmatter values (e.g., `effective_date`) in body text, removing the duplication between frontmatter and `{{date:}}` directives

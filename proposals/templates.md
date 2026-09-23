@@ -2,15 +2,25 @@
 
 | | |
 |---|---|
-| **Status** | Accepted — specified in [`spec/legaldown-spec.md`](../spec/legaldown-spec.md) §15 (v0.2 DRAFT) |
+| **Status** | Accepted — specified in [`spec/legaldown-spec.md`](../spec/legaldown-spec.md) §15 for v0.2 |
 | **Targets** | v0.2 |
 | **Tracks** | [ForLegalAI/LegalDown#38](https://github.com/ForLegalAI/LegalDown/issues/38) — Conditional content for templates |
 | **Date** | 2026-09-23 |
 
-This is a design proposal, not specification text. Nothing here is normative until it lands in
-[`spec/legaldown-spec.md`](../spec/legaldown-spec.md) through the process in
-[CONTRIBUTING.md](../CONTRIBUTING.md). References written with § (§5.3) point to the v0.1
-specification; references written as "section 3" point to this proposal.
+This is a design proposal, not specification text; it is kept as a record of the design and its
+rationale. The normative text is §15 of [`spec/legaldown-spec.md`](../spec/legaldown-spec.md).
+
+> **Superseded in detail by the specification.** Review of the specification refined several
+> points after this proposal was accepted, and the specification wins wherever the two differ.
+> Most notably: includes in a template are restricted (only in the template's own body, each
+> fragment included once, no conditions or drafting notes in fragments); inserted text must be
+> kept apart from surrounding Markdown punctuation (`insertion-boundary`); a defined term may not
+> contain a blank; the assembly procedure and its escaping rules are specified byte for byte; and
+> several open questions below were settled (section 11: `!` for negation, single-value conditions, final
+> check as a job option). See the [0.2 changelog entry](../CHANGELOG.md).
+
+References written with § (§5.3) point to the v0.1 specification; references written as
+"section 3" point to this proposal.
 
 ---
 

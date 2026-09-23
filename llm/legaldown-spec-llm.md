@@ -2,7 +2,7 @@
 
 LegalDown is a plain-text markup language for legal documents, including contracts, unilateral acts, and collective acts. It is a CommonMark superset with legal-specific directives. This document is a condensed technical reference for reading, understanding, and generating LegalDown documents.
 
-Full specification: [`spec/legaldown-spec.md`](../spec/legaldown-spec.md). Working documents: [`examples/`](../examples) (simple and advanced tiers, with a feature-coverage table). Conformance corpus: [`fixtures/`](../fixtures) (one case per validation rule with its expected diagnostic).
+This reference covers specification **v0.2** (templates are §15 of the specification). Full specification: [`spec/legaldown-spec.md`](../spec/legaldown-spec.md). Working documents: [`examples/`](../examples) (simple and advanced tiers, with a feature-coverage table). Conformance corpus: [`fixtures/`](../fixtures) (one case per validation rule with its expected diagnostic).
 
 ## File Format
 

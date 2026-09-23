@@ -244,8 +244,8 @@ assembler must generate.
 
 | Version | Status | Document |
 |---------|--------|----------|
-| v0.2 | 🚧 DRAFT — in progress: templates (§15) | [spec/legaldown-spec.md](spec/legaldown-spec.md) |
-| [v0.1](../../releases/tag/v0.1) | Tagged draft | [spec/legaldown-spec.md @ v0.1](../../blob/v0.1/spec/legaldown-spec.md) |
+| [v0.2](../../releases/tag/v0.2) | 🚧 DRAFT — current: adds templates (§15) | [spec/legaldown-spec.md](spec/legaldown-spec.md) |
+| [v0.1](../../releases/tag/v0.1) | Previous draft | [spec/legaldown-spec.md @ v0.1](../../blob/v0.1/spec/legaldown-spec.md) |
 
 The specification is in early draft. It is not yet stable and may change
 before v1.0. Do not build production tooling against a draft version without
@@ -261,7 +261,10 @@ LegalDown is in early draft stage. Current priorities:
 - [x] Publish reference examples for common document types
 - [x] Publish the validation fixtures corpus (conformance test suite)
 - [x] Tag v0.1
-- [ ] Gather community feedback and publish v0.2 — template language (conditions, inline choices, drafting notes, assembly) drafted in §15
+- [x] Specify the template language — questions, conditions, inline choices, drafting notes, assembly (§15)
+- [x] Publish template assembly cases in the conformance corpus
+- [ ] Tag v0.2
+- [ ] Gather community feedback on v0.2, especially template assembly (§15.7)
 
 The reference parser and validator are developed in a separate repository —
 this repository holds the specification, examples, and conformance fixtures
