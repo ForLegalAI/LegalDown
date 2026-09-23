@@ -4,7 +4,7 @@
 This does NOT validate LegalDown documents — that is an implementation's job.
 It checks that the corpus itself is well-formed and honest:
 
-  * every fixture directory names a rule id defined in specification §15.1
+  * every fixture directory names a rule id defined in specification §16.1
   * every expectation file has the required fields and legal values
   * every referenced file exists and every asserted line is in range and non-blank
   * coverage.json matches what is actually on disk
@@ -24,7 +24,7 @@ TIERS = {'core', 'rendering', 'full'}
 
 def spec_rule_ids():
     text = open(os.path.join(REPO, 'spec', 'legaldown-spec.md'), encoding='utf-8').read()
-    section = text[text.index('### 15.1 Validation'):text.index('## 16. Conformance')]
+    section = text[text.index('### 16.1 Validation'):text.index('## 17. Conformance')]
     ids = set(re.findall(r'^\| `([a-z0-9-]+)` \|', section, re.M))
     ids |= set(re.findall(r'rule id `([a-z0-9-]+)`', section))
     return ids
@@ -43,7 +43,7 @@ def check():
             continue
         covered.add(rule)
         if rule not in known:
-            problems.append('%s: not a rule id defined in §15' % rule)
+            problems.append('%s: not a rule id defined in §16' % rule)
         expectations = [f for f in os.listdir(d) if f.endswith('.json')]
         if not expectations:
             problems.append('%s: no expectation file' % rule)

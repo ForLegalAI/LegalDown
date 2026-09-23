@@ -8,8 +8,8 @@ conforming validator must produce.
 
 Two tiers:
 
-- **[`simple/`](simple)** — the specification's §17 examples, verbatim (kept byte-identical to the
-  fenced blocks in §17). Start here.
+- **[`simple/`](simple)** — the specification's §18 examples, verbatim (kept byte-identical to the
+  fenced blocks in §18). Start here.
 - **[`advanced/`](advanced)** — larger documents exercising the full feature surface: includes,
   attachments, anchors below heading level, bilingual pairs, and templates.
 
@@ -92,10 +92,10 @@ Where to find a live example of each feature. Section numbers refer to the speci
 - **Binary placeholders.** The `.pdf` and `.png` files are minimal but structurally valid — the
   PDFs carry a correct cross-reference table, `/Size`, and `/Length`, so a renderer that opens them
   gets a parseable one-page document rather than a parse error. They exist so file-existence checks
-  (§15.10, §16.4) have something to resolve; their visible content is irrelevant.
+  (§16.10, §17.4) have something to resolve; their visible content is irrelevant.
 - **Expected diagnostics.** These documents validate with **no Errors** under any conforming
   implementation. Warnings and Info notes depend on render-time configuration and are expected in
-  some setups — for example, §15.3's Warning for a `{{ref:}}` to an item anchor fires under a
+  some setups — for example, §16.3's Warning for a `{{ref:}}` to an item anchor fires under a
   template that disables list enumeration (§13.2), and a definition used before its declaration
   point is an Info note. "No Errors" is the portable bar; the rest is configuration-dependent.
 - **Rendering** these documents requires choosing a numbering scheme and style template (§13); none

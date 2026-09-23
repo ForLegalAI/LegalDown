@@ -10,6 +10,6 @@
   ],
   "exhaustive": false,
   "requires_level": "full",
-  "spec": "15.6",
+  "spec": "16.6",
   "note": "Declared supersedes.file does not exist. The document is never loaded, only checked for existence."
 }

@@ -8,6 +8,6 @@
   ],
   "exhaustive": false,
   "requires_level": "core",
-  "spec": "15.6",
+  "spec": "16.6",
   "note": "language must be an ISO 639-1 code."
 }

@@ -8,6 +8,6 @@
   ],
   "exhaustive": false,
   "requires_level": "core",
-  "spec": "15.8",
+  "spec": "16.8",
   "note": "amends requires a non-empty title."
 }

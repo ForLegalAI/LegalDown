@@ -8,6 +8,6 @@
   ],
   "exhaustive": false,
   "requires_level": "core",
-  "spec": "15.6",
+  "spec": "16.6",
   "note": "Party names must be unique across the entire document, not per side."
 }

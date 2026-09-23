@@ -10,6 +10,6 @@
   ],
   "exhaustive": false,
   "requires_level": "core",
-  "spec": "15.10",
+  "spec": "16.10",
   "note": "Attachment id collides with a section identifier in the shared anchor namespace."
 }

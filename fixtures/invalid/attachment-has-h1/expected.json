@@ -10,6 +10,6 @@
   ],
   "exhaustive": false,
   "requires_level": "full",
-  "spec": "15.10",
+  "spec": "16.10",
   "note": "Attachment files must not contain a level 1 heading; the renderer supplies it."
 }

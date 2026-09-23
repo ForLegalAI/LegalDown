@@ -10,6 +10,6 @@
   ],
   "exhaustive": false,
   "requires_level": "full",
-  "spec": "15.8",
+  "spec": "16.8",
   "note": "Declared amends.file does not exist."
 }

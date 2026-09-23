@@ -39,13 +39,13 @@ argument:
   and the directive grammar (§11.2) are the reference standard for the level of precision expected.
 - **Minimal extensions.** LegalDown extends CommonMark only where legal drafting genuinely needs
   it. Prefer reusing an existing mechanism over adding a new directive.
-- **Every rule needs a severity.** A new requirement belongs in the §15 validation tables as an
+- **Every rule needs a severity.** A new requirement belongs in the §16 validation tables as an
   Error, Warning, or Info — otherwise implementations will disagree about what to do with it.
 - **Every rule needs a conformance level.** Decide whether the check is Core, Rendering, or Full
-  (§16). Roughly: a check needing only the document file is **Core**; one needing the active style
+  (§17). Roughly: a check needing only the document file is **Core**; one needing the active style
   template or rendered output is **Rendering**; one needing another file is **Full**. Where a rule
-  sits in a §15 table whose level differs, §16.2 carves it out by name — as it does for the
-  template-dependent §15.3 row and the `supersedes.file` existence row.
+  sits in a §16 table whose level differs, §17.2 carves it out by name — as it does for the
+  template-dependent §16.3 row and the `supersedes.file` existence row.
 
 ---
 
@@ -54,14 +54,14 @@ argument:
 A specification change usually touches more than the specification. Before opening a PR:
 
 - [ ] **[`spec/legaldown-spec.md`](spec/legaldown-spec.md)** — the normative change, including any
-      §15 validation rows and §16 conformance placement
+      §16 validation rows and §17 conformance placement
 - [ ] **[`llm/legaldown-spec-llm.md`](llm/legaldown-spec-llm.md)** — the condensed reference, if the
       change is authoring-facing (skip for implementation-only changes, and say so in the PR)
 - [ ] **[`README.md`](README.md)** — if the change affects the introductory material or examples
 - [ ] **[`examples/`](examples)** — if the change adds a feature, add or extend an example, and
       update the feature-coverage table in [`examples/README.md`](examples/README.md)
-- [ ] **§17 ↔ `examples/simple/` stay byte-identical** — three documents claim the specification's
-      §17 fenced blocks and the files in `examples/simple/` are the same text. If you edit either,
+- [ ] **§18 ↔ `examples/simple/` stay byte-identical** — three documents claim the specification's
+      §18 fenced blocks and the files in `examples/simple/` are the same text. If you edit either,
       edit both
 - [ ] **[`CHANGELOG.md`](CHANGELOG.md)** — a dated entry under `[Unreleased]` (format below)
 - [ ] **The spec's `Revision:` date** — bump it when `spec/legaldown-spec.md` changes
@@ -93,20 +93,20 @@ the file agree.
 
 ## Fixtures
 
-[`fixtures/`](fixtures) is the conformance corpus: one directory per §15 rule id, holding a
+[`fixtures/`](fixtures) is the conformance corpus: one directory per §16 rule id, holding a
 document that trips that rule and the diagnostic a validator must produce. It is what lets
 independent implementations verify they agree.
 
 When you **add or change a validation rule**:
 
-- Give it a **rule id** in the §15 table (§15.1) — stable, lowercase, never renamed or reused
+- Give it a **rule id** in the §16 table (§16.1) — stable, lowercase, never renamed or reused
 - Add `fixtures/invalid/<rule-id>/` with a case that trips it, and an expectation file recording
-  rule id, level, and line — **never message text**, which §15.9 leaves to implementations
+  rule id, level, and line — **never message text**, which §16.9 leaves to implementations
 - If the rule cannot be exercised by a document — because it depends on a style template or on the
   implementation rather than the input — record it in `fixtures/coverage.json` under
   `not_mechanically_testable` with a reason, rather than writing a fixture that does not test it
 - Run `python fixtures/verify.py`, which checks the corpus is self-consistent and that every rule
-  id in §15 is accounted for
+  id in §16 is accounted for
 
 ---
 

@@ -8,6 +8,6 @@
   ],
   "exhaustive": false,
   "requires_level": "core",
-  "spec": "15.5",
+  "spec": "16.5",
   "note": "Amounts must be non-negative."
 }

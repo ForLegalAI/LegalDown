@@ -51,7 +51,7 @@ Throughout this specification:
 - **SHOULD** / **SHOULD NOT** — recommended but not mandatory
 - **MAY** — optional feature
 
-Implementations claiming LegalDown conformance MUST support all MUST requirements within the scope of their claimed conformance level — Core, Rendering, or Full (see Section 16).
+Implementations claiming LegalDown conformance MUST support all MUST requirements within the scope of their claimed conformance level — Core, Rendering, or Full (see Section 17).
 
 ---
 
@@ -82,7 +82,7 @@ LegalDown documents reference external files in several places: `{{include:}}` (
 - MUST be relative paths. An absolute path, or any path beginning with a URI scheme (`https://`, `file://`, etc. — a scheme makes the target absolute regardless of filesystem syntax), is a validation Error. Remote resources are therefore never fetched while processing a document
 - MUST resolve to a location within the **document root** when one is configured. The document root is a boundary directory outside which no referenced file may be read; a path that escapes it (e.g., via `../` traversal) is a validation Error
 - This specification defines **no default document root**: when none is configured, the containment check does not run, and paths such as `../shared/definitions.lgd` are valid. Implementations that process documents they do not control — hosted validators, renderers, and services — MUST support configuring a document root and SHOULD require one
-- Both the relative-form check and, when a root is configured, the containment check are syntactic — they resolve the path lexically without reading the filesystem — and apply at Core (§16.2). File **existence** checks remain Full-level (§16.4) per each feature's validation table
+- Both the relative-form check and, when a root is configured, the containment check are syntactic — they resolve the path lexically without reading the filesystem — and apply at Core (§17.2). File **existence** checks remain Full-level (§17.4) per each feature's validation table
 
 This is a safety boundary for hosted validators and renderers: a document must never be able to read files outside the tree it belongs to.
 
@@ -150,7 +150,7 @@ tags:
 
 ### 3.2 Standard Metadata Fields
 
-Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status column below applies **when frontmatter is present**: a document without frontmatter is valid, but has no title, parties, or other metadata, and validators SHOULD emit a Warning (§15.6).
+Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status column below applies **when frontmatter is present**: a document without frontmatter is valid, but has no title, parties, or other metadata, and validators SHOULD emit a Warning (§16.6).
 
 | Field | Status | Description |
 |---|---|---|
@@ -175,7 +175,7 @@ Frontmatter is OPTIONAL as a block (§2.2) but RECOMMENDED (§3.1). The Status c
 
 If `legaldown` is present, it declares the specification version the document was authored against. The value SHOULD be written as a quoted string (unquoted, YAML would parse `0.1` as a number). Implementations SHOULD emit a Warning when the declared version is newer than the version they implement, and MUST NOT fail solely because the declared version is unknown. When the field is absent, implementations process the document under the version they implement. A newer declared version also softens unknown-directive handling — see §11.5.
 
-If `supersedes` is present, it MAY be either a plain string describing the superseded document, or an object with the same fields as `amends` (`title` REQUIRED, `file` OPTIONAL — §3.8). In the object form, `supersedes.file` is a file reference governed by §2.3, and its existence is checked at the Full level (§16.4). Unlike `amends`, a superseded document is never loaded: it is a historical pointer, so no definitions are imported from it.
+If `supersedes` is present, it MAY be either a plain string describing the superseded document, or an object with the same fields as `amends` (`title` REQUIRED, `file` OPTIONAL — §3.8). In the object form, `supersedes.file` is a file reference governed by §2.3, and its existence is checked at the Full level (§17.4). Unlike `amends`, a superseded document is never loaded: it is a historical pointer, so no definitions are imported from it.
 
 If `field_types` is present, it MUST be a YAML map where each entry is `type-name: description`.
 
@@ -312,7 +312,7 @@ The `amends` object has the following fields:
 - The original file MAY be a LegalDown file (`.lgd`, `.legaldown`, `.legal.md`) or a non-LegalDown file (`.pdf`, `.docx`, etc.)
 - The amendment document itself follows the same structure rules as any other LegalDown document — all existing features (headings, section identifiers, cross-references, definitions, field specs, etc.) work unchanged
 - An amendment MAY declare its own definitions using `{{def:}}` for new terms introduced by the amendment
-- **Referencing the original's provisions:** `{{ref:}}` resolves only within the amendment itself (§6); references to the original's sections are written as literal text (e.g., "Section 5.1 of the Agreement"), citing the original's **executed rendering**. Because rendered numbers depend on the numbering scheme active at render time (§13.1), parties SHOULD pin the numbering scheme used for the executed original — for example in repository or template configuration — so such citations remain accurate. Qualified cross-document references are a Roadmap candidate (§18)
+- **Referencing the original's provisions:** `{{ref:}}` resolves only within the amendment itself (§6); references to the original's sections are written as literal text (e.g., "Section 5.1 of the Agreement"), citing the original's **executed rendering**. Because rendered numbers depend on the numbering scheme active at render time (§13.1), parties SHOULD pin the numbering scheme used for the executed original — for example in repository or template configuration — so such citations remain accurate. Qualified cross-document references are a Roadmap candidate (§19)
 
 **Example:**
 
@@ -465,7 +465,7 @@ Between headings, the document body consists of standard Markdown paragraphs, li
 
 ### 4.4 Preamble Content
 
-Body content MAY appear before the first heading. Such content is the document's **preamble** — typically an introductory paragraph identifying the parties and the act (see the §17 examples).
+Body content MAY appear before the first heading. Such content is the document's **preamble** — typically an introductory paragraph identifying the parties and the act (see the §18 examples).
 
 - The preamble is valid and unnumbered — section numbering (§13.1) begins at the first heading
 - All body-level directives are valid in the preamble, including `{{def:}}` declarations and field specs
@@ -573,7 +573,7 @@ All LegalDown identifiers share one format (§5.2) but live in separate **namesp
 
 **Rules:**
 
-- Section identifiers, item and paragraph anchors (§5.7), and attachment ids share the anchor namespace because all are link targets in rendered output; collisions are Errors (§15.2, §15.10). Within the shared namespace, the directives remain type-specific: `{{ref:}}` MUST resolve only against section identifiers and item/paragraph anchors, and `{{attach:}}` only against attachment ids. A `{{ref:}}` whose target is an attachment id is a broken reference (§6.3); the validator SHOULD suggest `{{attach:}}` in its diagnostic message
+- Section identifiers, item and paragraph anchors (§5.7), and attachment ids share the anchor namespace because all are link targets in rendered output; collisions are Errors (§16.2, §16.10). Within the shared namespace, the directives remain type-specific: `{{ref:}}` MUST resolve only against section identifiers and item/paragraph anchors, and `{{attach:}}` only against attachment ids. A `{{ref:}}` whose target is an attachment id is a broken reference (§6.3); the validator SHOULD suggest `{{attach:}}` in its diagnostic message
 - Definition identifiers are unique **among definitions only**. A definition identifier MAY equal a section identifier — this is common and benign (a "Services" section and a defined term "Services" both auto-generate `services`) and is not a collision
 - Placeholder ids form their own namespace; a placeholder id MAY coincide with any other identifier without relation. Repeated use of the same placeholder id denotes the same logical blank (§10.7)
 - Side names, party names, and field type names are frontmatter namespaces with their own uniqueness rules (§3.3, §3.4, §3.2); they are unrelated to body identifiers
@@ -632,7 +632,7 @@ The payment schedule in Article {{ref: payment-schedule}} applies from the Effec
 
 - The identifier MUST be a section identifier or an item/paragraph anchor (§5.7). `{{ref:}}` resolves against those members of the anchor namespace (§5.6); attachments are referenced with `{{attach:}}` (§6.4). A `{{ref:}}` targeting an attachment id is a broken reference, and validators SHOULD suggest `{{attach:}}` in the diagnostic message
 
-> **Note:** The word before a reference ("Section", "Article", "Clause") is ordinary body text chosen by the author, while the number comes from the render-time numbering scheme (§13.1). Changing the scheme can make the author's word read unconventionally — e.g., "Section I.A" under the legal outline scheme, where "Article I.A" is customary. Authors SHOULD choose wording compatible with the schemes the document will render under; a template-supplied reference label is a Roadmap candidate (§18).
+> **Note:** The word before a reference ("Section", "Article", "Clause") is ordinary body text chosen by the author, while the number comes from the render-time numbering scheme (§13.1). Changing the scheme can make the author's word read unconventionally — e.g., "Section I.A" under the legal outline scheme, where "Article I.A" is customary. Authors SHOULD choose wording compatible with the schemes the document will render under; a template-supplied reference label is a Roadmap candidate (§19).
 
 ### 6.3 Reference Rendering
 
@@ -729,7 +729,7 @@ A quoted span is delimited by one of the recognized opening/closing quotation-ma
 | Single guillemets | `‹` | `›` | U+2039 / U+203A |
 
 - The parser matches the closing delimiter immediately preceding the directive, then scans back to the corresponding opening delimiter to delimit the term. For symmetric pairs (where opening and closing are the same character) it pairs with the nearest prior identical mark on the same line.
-- This matching is deterministic only because **no character in the active set serves as the closing mark of two different pairs**. Configured sets — narrowed or extended per document `language` or implementation configuration — MUST preserve that property. When the backward scan fails to find the opening mark, the §15.4 no-quoted-span Error applies; the diagnostic SHOULD mention mismatched or typo'd quotation marks as a likely cause.
+- This matching is deterministic only because **no character in the active set serves as the closing mark of two different pairs**. Configured sets — narrowed or extended per document `language` or implementation configuration — MUST preserve that property. When the backward scan fails to find the opening mark, the §16.4 no-quoted-span Error applies; the diagnostic SHOULD mention mismatched or typo'd quotation marks as a likely cause.
 - Double-quote forms are RECOMMENDED. Single-quote forms are accepted, but because the right single quotation mark (U+2019) also serves as an apostrophe, a single-quoted term containing an apostrophe may be mis-delimited; validators SHOULD emit a warning in that case.
 
 **Identifiers:**
@@ -906,7 +906,7 @@ As a CommonMark superset (§1.3), LegalDown documents may contain constructs to 
 
 - **Raw HTML** (inline or block), other than comments (§8.6): ignored for rendered output by default — renderers MUST NOT emit it into output — and a validation Warning is emitted. Implementations MAY support the extended-table exception of §9.2 as a documented extension. The Warning fires whenever raw HTML is present, whether or not an extension processes it: it reports that the construct does not render portably, which remains true for every implementation that lacks the extension
 - **Links** (`[text](url)` and autolinks): valid. Renderers MUST render them as hyperlinks in formats that support linking; in print-oriented output, style templates MAY additionally render the URL visibly (e.g., in parentheses or a note)
-- **Images** (`![alt](path)`): valid. The path follows the file-reference rules of §2.3; the image is rendered where the output format supports images and replaced by its alt text where it does not. Existence checking of image paths is a Full-level capability (§16.4)
+- **Images** (`![alt](path)`): valid. The path follows the file-reference rules of §2.3; the image is rendered where the output format supports images and replaced by its alt text where it does not. Existence checking of image paths is a Full-level capability (§17.4)
 
 ---
 
@@ -1207,7 +1207,7 @@ All LegalDown-specific extensions use double-brace directive syntax `{{directive
 | `{{attach: id}}` | Core | Reference a declared attachment |
 | `{{attach: id, label=text}}` | Core | Attachment reference with display text |
 
-The **Level** column states the conformance level (Section 16) at which implementations MUST support the directive. `{{include:}}` expansion is a Full capability, and rendering the *content* of attachment files referenced via `{{attach:}}` is likewise Full (§16.4); resolving `{{attach:}}` to its declared `title` is Core. The column says nothing about documents: no directive is ever required to appear in a document — which directives to use is an authoring choice.
+The **Level** column states the conformance level (Section 17) at which implementations MUST support the directive. `{{include:}}` expansion is a Full capability, and rendering the *content* of attachment files referenced via `{{attach:}}` is likewise Full (§17.4); resolving `{{attach:}}` to its declared `title` is Core. The column says nothing about documents: no directive is ever required to appear in a document — which directives to use is an authoring choice.
 
 ### 11.2 Formal Grammar
 
@@ -1260,10 +1260,10 @@ Quoting exists to carry characters that are otherwise directive syntax:
 **Rules:**
 
 - An **unquoted** value MUST NOT contain a comma (`,`), the sequence `}}`, or a line break, and MUST NOT begin with `"`; its leading and trailing whitespace is trimmed
-- A value whose first non-whitespace character is `"` MUST be parsed as a quoted value. If its closing quote is missing, the directive is malformed (§15.2) — it never falls back to an unquoted parse
+- A value whose first non-whitespace character is `"` MUST be parsed as a quoted value. If its closing quote is missing, the directive is malformed (§16.2) — it never falls back to an unquoted parse
 - A **quoted** value MAY contain commas, the sequence `}}`, `=`, and leading or trailing spaces (all preserved exactly); it MUST NOT contain a line break
 - Within a quoted value, `\"` denotes a literal double quote and `\\` denotes a literal backslash; the `escape` alternative is matched preferentially over `quoted-char`. A backslash followed by any other character is not an escape sequence — it is an ordinary `quoted-char` and is preserved as written (e.g., `{{field: "C:\Users\doe", type=path}}` is valid, and the value is `C:\Users\doe`)
-- A quoted value MUST be terminated by a closing `"` on the same line, followed only by optional whitespace and then `,` or `}}`; anything else makes the directive malformed (§15.2)
+- A quoted value MUST be terminated by a closing `"` on the same line, followed only by optional whitespace and then `,` or `}}`; anything else makes the directive malformed (§16.2)
 - Only the straight double quote (U+0022) delimits quoted values. Typographic quotation marks (`“ ” „ « »` etc.) are ordinary value characters — validators SHOULD emit a Warning when an unquoted value begins with one, since it usually means an editor auto-curled an intended quote
 
 ### 11.4 Recognition Contexts and Escaping
@@ -1276,11 +1276,11 @@ Directives are **not** recognized inside:
 - Fenced or indented code blocks
 - HTML comments (`<!-- -->`) — their content is stripped from output regardless (§8.6)
 
-In those contexts, directive-like text is literal text. The same exclusion applies to anchor markers (`{#id}`, §5.2 and §5.7): a `{#id}` appearing inside a code span, code block, or comment is not an anchor, does not enter the anchor namespace, and MUST NOT trigger the misplaced-anchor Warning of §15.2.
+In those contexts, directive-like text is literal text. The same exclusion applies to anchor markers (`{#id}`, §5.2 and §5.7): a `{#id}` appearing inside a code span, code block, or comment is not an anchor, does not enter the anchor namespace, and MUST NOT trigger the misplaced-anchor Warning of §16.2.
 
 **Escaping a literal `{{`:** LegalDown inherits CommonMark backslash escapes for punctuation, so escaping the first brace (`\{`) prevents the sequence from forming a directive opener — `\{{ref: x}}` renders as the literal text `{{ref: x}}`.
 
-**Opener commitment:** In a recognized context, an unescaped `{{` immediately followed by a `name` and `:` begins a directive; if the directive cannot be completed according to the grammar on the same line (including an unterminated quoted value), it is malformed — a validation Error (§15.2). An unescaped `{{` **not** followed by a `name` and `:` is literal text; validators SHOULD emit a Warning, since stray double braces usually indicate a typo.
+**Opener commitment:** In a recognized context, an unescaped `{{` immediately followed by a `name` and `:` begins a directive; if the directive cannot be completed according to the grammar on the same line (including an unterminated quoted value), it is malformed — a validation Error (§16.2). An unescaped `{{` **not** followed by a `name` and `:` is literal text; validators SHOULD emit a Warning, since stray double braces usually indicate a typo.
 
 ### 11.5 General Directive Rules
 
@@ -1298,7 +1298,7 @@ In those contexts, directive-like text is literal text. The same exclusion appli
 
 ### 12.1 Syntax
 
-File inclusion inserts the content of an external LegalDown fragment at the position of the directive. Include processing is a Full-level capability (§16.4).
+File inclusion inserts the content of an external LegalDown fragment at the position of the directive. Include processing is a Full-level capability (§17.4).
 
 ```markdown
 # Schedule A — Service Description {#schedule-a}
@@ -1322,7 +1322,7 @@ Include targets use the same file model as LegalDown attachment files (§12.4): 
 - A fragment MAY itself contain `{{include:}}` directives; circular includes MUST be detected across the entire include chain and rejected with an error
 - A `{{def:}}` inside an included fragment registers a document-wide term, exactly as in attachment files (§7.2, §12.4)
 - Section identifiers in included fragments MUST be unique across the entire combined document
-- Validation of the combined document (including all inclusions) is REQUIRED (§15.11)
+- Validation of the combined document (including all inclusions) is REQUIRED (§16.11)
 
 ### 12.3 Distinction from Attachments
 
@@ -1338,7 +1338,7 @@ Include targets use the same file model as LegalDown attachment files (§12.4): 
 
 ### 12.4 Attachment Files
 
-LegalDown attachment files are body-only LegalDown content fragments included by a parent LegalDown document. They MUST NOT contain frontmatter. They MUST NOT contain a level 1 heading (`#`). They inherit the parent document's context — definitions, field types, metadata. Attachment files are not standalone LegalDown documents for purposes of §4.1 and §15.2 validation. Instead, attachment files are validated using the attachment-specific rules in this section and §15.10, plus any validation that applies across the combined document such as identifier uniqueness.
+LegalDown attachment files are body-only LegalDown content fragments included by a parent LegalDown document. They MUST NOT contain frontmatter. They MUST NOT contain a level 1 heading (`#`). They inherit the parent document's context — definitions, field types, metadata. Attachment files are not standalone LegalDown documents for purposes of §4.1 and §16.2 validation. Instead, attachment files are validated using the attachment-specific rules in this section and §16.10, plus any validation that applies across the combined document such as identifier uniqueness.
 
 **What attachment files can use:**
 
@@ -1634,20 +1634,20 @@ authoritative: en
 
 ### 14.3 Bilingual Validation
 
-Bilingual synchronization validation — a Full-level capability (§16.4) — MUST check:
+Bilingual synchronization validation — a Full-level capability (§17.4) — MUST check:
 
 - Linked files have identical heading hierarchy
 - All section identifiers match between the linked files
 - All `{{def:}}` identifiers exist in both files
 - The linked files declare the same set of languages (each file's `language` plus its `translations` keys)
 
-Violations are Errors; the per-rule severities are defined in §15.7.
+Violations are Errors; the per-rule severities are defined in §16.7.
 
 ---
 
-## 15. Validation
+## 16. Validation
 
-### 15.1 Validation Levels and Rule Identifiers
+### 16.1 Validation Levels and Rule Identifiers
 
 Validators MUST categorize issues at three levels:
 
@@ -1655,14 +1655,14 @@ Validators MUST categorize issues at three levels:
 - **Warning** — Potential issue that should be reviewed (SHOULD be reported)
 - **Info** — Suggestion for improvement (MAY be reported)
 
-**Rule identifiers.** Every check in §15.2–§15.11 carries a **rule id** — a stable, lowercase identifier in the same format as every other LegalDown identifier, `[a-z][a-z0-9-]*` (§5.2). Rule ids identify a check independently of where it sits in this document, so that section renumbering never invalidates a reference to a rule.
+**Rule identifiers.** Every check in §16.2–§16.11 carries a **rule id** — a stable, lowercase identifier in the same format as every other LegalDown identifier, `[a-z][a-z0-9-]*` (§5.2). Rule ids identify a check independently of where it sits in this document, so that section renumbering never invalidates a reference to a rule.
 
-- Implementations SHOULD include the rule id in their diagnostic output (§15.9), enabling users to suppress, escalate, or filter a specific check consistently across tools
+- Implementations SHOULD include the rule id in their diagnostic output (§16.9), enabling users to suppress, escalate, or filter a specific check consistently across tools
 - Rule ids are **stable**: once assigned, an id is not renamed or reused for a different check. A check that is removed retires its id permanently
 - This specification defines the meaning, severity, and conformance level of each rule, but **not** the wording of any diagnostic message — message text is an implementation concern
 - Implementations MAY define additional checks of their own. Ids for such checks MUST be namespaced with a prefix ending in a hyphen (for example `acme-house-style`) to avoid collision with ids this specification may assign later
 
-### 15.2 Structure Validation
+### 16.2 Structure Validation
 
 | ID | Check | Level |
 |---|---|---|
@@ -1684,18 +1684,18 @@ Validators MUST categorize issues at three levels:
 | `path-outside-root` | File-reference paths resolve within the document root, when one is configured (§2.3) | Error |
 | `raw-html` | Raw HTML other than comments present (§8.7 — fires whether or not an extension processes it) | Warning |
 
-### 15.3 Reference Validation
+### 16.3 Reference Validation
 
 | ID | Check | Level |
 |---|---|---|
 | `ref-broken` | All `{{ref: id}}` point to existing sections | Error |
 | `ref-targets-attachment` | `{{ref: id}}` targets an attachment id — attachments are referenced with `{{attach:}}` (§5.6) | Error |
-| `ref-not-enumerated` | `{{ref: id}}` targets an item or paragraph anchor whose containing list or paragraphs the active template does not enumerate (renders as the containing section number; template-dependent — evaluated from the Rendering level, §16.3) | Warning |
+| `ref-not-enumerated` | `{{ref: id}}` targets an item or paragraph anchor whose containing list or paragraphs the active template does not enumerate (renders as the containing section number; template-dependent — evaluated from the Rendering level, §17.3) | Warning |
 | `term-undefined` | All `{{term: id}}` point to declared definitions | Error |
 | `definition-circular` | Circular definitions detected (scoped to each definition's containing paragraph, see §7.2) | Warning |
 | `definition-used-before-declaration` | Definitions used before declaration | Info |
 
-### 15.4 Definition Validation
+### 16.4 Definition Validation
 
 | ID | Check | Level |
 |---|---|---|
@@ -1707,7 +1707,7 @@ Validators MUST categorize issues at three levels:
 | `def-single-quote-ambiguous` | Single-quoted term ambiguous with an apostrophe (U+2019) | Warning |
 | `def-unreferenced` | Declared definitions never referenced with `{{term:}}` (may yield false positives when §7.4 automatic term recognition is enabled) | Warning |
 
-### 15.5 Field Spec Validation
+### 16.5 Field Spec Validation
 
 | ID | Check | Level |
 |---|---|---|
@@ -1732,7 +1732,7 @@ Validators MUST categorize issues at three levels:
 | `placeholder-in-structural-field` | `{{placeholder:}}` in frontmatter appears in an identifier or structural field (any side or party `name`, party `type`, `document_type`, `legaldown`, `sides`/`parties` structure) | Error |
 | `note-invalid` | Field spec `note` parameter is plain text and satisfies the value rules in §11.3 (unquoted: no commas or closing braces) | Error |
 
-### 15.6 Document Metadata Validation
+### 16.6 Document Metadata Validation
 
 If `document_type` is omitted, validators MUST treat it as `contract` when applying the following checks:
 
@@ -1769,12 +1769,12 @@ The Warning raised when `sides` is absent has the rule id `sides-absent`.
 | `authoritative-not-declared` | `authoritative`, when present, equals the document `language` or a `translations` key | Warning |
 | `legaldown-version-newer` | `legaldown`, when present, does not declare a version newer than the implementation supports | Warning |
 | `supersedes-title-empty` | `supersedes.title` is non-empty when `supersedes` uses the object form | Error |
-| `supersedes-file-missing` | `supersedes.file` path exists when specified (Full level, §16.4) | Error |
+| `supersedes-file-missing` | `supersedes.file` path exists when specified (Full level, §17.4) | Error |
 | `representative-name-empty` | Representative `name` is non-empty | Error |
 
-Where §3.10 permits a placeholder in a value field, a placeholder value satisfies that field's presence requirement and is **exempt from the field's format checks** above (for example, `effective_date: "{{placeholder: effective-date, type=date}}"` does not fail the ISO 8601 check); the placeholder's own checks (§15.5) apply instead.
+Where §3.10 permits a placeholder in a value field, a placeholder value satisfies that field's presence requirement and is **exempt from the field's format checks** above (for example, `effective_date: "{{placeholder: effective-date, type=date}}"` does not fail the ISO 8601 check); the placeholder's own checks (§16.5) apply instead.
 
-### 15.7 Bilingual Validation (when translations metadata present)
+### 16.7 Bilingual Validation (when translations metadata present)
 
 | ID | Check | Level |
 |---|---|---|
@@ -1786,7 +1786,7 @@ Where §3.10 permits a placeholder in a value field, a placeholder value satisfi
 | `translation-implicit-id` | Every heading and `{{def:}}` in a translation file (a linked file whose `language` differs from `authoritative`) carries an explicit identifier | Error |
 | `translation-authoritative-absent` | Auto-generated identifiers used in linked files when `authoritative` is absent (primary cannot be determined) | Warning |
 
-### 15.8 Amendment Validation (when amends metadata present)
+### 16.8 Amendment Validation (when amends metadata present)
 
 | ID | Check | Level |
 |---|---|---|
@@ -1796,11 +1796,11 @@ Where §3.10 permits a placeholder in a value field, a placeholder value satisfi
 | `amend-term-unresolvable` | `{{term:}}` references id not found in amendment (original not available or not LegalDown source) | Info |
 | `amend-def-override` | Amendment declares `{{def:}}` with same id as definition in original LegalDown source | Warning |
 
-### 15.9 Validation Output
+### 16.9 Validation Output
 
-Validators MUST produce structured output indicating file, line number, identifier (if applicable), issue level, and human-readable message. Output SHOULD also carry the **rule id** (§15.1) of the check that produced each diagnostic, since it is the only part of a diagnostic that is stable across implementations and specification revisions. Validators SHOULD support output in plain text and JSON formats for integration with tooling.
+Validators MUST produce structured output indicating file, line number, identifier (if applicable), issue level, and human-readable message. Output SHOULD also carry the **rule id** (§16.1) of the check that produced each diagnostic, since it is the only part of a diagnostic that is stable across implementations and specification revisions. Validators SHOULD support output in plain text and JSON formats for integration with tooling.
 
-### 15.10 Attachment Validation
+### 16.10 Attachment Validation
 
 | ID | Check | Level |
 |---|---|---|
@@ -1816,7 +1816,7 @@ Validators MUST produce structured output indicating file, line number, identifi
 
 Non-LegalDown attachments: only file existence is checked.
 
-### 15.11 Include Validation
+### 16.11 Include Validation
 
 | ID | Check | Level |
 |---|---|---|
@@ -1828,13 +1828,13 @@ Non-LegalDown attachments: only file existence is checked.
 | `include-anchor-duplicate` | Section identifiers in included fragments are unique across the entire combined document | Error |
 | `include-heading-skip` | Combined document (after all inclusions) satisfies the heading hierarchy rules (§4.1) | Error |
 
-All other §15 checks apply to the combined document after inclusion (§12.2). Include processing is a Full-level capability (§16.4); the file-extension check on the include path is determinable from the document alone and applies at Core (§16.2).
+All other §16 checks apply to the combined document after inclusion (§12.2). Include processing is a Full-level capability (§17.4); the file-extension check on the include path is determinable from the document alone and applies at Core (§17.2).
 
 ---
 
-## 16. Conformance Levels
+## 17. Conformance Levels
 
-### 16.1 Model
+### 17.1 Model
 
 LegalDown defines three cumulative conformance levels. Each level includes every requirement of the levels below it. An implementation claims a level and MUST satisfy every MUST requirement within that level's scope.
 
@@ -1847,10 +1847,10 @@ LegalDown defines three cumulative conformance levels. Each level includes every
 **General rules:**
 
 - Conformance levels describe **implementation** obligations only. They impose nothing on documents or authors: no construct is ever mandatory in a document, and a document MAY use any LegalDown construct regardless of the conformance level of the implementation that will process it.
-- A claimed level is a floor, not a ceiling. An implementation MAY support individual capabilities from a higher level (for example, a Core validator that also performs bilingual validation per §15.7) without claiming that level.
+- A claimed level is a floor, not a ceiling. An implementation MAY support individual capabilities from a higher level (for example, a Core validator that also performs bilingual validation per §16.7) without claiming that level.
 - Within a level's scope, the conformance keywords keep their §1.5 meanings — SHOULD and MAY features (for example, automatic term recognition, §7.4) remain non-mandatory at every level.
 
-### 16.2 Level 1 — Core
+### 17.2 Level 1 — Core
 
 Scope: everything that can be determined from the document file alone. A Core implementation MUST support:
 
@@ -1858,37 +1858,37 @@ Scope: everything that can be determined from the document file alone. A Core im
 - Document structure (§4) and identifiers (§5), including automatic identifier generation (§5.3) and item/paragraph anchors (§5.7)
 - Recognition and validation of all directives in §11.1: cross-references (§6), definitions and term references (§7), field specs (§10), and attachment references (§6.4)
 - Standard text formatting (§8) and tables (§9)
-- Validation (§15): §15.1–§15.6 and §15.9 in full, with two rows excluded — the §15.3 row on refs to non-enumerated item/paragraph anchors, which depends on the active style template and is therefore evaluated from the Rendering level (§16.3), and the §15.6 `supersedes.file` existence row, which requires opening another file and is therefore Full (§16.4) — plus the rows of §15.7, §15.8, §15.10, and §15.11 that need only the document itself:
-  - §15.7 — the single-file translation rows: every heading and `{{def:}}` carries an explicit identifier when the document itself is a translation (its `language` differs from its declared `authoritative`), and the auto-generated-identifier Warning when the document declares `translations` without `authoritative`
-  - §15.8 — `amends.title` is non-empty; unresolved `{{term:}}` references are handled per §7.5's "original not available" rules (a Core implementation never loads the original, so that branch always applies)
-  - §15.10 — attachment `id` uniqueness, attachment `id` collisions with other anchors (§5.6), attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
-  - §15.11 — the `{{include:}}` target path has a LegalDown file extension
+- Validation (§16): §16.1–§16.6 and §16.9 in full, with two rows excluded — the §16.3 row on refs to non-enumerated item/paragraph anchors, which depends on the active style template and is therefore evaluated from the Rendering level (§17.3), and the §16.6 `supersedes.file` existence row, which requires opening another file and is therefore Full (§17.4) — plus the rows of §16.7, §16.8, §16.10, and §16.11 that need only the document itself:
+  - §16.7 — the single-file translation rows: every heading and `{{def:}}` carries an explicit identifier when the document itself is a translation (its `language` differs from its declared `authoritative`), and the auto-generated-identifier Warning when the document declares `translations` without `authoritative`
+  - §16.8 — `amends.title` is non-empty; unresolved `{{term:}}` references are handled per §7.5's "original not available" rules (a Core implementation never loads the original, so that branch always applies)
+  - §16.10 — attachment `id` uniqueness, attachment `id` collisions with other anchors (§5.6), attachment `title` is non-empty, `{{attach:}}` references a declared id, attachment declared but never referenced
+  - §16.11 — the `{{include:}}` target path has a LegalDown file extension
 
-A Core implementation is not required to open any file other than the document itself. Checks that involve another file — existence of declared paths, attachment or include content, imported definitions, translation synchronization — belong to Full (§16.4).
+A Core implementation is not required to open any file other than the document itself. Checks that involve another file — existence of declared paths, attachment or include content, imported definitions, translation synchronization — belong to Full (§17.4).
 
-### 16.3 Level 2 — Rendering
+### 17.3 Level 2 — Rendering
 
 Everything in Core, plus rendering (Section 13) of a single document. A Rendering implementation MUST additionally support:
 
 - Section numbering generation (§13.1), configurable per render job
-- Resolution and rendering of all §11.1 directives except `{{include:}}` (Full, §16.4) per §6.3, §7.3, and §13.3–§13.5, including all bracketed failure markers (`[BROKEN REF: ...]`, `[UNDEFINED: ...]`, etc.); a Rendering implementation encountering `{{include:}}` follows §16.5
+- Resolution and rendering of all §11.1 directives except `{{include:}}` (Full, §17.4) per §6.3, §7.3, and §13.3–§13.5, including all bracketed failure markers (`[BROKEN REF: ...]`, `[UNDEFINED: ...]`, etc.); a Rendering implementation encountering `{{include:}}` follows §17.5
 - Party and side display rules (§3.6)
 - At least one of the RECOMMENDED output formats in §13.6 (PDF, DOCX, or HTML)
 - Comment stripping (§8.6)
 
 List enumeration (§13.2), style templates (§13.7), and signature block generation (§2.2) remain SHOULD. Rendering the content of attachment files (§13.8) is a Full capability; a Rendering implementation resolves `{{attach:}}` to the declared `title` (§6.4) without reading the attachment file.
 
-### 16.4 Level 3 — Full
+### 17.4 Level 3 — Full
 
 Everything in Rendering, plus all processing that reads files beyond the document itself. A Full implementation MUST additionally support:
 
-- File inclusion (§12.1–§12.3) and the remaining §15.11 checks (target exists, circular chains, fragment content rules, combined-document validation)
-- Attachment file processing: content rules (§12.4), attachment rendering (§13.8), and the remaining §15.10 checks (attachment file exists, contains no frontmatter and no level 1 heading, identifier uniqueness across the combined document)
-- Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §15.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
-- Bilingual documents: Section 14 and the remaining §15.7 checks (cross-file structure, identifier, and language-set matching)
+- File inclusion (§12.1–§12.3) and the remaining §16.11 checks (target exists, circular chains, fragment content rules, combined-document validation)
+- Attachment file processing: content rules (§12.4), attachment rendering (§13.8), and the remaining §16.10 checks (attachment file exists, contains no frontmatter and no level 1 heading, identifier uniqueness across the combined document)
+- Amendment processing: loading a LegalDown original and importing its definitions (§7.5), and the remaining §16.8 checks (`amends.file` exists, `{{term:}}` resolution against the imported original)
+- Bilingual documents: Section 14 and the remaining §16.7 checks (cross-file structure, identifier, and language-set matching)
 - Existence checks for every path declared in frontmatter (`attachments[].file`, `amends.file`, `supersedes.file`, `translations`) and for image paths (§8.7)
 
-### 16.5 Constructs Beyond the Claimed Level
+### 17.5 Constructs Beyond the Claimed Level
 
 An implementation that encounters a construct whose processing lies beyond its claimed level MUST NOT ignore it silently:
 
@@ -1897,11 +1897,11 @@ An implementation that encounters a construct whose processing lies beyond its c
 
 ---
 
-## 17. Complete Examples
+## 18. Complete Examples
 
-These examples exist as real files in the repository's `examples/simple/` directory, one per subsection: `nda/mutual-nda.lgd` (§17.1) with `attachments/confidential-categories.lgd`, `notice/termination-notice.lgd` (§17.2), `policy/remote-work-policy.lgd` (§17.3), and `amendment/first-amendment.lgd` (§17.4). Relative paths shown in the frontmatter below — such as the amendment's `amends.file` — resolve against that layout. Further examples covering the full feature surface are in `examples/advanced/`.
+These examples exist as real files in the repository's `examples/simple/` directory, one per subsection: `nda/mutual-nda.lgd` (§18.1) with `attachments/confidential-categories.lgd`, `notice/termination-notice.lgd` (§18.2), `policy/remote-work-policy.lgd` (§18.3), and `amendment/first-amendment.lgd` (§18.4). Relative paths shown in the frontmatter below — such as the amendment's `amends.file` — resolve against that layout. Further examples covering the full feature surface are in `examples/advanced/`.
 
-### 17.1 Contract Example
+### 18.1 Contract Example
 
 ```markdown
 ---
@@ -1989,7 +1989,7 @@ The following categories of information shall constitute
 available or independently developed by the receiving party.
 ```
 
-### 17.2 Unilateral Act Example
+### 18.2 Unilateral Act Example
 
 ```markdown
 ---
@@ -2029,7 +2029,7 @@ This notice shall be delivered in accordance with the notice provisions of the
 Services Agreement.
 ```
 
-### 17.3 Collective Act Example
+### 18.3 Collective Act Example
 
 ```markdown
 ---
@@ -2071,9 +2071,9 @@ The Issuer may issue equipment and security requirements needed to support
 {{term: remote-work}}.
 ```
 
-### 17.4 Amendment Example
+### 18.4 Amendment Example
 
-This example amends the contract of §17.1. Because `amends.file` points to a LegalDown file, that document's definitions are imported (§7.5): `{{term: agreement}}` and `{{term: confidential-info}}` resolve against the original without being redeclared here.
+This example amends the contract of §18.1. Because `amends.file` points to a LegalDown file, that document's definitions are imported (§7.5): `{{term: agreement}}` and `{{term: confidential-info}}` resolve against the original without being redeclared here.
 
 ```markdown
 ---
@@ -2139,7 +2139,7 @@ force and effect.
 
 ---
 
-## 18. Roadmap and Known Limitations (Non-Normative)
+## 19. Roadmap and Known Limitations (Non-Normative)
 
 Candidates considered during the v0.1 draft and deliberately deferred. Their absence from this version is a decision, not an oversight:
 
