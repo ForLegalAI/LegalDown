@@ -17,14 +17,15 @@ specification; references written as "section 3" point to this proposal.
 ## Summary
 
 v0.1 already supports fillable blanks in templates: `{{placeholder:}}` (§10.7, §3.10). This
-proposal adds the three things templates still lack, plus one validation option:
+proposal adds the four things templates still lack, plus one validation option:
 
 | | Addition | Syntax |
 |---|---|---|
 | 1 | **Questions**: optional declarations that give blanks a prompt and a default, and declare the yes/no and multiple-choice decisions a template depends on | `questions:` in frontmatter |
 | 2 | **Conditions**: optional and alternative sections, list items, paragraphs, and attachments | `{#id when=...}`, reusing the anchor marker |
-| 3 | **Drafting notes**: guidance for the person using the template, removed from the finished document | `> [!DRAFTING]` block quote |
-| 4 | **Final check**: a validator option that rejects anything unfinished | no syntax |
+| 3 | **Inline choices**: a word or phrase that varies with a decision, inside a sentence | `{{choose:}}` directive |
+| 4 | **Drafting notes**: guidance for the person using the template, removed from the finished document | `> [!DRAFTING]` block quote |
+| 5 | **Final check**: a validator option that rejects anything unfinished | no syntax |
 
 It also defines **assembly**: how a template plus a set of answers becomes an ordinary
 LegalDown document.
@@ -33,7 +34,8 @@ Two decisions keep this simple:
 
 - **Conditions attach only to whole structural units.** These are a section with its
   subsections, a list item, a paragraph, an included file, and an attachment. They never
-  attach to arbitrary spans of text.
+  attach to arbitrary spans of text. The one inline exception, `{{choose:}}`, picks between
+  plain-text phrases and cannot contain structure.
 - **A condition is a single test on a single answer.** There are no `and`/`or` operators and
   no expression language. Nesting gives "and", and alternatives cover most uses of "or".
 
@@ -60,8 +62,8 @@ changes what the renderer numbers.
    result for every answer set (section 5.4).
 4. **Deterministic.** The same template and answers produce byte-identical output in every
    conforming implementation.
-5. **Reuse what exists.** The anchor marker, block quotes, and placeholders are reused. No new
-   directive is added.
+5. **Reuse what exists.** The anchor marker, block quotes, placeholders, and the directive
+   grammar are reused. The only new directive is `{{choose:}}`.
 6. **Visible degradation.** A v0.1 tool must never silently drop or silently keep conditional
    content (§16.5).
 
@@ -70,9 +72,9 @@ changes what the renderer numbers.
 ## 2. Template, draft, final
 
 A template is not a new file type. It is a LegalDown document that declares `questions` or
-uses `when=`.
+uses `when=` or `{{choose:}}`.
 
-| State | `questions` / `when=` | Placeholders | Drafting notes |
+| State | `questions`, `when=`, `{{choose:}}` | Placeholders | Drafting notes |
 |---|---|---|---|
 | **Template** | Yes | MAY | MAY |
 | **Draft** | No | MAY | MAY |
@@ -118,8 +120,8 @@ The question id (the map key) follows the identifier format, `[a-z][a-z0-9-]*`.
 - `text`, `date`, `money`, and `duration` questions are **blanks**, filled through
   `{{placeholder:}}`. Declaring them is **optional** and only adds a prompt and a default. An
   undeclared placeholder behaves exactly as in v0.1.
-- `boolean` and `choice` questions are **decisions**. They are used only by `when=` and must
-  be declared, because a condition needs to know the possible values.
+- `boolean` and `choice` questions are **decisions**. They are used only by `when=` and
+  `{{choose:}}`, and must be declared, because both need to know the possible values.
 - When a placeholder's question is declared, the inline `type` may be omitted. If it is
   written, it must match the declaration.
 
@@ -219,7 +221,45 @@ and the validator only has to check it once.
 
 There is a drafting benefit too. A clause that switches wording on and off mid-sentence is hard
 to review. Putting each variant in its own paragraph, item, or section is clearer for the reader
-of the template and of the finished document.
+of the template and of the finished document. When only a word or phrase varies, the one inline
+form, `{{choose:}}` (section 4.5), picks between plain-text phrases. It cannot hide headings,
+anchors, or definitions, so it cannot break anything section 5 checks.
+
+### 4.5 Inline choices — `{{choose:}}`
+
+A phrase that varies with a decision, inside an otherwise fixed sentence:
+
+```markdown
+Nothing in Section {{ref: disputes}} prevents interim relief from
+{{choose: forum, courts="a competent court", arbitration="a competent court or an emergency arbitrator"}}.
+
+The fee is payable within thirty days of invoice{{choose: vat, true=", plus VAT", false=""}}.
+```
+
+**Syntax.** The directive follows the v0.1 directive grammar (§11.2) unchanged:
+
+- The positional value is the id of a declared `boolean` or `choice` question.
+- There is one named parameter per possible answer. The parameter names are the choice's value
+  ids, or `true` and `false` for a boolean.
+- **Every possible answer must be listed.** Use `""` to produce no text. If a template later
+  adds a choice value, every `{{choose:}}` for that question fails validation until it covers
+  the new value, so no phrase can go missing silently.
+- Values are plain text in the document's language, quoted when they contain a comma (§11.3).
+  They cannot contain directives: a `{{term:}}` or `{{ref:}}` inside a value would be literal
+  text, and `{{` draws `brace-stray` (§15.2). When a variant needs a defined term, a reference,
+  or a blank, write it as a paragraph or item alternative (section 4.3) instead.
+
+**Where it may appear.** Anywhere v0.1 recognizes directives in body text (§11.4): paragraphs,
+list items, table cells, and block quotes. It may not appear in headings, which stay plain
+text (§4.2), or in frontmatter.
+
+**Language neutrality.** The only fixed tokens are the directive name and, for booleans,
+`true`/`false`, the same literals the answers file uses. Value ids are the author's own
+identifiers, and the phrases are in the document's language. A translation mirrors the
+parameter names and translates only the phrases.
+
+`{{choose:}}` is the inline counterpart of `when=`. Use `when=` when a whole unit appears or
+disappears, and `{{choose:}}` when only words change.
 
 ---
 
@@ -248,9 +288,11 @@ present at the same time**. This is what permits alternatives (section 4.3).
 | `condition-invalid` | A `when=` names an undeclared question, uses `:value` with a boolean, omits the value for a choice, or names an undeclared choice value | Error |
 | `condition-never-true` | A unit can never be present, because its condition contradicts an enclosing one | Warning |
 | `condition-reference-unsafe` | A `{{ref:}}`, `{{term:}}`, or `{{attach:}}` may point to a unit that is absent while the reference itself is present | Error |
+| `choose-invalid` | A `{{choose:}}` names an undeclared or non-decision question, names a value the question does not have, or leaves a possible answer unlisted | Error |
 | `drafting-note-def` | A `{{def:}}` appears inside a drafting note, where assembly would remove it | Error |
 
-All seven are **Core** (§16.2). They need the document only.
+All eight are **Core** (§16.2). They need the document only. A question used only by
+`{{choose:}}` counts as used for `question-unused`.
 
 ### 5.4 The guarantee
 
@@ -262,7 +304,8 @@ If a template has no Errors, then every assembly of it has no Errors:
 | Broken references, terms, or attachments | `condition-reference-unsafe` |
 | Duplicate anchors or definitions | Refined duplicate rules (section 5.2) |
 | Invalid dates, amounts, or durations | Answer checks at assembly (section 6.2) |
-| Answer text interpreted as Markdown or directives | Escaping (section 6.2) |
+| A phrase missing for some answer | `choose-invalid` requires every answer to be listed |
+| Answer text or chosen phrases interpreted as Markdown or directives | Escaping (section 6.2) |
 
 Warnings can still appear, for example `def-unreferenced` when a term was only used in a removed
 section. That is acceptable, because a Warning only asks for review.
@@ -303,10 +346,13 @@ version of a template take the same answers file.
    (Warning).
 2. **Conditions.** Remove every unit whose condition is false, with everything inside it.
    Delete the `when=` attribute from the units that remain, and delete markers left empty.
+   Replace each `{{choose:}}` with the phrase for the given answer.
 3. **Blanks.** Replace each answered placeholder with the matching v0.1 construct: the text
-   itself, `{{date:}}`, `{{money:}}`, or `{{duration:}}`. Text answers are escaped (backslash
-   escapes, `\{` before `{{`, §11.4) so that they render literally. In frontmatter, the plain
-   value is inserted. Unanswered placeholders stay as they are.
+   itself, `{{date:}}`, `{{money:}}`, or `{{duration:}}`. In frontmatter, the plain value is
+   inserted. Unanswered placeholders stay as they are.
+
+   Text answers and chosen phrases are escaped (backslash escapes, `\{` before `{{`, §11.4), so
+   that they render exactly as written.
 4. **Clean-up.** Remove drafting notes and the `questions` block.
 5. **Identifiers.** Identifiers stay as they were in the template. If removing content would
    change an auto-generated identifier, write that identifier out explicitly.
@@ -357,6 +403,9 @@ When a renderer renders a template without answers, it:
 
 - MUST mark every conditional unit visibly, together with its condition. The label and layout
   come from the style template, not from fixed English strings.
+- MUST show every phrase of a `{{choose:}}`, the way paper templates show alternatives. The
+  RECOMMENDED form uses symbols only, so it needs no translation:
+  `[a competent court / a competent court or an emergency arbitrator]`.
 - SHOULD show drafting notes in a distinct style.
 - renders placeholders as in v0.1 (§13.5), and MAY show their `prompt`.
 
@@ -368,8 +417,10 @@ Rendering *with* answers means assembling first, then rendering as usual.
 ### 7.3 In v0.1 tools
 
 Nothing is dropped or kept without a trace. A marker with `when=` is not a valid v0.1 anchor,
-so it stays in the text, visibly. A drafting note renders as an ordinary quote with its label
-showing. `questions` is ignored as unknown metadata (§3.7).
+so it stays in the text, visibly. `{{choose:}}` renders as `[UNKNOWN DIRECTIVE: choose]`
+(§11.5); under a declared `legaldown: "0.2"` it is a Warning rather than an Error. A drafting
+note renders as an ordinary quote with its label showing. `questions` is ignored as unknown
+metadata (§3.7).
 
 ---
 
@@ -384,7 +435,7 @@ setting. With it enabled, two more checks apply:
 | ID | Check | Level |
 |---|---|---|
 | `placeholder-unfilled` | A `{{placeholder:}}` remains, in the body or frontmatter | Error |
-| `template-construct-present` | A `questions` block, a `when=` attribute, or a drafting note remains | Error |
+| `template-construct-present` | A `questions` block, a `when=` attribute, a `{{choose:}}`, or a drafting note remains | Error |
 
 Whether a document is final is a property of the job ("render this for signature"), not of the
 document, so no frontmatter field is needed.
@@ -399,7 +450,8 @@ are mirrored from the primary document, and only human text is translated:
 - Question ids, `type`, choice value ids, and every `when=` condition MUST be identical across
   linked files. This extends the existing `translation-hierarchy-mismatch` and
   `translation-anchor-mismatch` checks. No new rule is needed.
-- `prompt` and choice labels are translated in each file.
+- `prompt`, choice labels, and `{{choose:}}` phrases are translated in each file. The
+  `{{choose:}}` parameter names are value ids, so they stay the same.
 - One answers file assembles every language version. Only `text` answers may need per-language
   values, which is open question 3.
 
@@ -508,7 +560,8 @@ Disputes are finally settled under the ICC Rules by a sole arbitrator seated in
 # Governing Law {#governing-law}
 
 The {{term: agreement}} is governed by the laws of {{placeholder: governing-law}}. Nothing in
-Section {{ref: disputes}} prevents interim relief from a competent court.
+Section {{ref: disputes}} prevents interim relief from
+{{choose: forum, courts="a competent court", arbitration="a competent court or an emergency arbitrator"}}.
 ```
 
 `client-name`, `client-address`, `effective-date`, `governing-law`, and `forum-city` are not
@@ -521,6 +574,7 @@ What the validator confirms:
   is exactly when their targets exist. ✓
 - The two `{#disputes}` sections can never both be present. ✓
 - `{{ref: disputes}}` is unconditional, and one of the two targets is always present. ✓
+- The `{{choose:}}` lists a phrase for both `forum` values. ✓
 
 With the answers file from section 6.1 (`personal-data` defaults to `false`), assembly
 produces:
@@ -545,6 +599,12 @@ For {{duration: 12, unit=MO}} after the engagement ends, ...
 # Dispute Resolution {#disputes}
 
 Disputes are finally settled under the ICC Rules by a sole arbitrator seated in Vienna.
+
+# Governing Law {#governing-law}
+
+The {{term: agreement}} is governed by the laws of {{placeholder: governing-law}}. Nothing in
+Section {{ref: disputes}} prevents interim relief from
+a competent court or an emergency arbitrator.
 ```
 
 The assembled document also:
@@ -567,12 +627,14 @@ The assembled document also:
    `assembled_from: consulting-agreement.lgd`), so that tooling can re-assemble when the
    template changes?
 5. **Final check as an option, or a frontmatter field** such as `status: final`?
+6. **Directives inside `{{choose:}}` phrases.** Phrases are plain text for now, so "the
+   {{term: services}}" cannot vary inline. Allowing nested directives would need a change to
+   the v0.1 directive grammar. Is the gap big enough in real templates to justify one?
 
 ## 12. Deliberately left out
 
-- **Inline alternative wording** (for example, a `{{choose:}}` directive for a phrase that
-  varies mid-sentence). Put the variant in its own paragraph, item, or section instead. It can
-  be revisited if real templates show the need.
+- **Conditional spans of rich text.** `{{choose:}}` covers plain-text phrases. Anything with
+  directives, formatting, or structure goes in its own paragraph, item, or section.
 - **Combined conditions** (`and`, `or`, named conditions). Nesting and alternatives cover the
   common cases, and an expression language would bring English keywords or programmer syntax.
 - **Conditions on text, money, or date answers** (for example `fee > 100000`). Model the
@@ -599,8 +661,9 @@ The work follows the [CONTRIBUTING](../CONTRIBUTING.md) checklist:
   - Add a `questions` field to §3.2, with a new subsection describing it.
   - Add the `duration` type to §10.7.
   - Add the `when=` attribute to §5.2 and §5.7.
-  - Add a new section, "Templates", covering conditions, alternatives, assembly, and drafting
-    notes.
+  - Add `{{choose:}}` to the §11.1 directive table, at the Core level.
+  - Add a new section, "Templates", covering conditions, alternatives, inline choices,
+    assembly, and drafting notes.
   - Add a template row to the §5.6 namespaces table.
   - Add the rows from section 5.3 and section 8 to §15.
   - Add the Assembly capability to §16.
