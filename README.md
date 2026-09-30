@@ -123,7 +123,9 @@ This source renders automatically as a professionally formatted document with:
 - 📌 "Section 2" resolved and hyperlinked wherever `{{ref:}}` appears
 - 🎨 Professional typography and layout applied from a style template
 
-The source file itself remains clean, readable, and numbering-free.
+The source file itself remains clean, readable, and numbering-free. To try it,
+render the example with [`legaldown-render`](https://github.com/ForLegalAI/legaldown-render)
+(see Tools below).
 
 ---
 
@@ -266,9 +268,24 @@ LegalDown is in early draft stage. Current priorities:
 - [ ] Tag v0.2
 - [ ] Gather community feedback on v0.2, especially template assembly (§15.7)
 
-The reference parser and validator are developed in a separate repository —
-this repository holds the specification, examples, and conformance fixtures
+This repository holds the specification, examples, and conformance fixtures
 only. Implementations verify themselves against [`fixtures/`](fixtures).
+
+---
+
+### Tools 🛠️
+
+The reference implementations are developed in separate repositories:
+
+| Package | What it does | Conformance |
+|---|---|---|
+| [`legaldown-validator`](https://github.com/ForLegalAI/legaldown-validator) | Parses, validates, and serializes documents, and assembles templates. Gives the `legaldown` command and Python API | Level 1 — Core, and Assembly |
+| [`legaldown-render`](https://github.com/ForLegalAI/legaldown-render) | Renders documents to HTML and plain text, with numbering, cross-references, defined terms, and formatted values. Built on the validator. DOCX and PDF are planned | Level 2 — Rendering |
+
+```bash
+pip install legaldown-validator   # legaldown contract.lgd
+pip install legaldown-render      # legaldown-render contract.lgd -o contract.html
+```
 
 Watch this repository and follow [Discussions](../../discussions) to stay
 informed.
